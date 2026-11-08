@@ -915,3 +915,7 @@ button:disabled { cursor: not-allowed; }
 .h3-min { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; }
 .h3-soon { background: var(--ink); color: #fff; box-shadow: 4px 4px 0 var(--pink); background-image: radial-gradient(rgba(255, 255, 255, .16) 1.4px, transparent 1.6px); background-size: 12px 12px; }
 .h3-soon .soon-squares i { width: 28px; height: 28px; border-radius: 9px; margin-inline-end: -6px; }
+
+/* room game rail: each card is a slot so the FLIP move can transform it */
+.rail-slot { display: flex; will-change: transform; }
+.rail-slot > .tile { flex: 1; }

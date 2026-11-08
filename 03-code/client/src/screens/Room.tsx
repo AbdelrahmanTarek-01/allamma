@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, GAMES, SpyIcon, Trophy } from '../components/art';
-import { GameTile } from '../components/GameTile';
+import { GameRail } from '../components/GameRail';
 import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
@@ -152,16 +152,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
 
       <div className="col" style={{ gap: 6 }}>
         <span className="label" style={{ fontSize: 12 }}>هتلعبوا إيه؟</span>
-        <div className="game-row">
-          {GAMES.map((g) => (
-            <GameTile
-              key={g.id}
-              g={g}
-              selected={g.id === room.selectedGame}
-              onClick={isHost ? () => { sfx.tap(); if (g.ready) send('room:selectGame', { game: g.id }); else toast(`${g.name} جاية قريب`); } : undefined}
-            />
-          ))}
-        </div>
+        <GameRail selected={room.selectedGame} onPick={isHost ? (id) => { sfx.tap(); const g = GAMES.find((x) => x.id === id)!; if (g.ready) send('room:selectGame', { game: id }); else toast(`${g.name} جاية قريب`); } : undefined} />
       </div>
 
       {/* the selected game stays a small card: icon, name, one summary line, "?" help. Settings live behind the host's gear. */}
