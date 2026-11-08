@@ -51,7 +51,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
       if (!playerId) throw new GameError('عرّفنا بنفسك الأول');
       return { ok: true, ...(fn(playerId) || {}) };
     } catch (e) {
-      if (e instanceof GameError) return { ok: false, error: e.message };
+      if (e instanceof GameError) return { ok: false, error: e.message, ...(e.code ? { code: e.code } : {}) };
       console.error(e);
       return { ok: false, error: 'حصلت مشكلة، جرّب تاني' };
     }

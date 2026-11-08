@@ -20,7 +20,14 @@ export function OpenRooms({ lobby, onRefresh, onClose }: { lobby: LobbyRoom[] | 
     setBusy(false);
   };
   const join = (code: string) => go(() => send('room:join', { code }));
-  const quick = () => go(() => send('lobby:quick'));
+  // the server joins an existing waiting room and never creates one; NO_ROOMS (a race: the last room just filled) toasts the same message via send()
+  const waiting = (lobby ?? []).filter((r) => r.status === 'waiting').length;
+  const quick = async () => {
+    setBusy(true);
+    const r = await send('lobby:quick'); // on NO_ROOMS we stay here (the toast says why) and nothing was created
+    setBusy(false);
+    if (r.ok) back();
+  };
   const createPublic = () => go(async () => {
     const r = await send('room:create');
     if (r.ok) await send('room:privacy', { privacy: 'public' });
@@ -67,7 +74,8 @@ export function OpenRooms({ lobby, onRefresh, onClose }: { lobby: LobbyRoom[] | 
       </div>
 
       <div className="dock push">
-        <button className="btn big full" disabled={busy} onClick={quick}>العب مع ناس</button>
+        <button className="btn big full" disabled={busy || lobby === null || waiting === 0} onClick={quick}>{lobby !== null && waiting === 0 ? 'مفيش قعدات مستنية دلوقتي' : 'العب مع ناس'}</button>
+        {lobby !== null && waiting === 0 && <span className="muted" style={{ textAlign: 'center', fontSize: 12.5, fontWeight: 800 }}>اعمل قعدة وخلّيها عامة، والناس هتدخلك</span>}
       </div>
     </main>
   );

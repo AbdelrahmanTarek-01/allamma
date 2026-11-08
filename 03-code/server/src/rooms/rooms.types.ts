@@ -83,4 +83,7 @@ export interface Room {
   emptySince: number | null;
 }
 
-export class GameError extends Error {}
+/** A rule violation with an Arabic message for the player; `code` (optional) lets the client react to a specific case (e.g. NO_ROOMS). */
+export class GameError extends Error {
+  constructor(message: string, readonly code?: string) { super(message); }
+}

@@ -56,6 +56,14 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
 
   // every hook lives above this early return (a hook after it crashes with "rendered fewer hooks" when the open-rooms screen shows)
   const railRef = useRef<HTMLDivElement>(null);
+  // the live list is pushed (lobby:update); this is the safety net: a re-fetch right after a reconnect (the server forgot our subscription) and every 10 s while the open-rooms screen is up
+  useEffect(() => {
+    const refetch = () => fetchList().then(setLobby);
+    const onConnect = () => setTimeout(refetch, 600); // after the hello of the new connection
+    socket.on('connect', onConnect);
+    const iv = roomsOpen ? setInterval(refetch, 10000) : null;
+    return () => { socket.off('connect', onConnect); if (iv) clearInterval(iv); };
+  }, [roomsOpen]);
   // first Home visit only: the rail nudges ~90px and back once, so people see there is more to swipe (skipped with reduced motion)
   useEffect(() => {
     let seen = true;

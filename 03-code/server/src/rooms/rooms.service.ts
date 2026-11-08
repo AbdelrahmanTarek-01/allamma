@@ -272,15 +272,15 @@ export class RoomsService implements OnModuleDestroy {
       .sort((a, b) => Number(a.status === 'playing') - Number(b.status === 'playing') || b.players - a.players || a.code.localeCompare(b.code));
   }
 
-  /** Join the fullest public room that is waiting and has a free seat, otherwise open a new public room. */
+  /**
+   * "العب مع ناس": join the fullest public room that is waiting, has a free seat, is not locked, does not ban this player and is not the player's own.
+   * It NEVER creates a room: with none to join it fails with the code NO_ROOMS.
+   */
   quickPlay(playerId: string, name: string, avatar: string, socketId: string) {
     const mine = this.roomOf(playerId);
     const best = this.lobbyList().find((l) => l.status === 'waiting' && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
-    if (best) return { room: this.joinRoom(best.code, playerId, name, avatar, socketId), created: false };
-    const room = this.createRoom(playerId, name, avatar, socketId);
-    room.privacy = 'public';
-    this.emit(room);
-    return { room, created: true };
+    if (!best) throw new GameError('مفيش قعدات مستنية دلوقتي', 'NO_ROOMS');
+    return { room: this.joinRoom(best.code, playerId, name, avatar, socketId), created: false };
   }
 
   /** Tell lobby watchers the list changed, at most once per second and only if it really changed. */
