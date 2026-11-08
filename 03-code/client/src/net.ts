@@ -98,6 +98,20 @@ export interface WaveGameView {
   roundPoints: Record<string, number>;
 }
 
+/** One row of the room leaderboard (placement points across the games played in this lounge). */
+export interface BoardRow {
+  id: string; name: string; avatar: string;
+  /** Still in the lounge (rows of players who left stay, greyed). */
+  inRoom: boolean; connected: boolean;
+  total: number;
+  /** Points of the latest finished game. */
+  gain: number;
+  /** Rank (0 = first) before the latest game, null if new. */
+  prevRank: number | null;
+  byGame: Record<string, number>;
+}
+export interface BoardView { rows: BoardRow[]; played: { n: number; game: string; winner: string; at: number }[]; games: string[] }
+
 /** A game's settings schema: the lounge renders its settings sheet generically from this. */
 /** Rule for all settings: one word or number per button (`label`), any explanation in the group's one helper line (`hint`). */
 export interface SettingOption { value: number | string; label: string; full?: string; hintName?: string; minPlayers?: number }
@@ -124,6 +138,8 @@ export interface RoomView {
   /** Shared lounge difficulty (host-only). Only games with a level table show it (`hasLevels`). */
   difficulty: Level;
   hasLevels: boolean;
+  /** Room leaderboard (placement points across the games played here). */
+  board: BoardView;
   /** الموجة: the team (0 or 1) of every player, for the host's teams editor. */
   teams: Record<string, 0 | 1> | null;
   hostId: string;

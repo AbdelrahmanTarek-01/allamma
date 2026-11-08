@@ -185,6 +185,20 @@ export class WaveEngine implements GameEngine {
     return this.phase === 'final';
   }
 
+  players() {
+    return this.participants;
+  }
+
+  /** Teams mode: the team with more points wins (a tie counts as a win for both). */
+  teamResult() {
+    if (!this.teamsMode) return null;
+    const ids = (t: Team) => this.participants.filter((id) => this.teams[id] === t);
+    const [a, b] = this.teamScores;
+    if (a === b) return { winners: [...ids(0), ...ids(1)], losers: [], label: 'تعادل' };
+    const w: Team = a > b ? 0 : 1;
+    return { winners: ids(w), losers: ids(w === 0 ? 1 : 0), label: w === 0 ? 'الفريق الأزرق' : 'الفريق البرتقالي' };
+  }
+
   /** Secrets: the target only for the narrator until the reveal; solo needles never; the shared needle only for its team. */
   viewFor(playerId: string) {
     const t = this.t;

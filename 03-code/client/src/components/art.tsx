@@ -117,3 +117,14 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
 export function Plus() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
 }
+
+/** Filled trophy with black outlines, like every icon in the app. */
+export function Trophy({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 4h10v6a5 5 0 01-10 0z" fill="#FFD23F" stroke="#111" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15v3M8.500 20.500h7" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

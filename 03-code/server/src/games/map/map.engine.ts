@@ -200,6 +200,10 @@ export class MapEngine implements GameEngine {
     return this.phase === 'final';
   }
 
+  players() {
+    return this.participants;
+  }
+
   /** Secrets: the true location only from the reveal on, other players' pins only in the reveal, a hint only to its owner. */
   viewFor(playerId: string) {
     const r = this.r;

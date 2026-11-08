@@ -78,3 +78,10 @@ result ──host──▶ back to the lounge
 - **Scoring:** the target is 24-156 degrees so every zone fits. Zones are 9 degrees wide: centre 4, next 3, outer 2, else 0, times the card's difficulty (1 / 1.5 / 2). Solo: each guesser gets their zone points, the narrator the rounded average of the guessers. Teams: the narrator's team gets the zone points of the shared needle, the other team +1 for a correct left/right call.
 - **Teams:** assignments live in the game's settings (`teams`), edited with `room:teams`; missing players are balanced in (`normalizeTeams`). Teams need at least 4 players (`GameDef.validateStart`).
 - **Client:** `components/Dial.tsx` (the half-circle, pointer capture, zones, needles, finger dots, reveal cover), `screens/WaveGame.tsx` (narrator, waiting, guess/call for both modes, reveal, final).
+
+## Room leaderboard (ترتيب القعدة)
+- **Where:** `Room.board` (`rooms.types.ts`), filled by `RoomsService.recordBoard` when a game reaches its final screen (same moment as the lounge scores, once per game). It lives and dies with the room, and is keyed by playerId so a player who leaves keeps their (greyed) row and gets it back on rejoin.
+- **Points:** by placement 10 / 7 / 5 / 2 (ties share the better place). Team games: every member of the winning team 8, the losers 2 (a tie: both teams 8). Engines tell the room who played (`GameEngine.players()`) and, for teams, who won (`teamResult()`).
+- **View:** `room.board` = `{ rows (sorted, with total, gain of the last game, prevRank, per-game points, inRoom), played (game, winner, newest last), games }`.
+- **Client:** `screens/RoomBoard.tsx`: podium, list with rank-change arrows, filter tabs per game, games-played strip. Opened from the trophy in the lounge header, and by itself ~4s after a game ends, with "اختار اللعبة الجاية" for the host (it sends `game:backToRoom`).
+- The older per-player `lounge` sum (raw game points) is still sent and shown as a small chip in the lounge; the board is the placement-based ranking.

@@ -6,7 +6,7 @@ import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
 import { applySettings } from '../games/settings';
 import { normalizeTeams } from '../games/wave/wave.engine';
 import { maskBad } from '../common/profanity';
-import { AVATARS, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
+import { AVATARS, Board, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
 const MAX_PLAYERS = 10;
 const CHAT_GAP_MS = 1000;
@@ -14,6 +14,11 @@ const MAX_CHAT = 50; // chat lives in memory only, last 50 messages per room, go
 const LOBBY_THROTTLE_MS = 1000;
 const MAX_ROOM_NAME = 24;
 const EMPTY_ROOM_TTL_MS = 15 * 60 * 1000;
+/** Room leaderboard points by placement: 1st 10, 2nd 7, 3rd 5, everyone else 2. Team games: winners 8, losers 2. */
+const PLACE_POINTS = [10, 7, 5];
+const TEAM_WIN = 8;
+const OTHER_POINTS = 2;
+const MAX_BOARD_GAMES = 30;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -121,6 +126,7 @@ export class RoomsService implements OnModuleDestroy {
       difficulty: DEFAULT_LEVEL,
       settings: { [def.id]: def.defaultSettings() },
       engine: null,
+      board: { totals: {}, byGame: {}, gain: {}, prevRank: {}, members: {}, played: [] },
       settled: false,
       timer: null,
       emptySince: null
@@ -385,6 +391,76 @@ export class RoomsService implements OnModuleDestroy {
     if (!e || room.settled || !e.isOver()) return;
     room.settled = true;
     room.players.forEach((p) => (p.lounge += e.scoreOf(p.id)));
+    this.recordBoard(room, e);
+  }
+
+  /** Rank (0 = first) of everyone by total, ties keep the order of `ids`. */
+  private rankOf(totals: Record<string, number>, ids: string[]) {
+    const sorted = [...ids].sort((a, b) => (totals[b] ?? 0) - (totals[a] ?? 0));
+    return Object.fromEntries(sorted.map((id, i) => [id, i])) as Record<string, number>;
+  }
+
+  /** A finished game becomes placement points on the room leaderboard (once per game, called from settle). */
+  private recordBoard(room: Room, e: NonNullable<Room['engine']>) {
+    const b = room.board;
+    const ids = e.players?.() ?? [...room.players.keys()];
+    if (!ids.length) return;
+    const nameOf = (id: string) => room.players.get(id)?.name ?? b.members[id]?.name ?? '؟';
+    const before = this.rankOf(b.totals, Object.keys(b.members));
+    const pts: Record<string, number> = {};
+    let winner: string;
+    const team = e.teamResult?.();
+    if (team) {
+      team.winners.forEach((id) => (pts[id] = TEAM_WIN));
+      team.losers.forEach((id) => (pts[id] = OTHER_POINTS));
+      winner = team.label;
+    } else {
+      // placement; players with the same score share the better place
+      const sorted = [...ids].sort((x, y) => e.scoreOf(y) - e.scoreOf(x));
+      let place = 0;
+      sorted.forEach((id, i) => {
+        if (i > 0 && e.scoreOf(id) < e.scoreOf(sorted[i - 1])) place = i;
+        pts[id] = PLACE_POINTS[place] ?? OTHER_POINTS;
+      });
+      winner = sorted.filter((id) => pts[id] === PLACE_POINTS[0]).map(nameOf).join(' و ');
+    }
+    b.gain = pts;
+    b.prevRank = before;
+    const gameId = e.id;
+    (b.byGame[gameId] ??= {});
+    Object.entries(pts).forEach(([id, n]) => {
+      b.totals[id] = (b.totals[id] ?? 0) + n;
+      b.byGame[gameId][id] = (b.byGame[gameId][id] ?? 0) + n;
+      const p = room.players.get(id);
+      b.members[id] = { name: p?.name ?? b.members[id]?.name ?? '؟', avatar: p?.avatar ?? b.members[id]?.avatar ?? 'c1' };
+    });
+    b.played.push({ n: b.played.length + 1, game: gameId, winner, at: Date.now() });
+    if (b.played.length > MAX_BOARD_GAMES) b.played.splice(0, b.played.length - MAX_BOARD_GAMES);
+  }
+
+  /** The leaderboard as every player sees it: rows already sorted by total, with names that survive a leave. */
+  private boardView(room: Room) {
+    const b = room.board;
+    const ids = Object.keys(b.members);
+    const rank = this.rankOf(b.totals, ids);
+    return {
+      rows: [...ids].sort((x, y) => rank[x] - rank[y]).map((id) => {
+        const p = room.players.get(id);
+        return {
+          id,
+          name: p?.name ?? b.members[id].name,
+          avatar: p?.avatar ?? b.members[id].avatar,
+          inRoom: !!p,
+          connected: !!p?.connected,
+          total: b.totals[id] ?? 0,
+          gain: b.gain[id] ?? 0,
+          prevRank: id in b.prevRank ? b.prevRank[id] : null,
+          byGame: Object.fromEntries(Object.keys(b.byGame).map((g) => [g, b.byGame[g][id] ?? 0]))
+        };
+      }),
+      played: b.played,
+      games: [...new Set(b.played.map((g) => g.game))]
+    };
   }
 
   // ---------- view ----------
@@ -409,6 +485,7 @@ export class RoomsService implements OnModuleDestroy {
       selectedGame: room.selectedGame,
       minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
       difficulty: room.difficulty,
+      board: this.boardView(room),
       // الموجة: the team of every player (saved choices + automatic balance), for the host's teams editor
       teams: room.selectedGame === 'wave'
         ? normalizeTeams([...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id), room.settings.wave?.teams ?? {})

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Character, GAMES, SpyIcon } from '../components/art';
+import { Character, GAMES, SpyIcon, Trophy } from '../components/art';
 import { GameTile } from '../components/GameTile';
 import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
@@ -12,7 +12,7 @@ const LockMini = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#111" /><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="#111" strokeWidth={3} /></svg>
 );
 
-export function Room({ room }: { room: RoomView }) {
+export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void }) {
   const me = room.players.find((p) => p.id === room.youId)!;
   const isHost = room.hostId === room.youId;
   const online = room.players.filter((p) => p.connected).length;
@@ -106,6 +106,7 @@ export function Room({ room }: { room: RoomView }) {
           <span className="label" style={{ fontSize: 12 }}>كود الأوضة</span>
           <button onClick={copyCode} aria-label={`انسخ الكود ${room.code}`} className="display" style={{ fontSize: 30, letterSpacing: 3, lineHeight: 1.1, border: 0, background: 'none', padding: 0, textAlign: 'right' }}>{room.code}</button>
         </div>
+        <button className="btn icon" aria-label="ترتيب القعدة" onClick={() => { sfx.tap(); onBoard(); }}><Trophy size={24} /></button>
         <MuteButton />
         <button className="btn black" onClick={invite}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7" /><path d="M12 3v12M8 7l4-4 4 4" /></svg>

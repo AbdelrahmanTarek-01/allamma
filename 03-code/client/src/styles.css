@@ -592,3 +592,23 @@ button:disabled { cursor: not-allowed; }
 .vote-btn { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 52px; height: 52px; padding: 0; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 2px 2px 0 var(--ink); font-size: 13px; transition: transform .1s, box-shadow .1s, background .15s; }
 .vote-btn.on { background: var(--yellow-soft); }
 .vote-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+
+/* room leaderboard (ترتيب القعدة) */
+.board-screen { gap: 12px; }
+.board-tabs { display: flex; gap: 6px; overflow-x: auto; padding-block: 4px; scrollbar-width: none; }
+.board-tabs::-webkit-scrollbar { display: none; }
+.board-tabs .chip { flex: none; font-size: 13.5px; padding: 3px 14px; }
+.podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; padding-top: 22px; }
+.pod-col { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; animation: rise .45s cubic-bezier(.2, .9, .3, 1.15) backwards; }
+.pod-col.away { opacity: .55; filter: grayscale(.6); }
+.pod-name { max-width: 100%; font-weight: 900; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-step { width: 100%; margin-top: 4px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--ink); border-radius: 14px 14px 0 0; border-bottom: 0; font-family: var(--font-display); font-weight: 800; font-size: 28px; }
+.pod-crown { position: absolute; top: -26px; }
+.pod-col.first .pod-crown { animation-delay: .9s; }
+.board-row { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 14px; }
+.board-row.away { opacity: .5; filter: grayscale(.6); }
+.mini-bars { display: flex; height: 8px; border: 2px solid var(--ink); border-radius: 99px; background: #F1EFE6; overflow: hidden; }
+.mini-bars i { display: block; height: 100%; }
+.played-strip { display: flex; gap: 8px; overflow-x: auto; padding-block: 2px 6px; scrollbar-width: none; }
+.played-strip::-webkit-scrollbar { display: none; }
+.played-card { flex: 0 0 150px; display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; background: var(--white); border: 3px solid var(--ink); border-top: 8px solid var(--gc); border-radius: 14px; }

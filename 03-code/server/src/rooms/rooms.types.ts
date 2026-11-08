@@ -27,6 +27,25 @@ export interface ChatMsg {
 
 export type Privacy = 'private' | 'public';
 
+/** One finished game on the room leaderboard. */
+export interface BoardGame { n: number; game: string; winner: string; at: number }
+
+/**
+ * The room leaderboard (01-brainstorm/room-leaderboard.md): placement points across every game played in the lounge.
+ * Keyed by playerId, so someone who leaves keeps their row and gets it back when they rejoin. Lives and dies with the room.
+ */
+export interface Board {
+  totals: Record<string, number>;
+  byGame: Record<string, Record<string, number>>;
+  /** Points of the latest finished game. */
+  gain: Record<string, number>;
+  /** Rank (0 = first) before the latest game, for the rank-change arrows. */
+  prevRank: Record<string, number>;
+  /** Everyone who ever got points, so a row can still be drawn after they left. */
+  members: Record<string, { name: string; avatar: string }>;
+  played: BoardGame[];
+}
+
 /** One row of the public lobby list. */
 export interface LobbyRoom {
   code: string;
@@ -57,6 +76,7 @@ export interface Room {
   /** Settings per game id, so switching games keeps each game's choices. */
   settings: Record<string, any>;
   engine: GameEngine | null;
+  board: Board;
   /** True once the finished game's points were added to the lounge scores. */
   settled: boolean;
   timer: NodeJS.Timeout | null;

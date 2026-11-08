@@ -149,6 +149,10 @@ export class SpyEngine implements GameEngine {
     return this.g?.phase === 'final';
   }
 
+  players() {
+    return this.g?.participants ?? [];
+  }
+
   viewFor(playerId: string) {
     const g = this.g;
     const inRound = g.participants.includes(playerId);

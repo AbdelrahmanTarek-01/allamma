@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Character, GAMES, Plus } from '../components/art';
+import { Character, GAMES, Plus, Trophy } from '../components/art';
 import { GameTile } from '../components/GameTile';
 import { IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 import { OpenRooms } from './OpenRooms';
-
-/** Filled trophy with black outlines, like every icon in the app. */
-export function Trophy({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 4h10v6a5 5 0 01-10 0z" fill="#FFD23F" stroke="#111" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 15v3M8.500 20.500h7" stroke="#111" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();

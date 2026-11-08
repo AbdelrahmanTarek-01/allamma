@@ -37,6 +37,10 @@ export interface GameEngine {
   scoreOf(playerId: string): number;
   /** True once the game reached its final screen. Lounge scores are updated at that moment. */
   isOver(): boolean;
+  /** Who played this game (the room leaderboard ranks them). Without it every player in the room is ranked. */
+  players?(): string[];
+  /** Team games: the winning and losing members, for the room leaderboard (8 / 2 points). Null for a game without teams. */
+  teamResult?(): { winners: string[]; losers: string[]; label: string } | null;
 }
 
 /**

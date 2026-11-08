@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { GameChat } from './components/GameChat';
 import { HelpSheet } from './components/HelpSheet';
 import { takeFirstTimeHelp } from './games';
@@ -8,6 +8,7 @@ import { music, type MusicName } from './sound';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Room } from './screens/Room';
+import { RoomBoard } from './screens/RoomBoard';
 import { SpyGame } from './screens/Spy';
 import { hasInviteLink, hasSeenWelcome, markWelcomed, Welcome } from './screens/Welcome';
 
@@ -20,6 +21,9 @@ export function App() {
   const [editing, setEditing] = useState(false);
   const [autoHelp, setAutoHelp] = useState<string | null>(null);
   // the welcome screen is for a first visit only: not for returning users (they have a profile) and not for invite links
+  // the room leaderboard: opened from the trophy in the lounge ('view'), or by itself after a game ends ('auto')
+  const [board, setBoard] = useState<null | 'view' | 'auto'>(null);
+  const boardShownFor = useRef<number | null>(null);
   const [welcomed, setWelcomed] = useState(() => hasSeenWelcome() || hasInviteLink());
 
   useEffect(() => { start(); }, []);
@@ -34,7 +38,8 @@ export function App() {
     key = status === 'online' ? 'home' : 'reconnect';
     screen = status === 'online' ? <Home onEditProfile={() => setEditing(true)} /> : <SkeletonHome note="بنرجّع الاتصال…" />;
   }
-  else if (!room.game) { key = 'room'; screen = <Room room={room} />; }
+  else if (board && room.board) { key = 'board'; screen = <RoomBoard room={room} auto={board === 'auto'} onClose={() => setBoard(null)} />; }
+  else if (!room.game) { key = 'room'; screen = <Room room={room} onBoard={() => setBoard('view')} />; }
   else if (room.game.type === 'map') {
     key = `map-${room.game.round}-${room.game.phase}`;
     screen = <Suspense fallback={<SkeletonHome note="بنجهّز الخريطة…" />}><MapGame room={room} g={room.game} /></Suspense>;
@@ -61,6 +66,18 @@ export function App() {
     : phase === 'discuss' || phase === 'vote' ? 'tension' : phase === 'reveal' || phase === 'guess' ? null : 'lobby';
   useEffect(() => { music.play(track); }, [track]);
 
+  // after a game ends the room leaderboard opens by itself (once per finished game), after the final screen had its moment
+  const finished = room?.game?.phase === 'final';
+  const playedCount = room?.board?.played.length ?? 0;
+  useEffect(() => {
+    if (!finished) return;
+    if (boardShownFor.current === playedCount) return;
+    const t = setTimeout(() => { boardShownFor.current = playedCount; setBoard('auto'); }, 3800);
+    return () => clearTimeout(t);
+  }, [finished, playedCount]);
+  // back in the lounge (or out of the room): the automatic board is done
+  useEffect(() => { if (!room?.game && board === 'auto') setBoard(null); if (!room) setBoard(null); }, [room?.game, !room]);
+
   return (
     <>
       {/* connection status: a thin in-flow bar at the very top, so it never covers content (a bottom toast covered the footer text) */}
@@ -70,7 +87,7 @@ export function App() {
       <div key={key} className="enter">{screen}</div>
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
-      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && phase === 'discuss'} visible={!room.game || (isWave ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result')} />}
+      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && phase === 'discuss'} visible={!board && (!room.game || (isWave ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
       {toast && <div key={toast} className="toast" role="status">{toast}</div>}
     </>
   );
