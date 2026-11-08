@@ -37,12 +37,15 @@ const SPECS = {
     ]
   },
   arab: {
-    w: 800, h: 920, set: countries50, shortKm: 3000, scaleKm: 400,
-    make: () => geoMercator().center([22, 23]).scale(800 / ((86 * Math.PI) / 180)).translate([400, 460]),
+    // tight on the Arab world: lon -18..60 (Atlantic to the Gulf), lat -3..38 (Somalia to south Turkey). The canvas is bigger than that box (bleed), the box is the "fit" view.
+    w: 800, h: 920, set: countries50, shortKm: 4500, scaleKm: 400,
+    make: () => geoMercator().center([21, 17.5]).scale(720 / ((78 * Math.PI) / 180)).translate([400, 460]),
     kind: 'mercator',
+    bounds: { lon: [-18, 60], lat: [-3, 38] },
+    nbrClass: 'mp-far', // neighbours of the Arab League: faded, so they don't compete
     hl: (n) => ARAB.has(n),
     labels: [
-      ['البحر المتوسط', 18, 34.2], ['المحيط الأطلسي', -15.5, 33, -80], ['البحر الأحمر', 38.2, 20.5, 55], ['الخليج العربي', 51.7, 27.0, 40], ['بحر العرب', 62, 14.8], ['المحيط الهندي', 55, 3]
+      ['البحر المتوسط', 18, 34.2], ['المحيط الأطلسي', -14.5, 29, -80], ['البحر الأحمر', 38.4, 20.5, 55], ['الخليج العربي', 51.7, 27.0, 40], ['بحر العرب', 57.5, 13.5]
     ]
   },
   world: {
@@ -72,12 +75,15 @@ for (const [id, s] of Object.entries(SPECS)) {
   const grid = path(geoGraticule10());
   // focus: the box the "fit" button frames (the area the game is about). Everything around it is bleed so the screen never shows empty edges.
   let focus = [0, 0, s.w, s.h];
-  if (id !== 'world') {
+  if (s.bounds) {
+    const [x0, y1] = proj([s.bounds.lon[0], s.bounds.lat[0]]), [x1, y0] = proj([s.bounds.lon[1], s.bounds.lat[1]]);
+    focus = [x0, y0, x1, y1].map((v) => r(v, 1));
+  } else if (id !== 'world') {
     const fb = path.bounds({ type: 'FeatureCollection', features: land.filter((f) => s.hl(f.properties.name)) });
     const padX = (fb[1][0] - fb[0][0]) * 0.05, padY = (fb[1][1] - fb[0][1]) * 0.05;
     focus = [Math.max(0, fb[0][0] - padX), Math.max(0, fb[0][1] - padY), Math.min(s.w, fb[1][0] + padX), Math.min(s.h, fb[1][1] + padY)].map((v) => r(v, 1));
   }
-  const svg = `<rect class="mp-sea" width="${s.w}" height="${s.h}"/><path class="mp-grid" d="${grid}"/><path class="mp-nbr" d="${base}"/><path class="mp-hl" d="${hl}"/>${deco}`;
+  const svg = `<rect class="mp-sea" width="${s.w}" height="${s.h}"/><path class="mp-grid" d="${grid}"/><path class="${s.nbrClass ?? 'mp-nbr'}" d="${base}"/><path class="mp-hl" d="${hl}"/>${deco}`;
 
   const labels = s.labels.map(([t, lon, lat, rot]) => {
     const p = proj([lon, lat]);

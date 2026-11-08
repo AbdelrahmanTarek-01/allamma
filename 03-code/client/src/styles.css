@@ -475,6 +475,7 @@ button:disabled { cursor: not-allowed; }
 .mp-sea { fill: #CFE5FF; }
 .mp-grid { fill: none; stroke: #4D9DFF; stroke-opacity: .16; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .mp-nbr { fill: var(--yellow-soft); stroke: #C9A93A; stroke-width: 1.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mp-far { fill: #FFFBEF; stroke: #E9E0C6; stroke-width: .6px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .mp-hl { fill: var(--white); stroke: var(--ink); stroke-width: 2.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .mp-river { fill: none; stroke: var(--blue); stroke-width: 3px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .mp-river.thin { stroke-width: 2px; }
