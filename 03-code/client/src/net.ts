@@ -58,14 +58,15 @@ export interface Profile { id: string; name: string; avatar: string }
 type Status = 'waking' | 'online' | 'offline';
 
 // chat is not part of the room snapshot: the server sends the history once (chat:history), then each message (chat:new)
-interface State { status: Status; room: RoomView | null; chat: ChatView[]; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean }
+// chatBase = id of the last message in the history we received: everything up to it counts as already seen (no unread badge)
+interface State { status: Status; room: RoomView | null; chat: ChatView[]; chatBase: string | undefined; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean }
 
 const KEY = 'allamma.profile';
 const loadProfile = (): Profile | null => {
   try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
 };
 
-let state: State = { status: 'waking', room: null, chat: [], offset: 0, toast: null, profile: loadProfile(), hasConnected: false };
+let state: State = { status: 'waking', room: null, chat: [], chatBase: undefined, offset: 0, toast: null, profile: loadProfile(), hasConnected: false };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()); };
 export const useStore = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => state);
@@ -116,7 +117,7 @@ socket.on('disconnect', () => set({ status: 'offline' }));
 socket.on('connect_error', () => set({ status: state.hasConnected ? 'offline' : 'waking' }));
 socket.on('room:state', (room: RoomView) => set({ room, offset: room.serverNow - Date.now() }));
 socket.on('room:kicked', () => { set({ room: null, chat: [] }); sfx.leave(); toast('المضيف طلّعك من الأوضة'); });
-socket.on('chat:history', (list: ChatView[]) => set({ chat: list.slice(-MAX_CHAT) }));
+socket.on('chat:history', (list: ChatView[]) => set({ chat: list.slice(-MAX_CHAT), chatBase: list[list.length - 1]?.id }));
 socket.on('chat:new', (m: ChatView) => {
   if (state.chat.some((x) => x.id === m.id)) return;
   set({ chat: [...state.chat, m].slice(-MAX_CHAT) });

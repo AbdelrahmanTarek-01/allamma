@@ -34,7 +34,8 @@ export function App() {
   return (
     <>
       <div key={key} className="enter">{screen}</div>
-      {room?.game && <GameChat room={room} visible={phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
+      {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
+      {room && <GameChat room={room} lounge={!room.game} visible={!room.game || phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
       {hasConnected && status === 'offline' && room && (
         <div className="toast" role="status">النت فصل، بنرجّعك لنفس مكانك…</div>
       )}

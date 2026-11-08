@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, GAMES } from '../components/art';
+import { GameTile } from '../components/GameTile';
 import { MuteButton, Sheet } from '../components/ui';
-import { AR, leaveRoom, send, toast, useStore, type RoomView } from '../net';
+import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
 
 const MINUTES = [300, 480, 600];
 const ROUNDS = [1, 3, 5];
 
 export function Room({ room }: { room: RoomView }) {
-  const { chat } = useStore();
   const me = room.players.find((p) => p.id === room.youId)!;
   const isHost = room.hostId === room.youId;
   const online = room.players.filter((p) => p.connected).length;
-  const [msg, setMsg] = useState('');
   const [manageId, setManageId] = useState<string | null>(null);
   const [confirmKick, setConfirmKick] = useState(false);
   const target = room.players.find((p) => p.id === manageId && p.id !== room.youId);
@@ -27,20 +26,15 @@ export function Room({ room }: { room: RoomView }) {
     if (n !== room.name) await send('room:rename', { name: n });
   };
   const roundsText = (r: number) => (r === 1 ? 'جولة' : `${AR(r)} جولات`);
-  const chatRef = useRef<HTMLDivElement>(null);
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
 
-  useEffect(() => { chatRef.current?.scrollTo({ top: 1e6 }); }, [chat.length]);
-
-  // sounds for people joining and new chat messages from others
-  const seen = useRef({ players: room.players.length, chat: chat[chat.length - 1]?.id });
+  // sound for people joining and leaving (chat sounds and bubbles come from the floating chat)
+  const seen = useRef(room.players.length);
   useEffect(() => {
-    if (room.players.length > seen.current.players) sfx.join();
-    else if (room.players.length < seen.current.players) sfx.leave();
-    const last = chat[chat.length - 1];
-    if (last && last.id !== seen.current.chat && !last.system && last.from !== room.youId) sfx.chat();
-    seen.current = { players: room.players.length, chat: last?.id };
-  }, [room.players.length, chat]);
+    if (room.players.length > seen.current) sfx.join();
+    else if (room.players.length < seen.current) sfx.leave();
+    seen.current = room.players.length;
+  }, [room.players.length]);
 
   const copyCode = async () => {
     try { await navigator.clipboard.writeText(room.code); sfx.select(); toast('الكود اتنسخ'); } catch { /* ignore */ }
@@ -61,13 +55,6 @@ export function Room({ room }: { room: RoomView }) {
     const link = `${location.origin}/?room=${room.code}`;
     const text = `تعالوا نلعب ${game.name} في اللمّة ونفتح مكالمة صوت! الكود ${room.code}\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
-  };
-
-  const sendChat = async () => {
-    const t = msg.trim();
-    if (!t) return;
-    setMsg('');
-    await send('room:chat', { text: t });
   };
 
   return (
@@ -111,24 +98,14 @@ export function Room({ room }: { room: RoomView }) {
       <div className="col" style={{ gap: 6 }}>
         <span className="label" style={{ fontSize: 12 }}>هتلعبوا إيه؟</span>
         <div className="game-row">
-          {GAMES.map((g) => {
-            const selected = g.id === room.selectedGame;
-            const Tag = isHost ? 'button' : 'div';
-            return (
-              <Tag
-                key={g.id}
-                className={`tile${g.ready ? '' : ' off'}`}
-                {...(isHost ? { type: 'button' as const, 'aria-pressed': selected, onClick: () => { sfx.tap(); if (g.ready) send('room:selectGame', { game: g.id }); else toast(`${g.name} جاية قريب`); } } : {})}
-                style={{ flex: '0 0 148px', height: 134, background: selected ? 'var(--yellow-soft)' : '#fff', outline: selected ? '3px solid var(--ink)' : 'none', outlineOffset: 3, cursor: isHost ? 'pointer' : 'default' }}
-              >
-                {!g.ready && <span className="chip badge">قريباً</span>}
-                {selected && <span className="chip dark badge">مختارة</span>}
-                <span className="icontile" style={{ background: g.color }}>{g.icon}</span>
-                <span className="display" style={{ fontSize: 19, marginTop: 4 }}>{g.name}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{g.tagline}</span>
-              </Tag>
-            );
-          })}
+          {GAMES.map((g) => (
+            <GameTile
+              key={g.id}
+              g={g}
+              selected={g.id === room.selectedGame}
+              onClick={isHost ? () => { sfx.tap(); if (g.ready) send('room:selectGame', { game: g.id }); else toast(`${g.name} جاية قريب`); } : undefined}
+            />
+          ))}
         </div>
       </div>
 
@@ -182,12 +159,18 @@ export function Room({ room }: { room: RoomView }) {
         </section>
       )}
 
-      <div className="row between">
+      <div className="row" style={{ gap: 10 }}>
         <h2 className="display h2">اللاعيبة</h2>
-        <span className="label" style={{ fontSize: 14 }}>{AR(room.players.length)} من ١٠</span>
+        <span className="chip">{AR(room.players.length)} من {AR(10)}</span>
       </div>
 
-      <div className="grid3">
+      <div className="strip">
+        {room.players.length < 10 && (
+          <button className="tile player" onClick={invite} style={{ alignItems: 'center', borderStyle: 'dashed', boxShadow: 'none', background: 'transparent' }}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            <span style={{ fontWeight: 900, fontSize: 14 }}>ادعي حد</span>
+          </button>
+        )}
         {room.players.map((p) => {
           const manageable = isHost && p.id !== room.youId;
           const Tag = manageable ? 'button' : 'div';
@@ -199,7 +182,7 @@ export function Room({ room }: { room: RoomView }) {
               style={{ alignItems: 'center', padding: '14px 4px 8px', opacity: p.connected ? 1 : 0.5, background: p.id === room.youId ? 'var(--yellow-soft)' : '#fff', cursor: manageable ? 'pointer' : 'default' }}
             >
               {p.id === room.hostId && <span className="chip dark badge" style={{ insetInlineStart: '50%', transform: 'translateX(50%)' }}>المضيف</span>}
-              <Character id={p.avatar} size={52} />
+              <Character id={p.avatar} size={46} />
               <span style={{ fontWeight: 900, fontSize: 13.5, lineHeight: 1.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {p.id === room.youId ? 'إنت' : p.name}
               </span>
@@ -210,34 +193,10 @@ export function Room({ room }: { room: RoomView }) {
             </Tag>
           );
         })}
-        {room.players.length < 10 && (
-          <button className="tile" onClick={invite} style={{ alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed', boxShadow: 'none', background: 'transparent', minHeight: 116 }}>
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-            <span style={{ fontWeight: 900, fontSize: 14 }}>ادعي حد</span>
-          </button>
-        )}
       </div>
 
-      <section className="card flat col" style={{ padding: 10, gap: 8 }}>
-        <div className="chat" ref={chatRef} aria-live="polite">
-          {chat.length === 0 && <span className="muted">قول حاجة لصحابك وانتو مستنيين…</span>}
-          {chat.map((m) => m.system ? (
-            <span key={m.id} className="chat-system">{m.text}</span>
-          ) : (
-            <div key={m.id} className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
-              <b style={{ fontSize: 13, fontWeight: 900, flex: 'none' }}>{nameOf(m.from)}</b>
-              <span style={{ fontSize: 13, fontWeight: 600, overflowWrap: 'anywhere' }}>{m.text}</span>
-            </div>
-          ))}
-        </div>
-        <form className="row" style={{ gap: 6 }} onSubmit={(e) => { e.preventDefault(); sendChat(); }}>
-          <label htmlFor="chatmsg" className="sr" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>رسالة</label>
-          <input id="chatmsg" className="input" style={{ height: 42, fontSize: 14, borderWidth: 2.5 }} value={msg} maxLength={200} placeholder="اكتب رسالة" onChange={(e) => setMsg(e.target.value)} />
-          <button className="btn sm black" type="submit">ابعت</button>
-        </form>
-      </section>
-
-      <div className="col push" style={{ gap: 8 }}>
+      {/* pinned to the bottom of the screen so the start/ready button is always reachable */}
+      <div className="dock push">
         {isHost ? (
           <>
             <span className="label center" style={{ textAlign: 'center' }}>محتاجين ٣ على الأقل · معاكم {AR(online)}</span>

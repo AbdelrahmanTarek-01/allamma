@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Character, GAMES, Plus } from '../components/art';
-import { MuteButton } from '../components/ui';
+import { GameTile } from '../components/GameTile';
+import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
   const [code, setCode] = useState('');
+  const [codeOpen, setCodeOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lobby, setLobby] = useState<LobbyRoom[] | null>(null); // null = still loading
 
@@ -21,8 +23,8 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     };
   }, []);
 
-  const join = async (c = code) => {
-    if (c.trim().length < 4) return toast('اكتب كود الأوضة كامل');
+  const join = async (c: string) => {
+    if (c.trim().length < 4) return toast('اكتب كود القعدة كامل');
     setBusy(true);
     await send('room:join', { code: c.trim().toUpperCase() });
     setBusy(false);
@@ -52,16 +54,12 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
 
       <button className="btn big full" disabled={busy} onClick={quick}>العب مع ناس</button>
 
-      <section className="card col" style={{ gap: 10 }}>
-        <label htmlFor="code" className="label" style={{ fontSize: 17 }}>معاك كود؟ ادخل على طول</label>
-        <form className="row" style={{ gap: 8 }} onSubmit={(e) => { e.preventDefault(); join(); }}>
-          <input id="code" className="input code" placeholder="الكود" value={code} maxLength={6} autoCapitalize="characters" autoComplete="off" onChange={(e) => setCode(e.target.value)} />
-          <button className="btn black" disabled={busy} type="submit">يلا</button>
-        </form>
-        <button className="btn yellow full" disabled={busy} onClick={create}><Plus /> اعمل أوضة جديدة</button>
-      </section>
+      <div className="row" style={{ gap: 10 }}>
+        <button className="btn yellow grow" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
+        <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
+      </div>
 
-      <h2 className="display" style={{ fontSize: 28 }}>قعدات مفتوحة</h2>
+      <h2 className="display" style={{ fontSize: 26 }}>قعدات مفتوحة</h2>
       <div className="col" style={{ gap: 12 }}>
         {lobby === null && Array.from({ length: 3 }, (_, i) => <div key={i} className="sk card-sk" style={{ height: 78, animationDelay: `${i * 160}ms` }} />)}
         {lobby?.length === 0 && (
@@ -85,23 +83,21 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         })}
       </div>
 
-      <h2 className="display" style={{ fontSize: 28 }}>هتلعبوا إيه النهارده؟</h2>
-
+      <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
         {GAMES.map((g, i) => (
-          <button
-            key={g.id}
-            className={`tile${g.ready ? '' : ' off'}`}
-            style={{ height: 134, animationDelay: `${i * 60}ms` }}
-            onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }}
-          >
-            {!g.ready && <span className="chip badge">قريباً</span>}
-            <span className="icontile" style={{ background: g.color }}>{g.icon}</span>
-            <span className="display" style={{ fontSize: 21, marginTop: 4 }}>{g.name}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{g.tagline}</span>
-          </button>
+          <GameTile key={g.id} g={g} style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }} />
         ))}
       </div>
+
+      {codeOpen && (
+        <Sheet title="ادخل بكود" onClose={() => setCodeOpen(false)}>
+          <form className="row" style={{ gap: 8 }} onSubmit={(e) => { e.preventDefault(); join(code); }}>
+            <input className="input code" aria-label="كود القعدة" placeholder="الكود" autoFocus value={code} maxLength={6} autoCapitalize="characters" autoComplete="off" onChange={(e) => setCode(e.target.value)} />
+            <button className="btn black" disabled={busy} type="submit">يلا</button>
+          </form>
+        </Sheet>
+      )}
     </main>
   );
 }

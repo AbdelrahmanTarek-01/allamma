@@ -12,12 +12,12 @@ const BUBBLE_MS = 2000;
  * and a short bubble at the top when a message arrives while the sheet is closed.
  * Mounted once in App (outside the per-phase keyed screen) so unread state survives phase changes.
  */
-export function GameChat({ room, visible }: { room: RoomView; visible: boolean }) {
-  const { chat } = useStore(); // the client's own list (server sends history once, then each new message)
+export function GameChat({ room, visible, lounge }: { room: RoomView; visible: boolean; lounge?: boolean }) {
+  const { chat, chatBase } = useStore(); // the client's own list (server sends history once, then each new message)
   const lastMsg = chat[chat.length - 1];
   const lastId = lastMsg?.id;
   const [open, setOpen] = useState(false);
-  const [readId, setReadId] = useState(lastId); // lobby messages before the game count as read
+  const [readId, setReadId] = useState(chatBase); // what was in the history when we got here counts as read
   const [bubble, setBubble] = useState<ChatView | null>(null);
   const [text, setText] = useState('');
   const prevId = useRef(lastId);
@@ -28,6 +28,7 @@ export function GameChat({ room, visible }: { room: RoomView; visible: boolean }
   useEffect(() => {
     if (lastId === prevId.current) return;
     prevId.current = lastId;
+    if (lastId === chatBase) { setReadId(chatBase); return; } // the history just arrived: not "new"
     if (!lastMsg || lastMsg.system || lastMsg.from === room.youId || !visible) return;
     sfx.chat();
     if (!open) setBubble(lastMsg);
@@ -60,7 +61,7 @@ export function GameChat({ room, visible }: { room: RoomView; visible: boolean }
   return (
     <>
       {!open && (
-        <button className="chat-fab" aria-label={unread ? `الشات، ${AR(unread)} رسايل جديدة` : 'الشات'} onClick={() => setOpen(true)}>
+        <button className={`chat-fab${lounge ? ' lounge' : ''}`} aria-label={unread ? `الشات، ${AR(unread)} رسايل جديدة` : 'الشات'} onClick={() => setOpen(true)}>
           <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M5 4h14a2 2 0 012 2v9a2 2 0 01-2 2h-7l-5 4v-4H5a2 2 0 01-2-2V6a2 2 0 012-2z" fill="var(--blue)" stroke="#111" strokeWidth={2} strokeLinejoin="round" />
             <circle cx="8.5" cy="10.5" r="1.2" fill="#111" /><circle cx="12" cy="10.5" r="1.2" fill="#111" /><circle cx="15.5" cy="10.5" r="1.2" fill="#111" />
