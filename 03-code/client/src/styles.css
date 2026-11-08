@@ -962,14 +962,12 @@ button:disabled { cursor: not-allowed; }
 
 /* games rail: the dice card and the slot-machine highlight */
 .game-tile.lit { background: var(--yellow-soft); outline: 3px solid var(--ink); outline-offset: 3px; transform: scale(1.04); }
-.dice-tile { background-color: var(--ink); color: #fff; box-shadow: 4px 4px 0 var(--pink); background-image: radial-gradient(rgba(255, 255, 255, .16) 1.4px, transparent 1.6px); background-size: 12px 12px; overflow: hidden; }
+.dice-tile { background: var(--ink); color: #fff; box-shadow: 4px 4px 0 var(--pink); }
 .dice-tile .game-title { color: var(--yellow); }
 .dice-tile .game-tag { color: #fff; opacity: 1; }
-.dice-art { position: relative; width: 100%; height: 56px; flex: none; }
-.dice-art i { position: absolute; width: 32px; height: 32px; border-radius: 10px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; transform: rotate(var(--r)); box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); }
-.dice-front { position: absolute; inset-inline-start: 0; top: 4px; width: 50px; height: 50px; border-radius: 15px; background: var(--yellow); border: 3px solid var(--ink); box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); display: flex; align-items: center; justify-content: center; transform: rotate(-7deg); animation: diceWiggle 4s ease-in-out infinite; }
+.dice-icon { transform: rotate(-7deg); animation: diceWiggle 4s ease-in-out infinite; }
 @keyframes diceWiggle { 0%, 82%, 100% { transform: rotate(-7deg); } 86% { transform: rotate(7deg) scale(1.06); } 90% { transform: rotate(-11deg); } 94% { transform: rotate(4deg); } 97% { transform: rotate(-7deg); } }
-@media (prefers-reduced-motion: reduce) { .game-tile.lit { transform: none; } .dice-front { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .game-tile.lit { transform: none; } .dice-icon { animation: none; } }
 
 /* game settings card (canvas GeoSettings): one white card, thin dividers, label right + helper left on one line, equal-width buttons, a small dashed dice for "random" */
 .sg-card { background: #fff; border: 3px solid var(--ink); border-radius: 24px; box-shadow: 5px 5px 0 var(--ink); padding: 6px 16px 10px; }

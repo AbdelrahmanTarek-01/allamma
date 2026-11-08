@@ -10,7 +10,7 @@ import { GameTile } from './GameTile';
  */
 /** The dice on the "عشوائي" card (filled, black outline, like the other game icons). */
 const Dice = () => (
-  <svg width="34" height="34" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true">
     <rect x="6" y="6" width="36" height="36" rx="9" fill="#fff" stroke="#111" strokeWidth="3.2" strokeLinejoin="round" />
     {[[16, 16], [32, 16], [24, 24], [16, 32], [32, 32]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3.4" fill={x === 24 ? '#FF4F9A' : '#111'} />)}
   </svg>
@@ -86,14 +86,9 @@ export function GameRail({ selected, onPick, onRandom, lit }: { selected: string
       {/* host only: the dice card is always first */}
       {onRandom && (
         <div className="rail-slot">
-          {/* same family as the Home "ألعاب جاية" card: black, dotted, pink shadow; game tiles fanned behind a big yellow dice */}
+          {/* black card with a pink shadow; otherwise the exact layout of the other game cards */}
           <button type="button" className="tile game-tile dice-tile" onClick={onRandom}>
-            <span className="dice-art" aria-hidden="true">
-              {GAMES.slice(0, 3).map((g, i) => (
-                <i key={g.id} style={{ background: g.color, ['--r' as string]: `${[-14, 3, 17][i]}deg`, insetInlineStart: 30 + i * 16, top: [10, 2, 12][i] }}><span style={{ display: 'flex', transform: 'scale(.55)' }}>{g.icon}</span></i>
-              ))}
-              <b className="dice-front"><Dice /></b>
-            </span>
+            <span className="icontile dice-icon" style={{ background: '#FFD23F' }}><Dice /></span>
             <span className="display game-title">عشوائي</span>
             <span className="game-tag">سيبها للحظ</span>
           </button>
