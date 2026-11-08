@@ -7,7 +7,20 @@ import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 import { OpenRooms } from './OpenRooms';
 
-const HERO = ['c2', 'c5', 'c1', 'c4', 'c3'];
+/** "لعبة الليلة" spotlight (canvas HomeV4): game, card colour and one-line hook, in the canvas order. No durations: no game defines a real one. */
+const SPOT: { id: string; bg: string; hook: string }[] = [
+  { id: 'spy', bg: '#FF4F9A', hook: 'واحد فيكم مش عارف إنتوا فين · اكشفوه قبل ما يكشفكم' },
+  { id: 'map', bg: '#3DDC97', hook: 'حط الدبوس على الخريطة · الأقرب ياخد النقط' },
+  { id: 'quiz', bg: '#B48CFF', hook: 'لوحة أسئلة بين فريقين · واسرق سؤال التاني' },
+  { id: 'words', bg: '#9ADFFF', hook: 'تلميح واحد يلم كلمات كتير · وبعّد عن القنبلة' },
+  { id: 'auction', bg: '#FF8A3D', hook: 'زايد على السؤال قبل ما تشوفه · على قد ثقتك' },
+  { id: 'draw', bg: '#FFF3C4', hook: 'ارسم وصحابك يخمّنوا · وفي الآخر معرض الليلة' },
+  { id: 'wave', bg: '#4D9DFF', hook: 'اقروا أفكار بعض على المقياس' }
+];
+const ROTATE_MS = 4200;
+const PAUSE_AFTER_TAP_MS = 6000;
+/** "يا" + the name only when it is written in Arabic letters, otherwise "يا نجم". */
+const nameOrStar = (n: string) => (/^[\u0600-\u06FF\s]+$/.test(n.trim()) && n.trim() ? n.trim() : 'نجم');
 
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
@@ -64,6 +77,17 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     const iv = roomsOpen ? setInterval(refetch, 10000) : null;
     return () => { socket.off('connect', onConnect); if (iv) clearInterval(iv); };
   }, [roomsOpen]);
+  // the spotlight: auto-rotates every 4.2 s; a tap on a dot pauses it for 6 s; paused while the tab is hidden; no auto-rotate with reduced motion
+  const [spot, setSpot] = useState(0);
+  const touched = useRef(0);
+  useEffect(() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const iv = setInterval(() => {
+      if (document.hidden || Date.now() - touched.current < PAUSE_AFTER_TAP_MS) return;
+      setSpot((i) => (i + 1) % SPOT.length);
+    }, ROTATE_MS);
+    return () => clearInterval(iv);
+  }, []);
   // first Home visit only: the rail nudges ~90px and back once, so people see there is more to swipe (skipped with reduced motion)
   useEffect(() => {
     let seen = true;
@@ -90,20 +114,36 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         </div>
       </header>
 
-      {/* the hero fills whatever height is left: live rooms, a greeting, the crowd and the "we are missing you" bubble */}
-      <section className="h3-hero">
-        <span className="row" style={{ gap: 6, fontSize: 13, fontWeight: 900 }}>
-          <i className="h3-live" />
-          {count === null ? <span className="sk" style={{ width: 110, height: 16, borderRadius: 99 }} /> : `${AR(count)} قعدة شغالة دلوقتي`}
-        </span>
-        <span className="display h3-greet">أهلاً يا {profile!.name}<br />جاهز للمّة النهارده؟</span>
-        <span aria-hidden="true" className="h3-bubble-wrap"><span className="h3-bob" style={{ animationDelay: '.6s' }}><span className="h3-bubble">ناقصينك إنت!</span></span></span>
-        <div aria-hidden="true" className="h3-crowd">
-          {HERO.map((id, i) => (
-            <span key={id} className="h3-bob" style={{ animationDelay: `${i * 0.3}s`, marginInlineStart: i ? -12 : 0, position: 'relative', zIndex: i === 2 ? 1 : 0 }}><Character id={id} size={i === 2 ? 96 : 80} /></span>
-          ))}
-        </div>
-      </section>
+      {/* greeting, then the spotlight card fills the leftover height */}
+      <span className="display h3-hello">{new Date().getHours() < 12 ? 'صباح الفل' : 'مساء الفل'} يا {nameOrStar(profile!.name)}</span>
+      {(() => {
+        const cur = SPOT[spot];
+        const g = GAMES.find((x) => x.id === cur.id)!;
+        return (
+          <section className="h3-spot" style={{ background: cur.bg }} onClick={() => { sfx.card(); setSheetGame(cur.id); }}>
+            <span aria-hidden="true" className="h3-spot-dots" />
+            <span aria-hidden="true" className="h3-spot-circle" />
+            <div className="row between" style={{ position: 'absolute', top: 14, right: 14, left: 14 }}>
+              <span className="h3-spot-tag">لعبة الليلة</span>
+              <span className="row" style={{ gap: 5 }}>
+                {SPOT.map((x, k) => (
+                  <button key={x.id} aria-label={GAMES.find((y) => y.id === x.id)?.name} className="h3-dot" style={{ width: k === spot ? 22 : 9, background: k === spot ? '#111' : '#fff' }}
+                    onClick={(e) => { e.stopPropagation(); touched.current = Date.now(); sfx.soft(); setSpot(k); }} />
+                ))}
+              </span>
+            </div>
+            <div key={cur.id} className="h3-spot-body">
+              <span className="h3-spot-icon"><span className="icontile" style={{ background: g.color, width: 50, height: 50, borderRadius: 15 }}>{g.icon}</span></span>
+              <span className="display" style={{ fontSize: 34, lineHeight: 1.15 }}>{g.name}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.5, maxWidth: 250 }}>{cur.hook}</span>
+              <div className="row" style={{ gap: 6, marginTop: 4 }}>
+                <span className="h3-pill">{AR(MIN[cur.id] ?? 2)}+ لاعيبة</span>
+                <span className="h3-play">العبها</span>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* actions in the thumb zone */}
       <section className="col" style={{ gap: 12, flex: 'none' }}>
