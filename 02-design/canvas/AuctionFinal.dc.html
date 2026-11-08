@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>مزاد المعلومات · الأغنى</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.18) rotate(-3deg)}100%{transform:scale(1)}}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-14deg);opacity:0}60%{transform:scale(.92) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes slideIn{0%{transform:translateX(-20px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hammer{0%,100%{transform:rotate(0)}40%{transform:rotate(-38deg)}60%{transform:rotate(6deg)}}
+@keyframes coinUp{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-140px) scale(1);opacity:0}}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),900px) rotate(var(--r))}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+
+  <section style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 6px">
+    <svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true" style="transform: scale({{bagS}})"><path d="M24 14h16l-4 8H28z" fill="#FF8A3D" stroke="#111" stroke-width="3" stroke-linejoin="round"/><path d="M28 22h8c12 6 18 16 16 26-1 7-8 10-20 10S13 55 12 48c-2-10 4-20 16-26z" fill="#3DDC97" stroke="#111" stroke-width="3" stroke-linejoin="round"/><text x="32" y="48" text-anchor="middle" font-family="Cairo" font-weight="900" font-size="16" fill="#111">ج</text></svg>
+    <span style="font-size: 13px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 12px; opacity: {{titleOp}}">خلص المزاد · ٨ معلومات</span>
+    <h1 style="margin: 0; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; text-align: center; opacity: {{titleOp}}">سارة أغنى واحدة!</h1>
+  </section>
+
+  <section style="background: #fff; border: 3px solid #111; border-radius: 22px; box-shadow: 5px 5px 0 #111; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+      <div style="display: grid; grid-template-columns: 20px 32px 52px 1fr 66px; gap: 6px; align-items: center">
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 16px; text-align: center">{{r.rank}}</span>
+        <svg width="30" height="30" viewBox="0 0 56 56" aria-hidden="true" style="flex: none;"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{r.c}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg>
+        <span style="font-weight: 900; font-size: 13.5px">{{r.name}}</span>
+        <span style="height: 18px; border: 2.5px solid #111; border-radius: 99px; overflow: hidden; display: flex; background: #f3ecd0"><span style="width: {{r.w}}%; background: {{r.bar}}; border-left: 2.5px solid #111"></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 16px; text-align: left; font-variant-numeric: tabular-nums">{{r.cash}}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; opacity: {{statsOp}}">
+    <sc-for list="{{awards}}" as="a" hint-placeholder-count="4">
+      <div style="background: #fff; border: 3px solid #111; border-radius: 18px; padding: 8px 10px; display: flex; flex-direction: column; gap: 1px">
+        <span style="font-size: 11.5px; font-weight: 900; opacity: .75">{{a.k}}</span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 19px">{{a.who}}</span>
+        <span style="font-size: 11.5px; font-weight: 800">{{a.why}}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+    <button onClick="{{play}}" style="height: 58px; border: 3px solid #111; border-radius: 18px; background: #111; color: #FFD23F; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 23px; box-shadow: 0 6px 0 #B48CFF">نلعبها تاني</button>
+    <button style="height: 48px; border: 2.5px solid #111; border-radius: 16px; background: #fff; box-shadow: 3px 3px 0 #111; font: 900 15px 'Cairo', sans-serif">نغيّر اللعبة</button>
+  </div>
+
+  <sc-if value="{{party}}" hint-placeholder-val="{{ false }}">
+    <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; overflow: hidden">
+      <sc-for list="{{rain}}" as="c" hint-placeholder-count="16"><span style="position: absolute; top: -30px; left: {{c.x}}%; animation: fall {{c.dur}}s cubic-bezier(.3,.6,.5,1) {{c.delay}}s forwards; --r: {{c.r}}deg; --dx: {{c.dx}}px"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10" fill="#FFD23F" stroke="#111" stroke-width="2.4"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#111" stroke-width="1.4" opacity=".5"/><text x="12" y="16" text-anchor="middle" font-family="Cairo" font-weight="900" font-size="10" fill="#111">ج</text></svg></span></sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { t: 99 };
+this.raf = 0;
+}
+componentWillUnmount() { cancelAnimationFrame(this.raf); }
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const ease = (v) => 1 - Math.pow(1 - clamp(v), 3);
+const back = (v) => { v = clamp(v); const c = 1.7; return 1 + (c + 1) * Math.pow(v - 1, 3) + c * Math.pow(v - 1, 2); };
+const t = this.state.t, k = ease((t - 0.2) / 1.4);
+const P = [['سارة', '#B48CFF', 2350], ['مازن', '#3DDC97', 1800], ['إنت', '#4D9DFF', 1250], ['نور', '#FF4F9A', 900], ['كريم', '#FF8A3D', 150]];
+const M = 2350;
+return {
+rows: P.map((p, i) => { const v = Math.round(1000 + (p[2] - 1000) * k); return { rank: AR(i + 1), name: p[0], c: p[1], bar: p[1] === '#fff' ? '#eee' : p[1], w: (v / M * 100).toFixed(1), cash: AR(Math.round(v / 10) * 10) }; }),
+bagS: (0.3 + 0.7 * back((t - 1.6) / 0.5)).toFixed(2),
+titleOp: clamp((t - 1.8) / 0.3).toFixed(2), statsOp: clamp((t - 2.3) / 0.4).toFixed(2),
+awards: [['أغلى معلومة', 'مازن', 'اشترى «الكورة» بـ ٧٠٠ ج وجابها'], ['أشجع مزايد', 'كريم', 'زايد بكل فلوسه مرتين'], ['أحسن توقّعات', 'نور', 'توقّعت ٦ صح من ٧'], ['صفقة العمر', 'سارة', 'اشترت بـ ٥٠ وكسبت ١٠٠']].map(a => ({ k: a[0], who: a[1], why: a[2] })),
+party: t > 1.6 && t < 6,
+rain: Array.from({ length: 16 }, (_, i) => ({ x: (i * 37) % 100, dur: (2 + (i % 5) * 0.35).toFixed(2), delay: ((i % 6) * 0.12).toFixed(2), r: 200 + i * 40, dx: ((i % 2 ? 1 : -1) * (10 + i * 4)) })),
+play: () => {
+cancelAnimationFrame(this.raf);
+const t0 = performance.now();
+const tick = (now) => { const tt = (now - t0) / 1000; this.setState({ t: tt }); if (tt < 6.5) this.raf = requestAnimationFrame(tick); };
+this.raf = requestAnimationFrame(tick);
+}
+};
+}
+}
+</script>
+</body>
+</html>

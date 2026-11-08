@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>حزّورة · اختيار الفئات</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+body{margin:0}
+a{color:#111}a:hover{color:#333}
+@keyframes slotIn{0%{transform:scale(.4) rotate(-10deg);opacity:0}70%{transform:scale(1.12) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+    <div style="display: flex; flex-direction: column">
+      <span style="font-size: 12px; font-weight: 900">حزّورة · قبل ما نبدأ</span>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15">اختاروا فئاتكم</span>
+    </div>
+    <span style="background: #111; color: #FFD23F; border-radius: 14px; padding: 2px 12px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px">٠:١٥</span>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+    <div style="background: #fff; border: 3px solid #111; border-radius: 18px; overflow: hidden; box-shadow: {{aGlow}}; transition: box-shadow .3s">
+      <div style="background: #4D9DFF; border-bottom: 3px solid #111; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center"><span style="font-weight: 900; font-size: 15px; white-space: nowrap">الأزرق</span><span aria-label="٣ لاعيبة" style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; background: rgba(255,255,255,.75); border: 1.5px solid #111; border-radius: 99px; padding: 0 7px; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.5" fill="#111"/><path d="M3.5 21a8.5 8.5 0 0117 0z" fill="#111"/></svg>٣</span></div>
+      <div style="padding: 8px; display: flex; flex-direction: column; gap: 5px">
+        <sc-for list="{{slotsA}}" as="s" hint-placeholder-count="3">
+          <div style="height: 30px; border: 2px {{s.bs}} #111; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; background: {{s.bg}}; animation: {{s.anim}}">{{s.label}}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="background: #fff; border: 3px solid #111; border-radius: 18px; overflow: hidden; box-shadow: {{bGlow}}; transition: box-shadow .3s">
+      <div style="background: #FF8A3D; border-bottom: 3px solid #111; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center"><span style="font-weight: 900; font-size: 15px; white-space: nowrap">البرتقالي</span><span aria-label="٣ لاعيبة" style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; background: rgba(255,255,255,.75); border: 1.5px solid #111; border-radius: 99px; padding: 0 7px; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.5" fill="#111"/><path d="M3.5 21a8.5 8.5 0 0117 0z" fill="#111"/></svg>٣</span></div>
+      <div style="padding: 8px; display: flex; flex-direction: column; gap: 5px">
+        <sc-for list="{{slotsB}}" as="s" hint-placeholder-count="3">
+          <div style="height: 30px; border: 2px {{s.bs}} #111; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; background: {{s.bg}}; animation: {{s.anim}}">{{s.label}}</div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: flex; align-items: center; gap: 8px; background: #111; color: #fff; border-radius: 14px; padding: 8px 12px">
+    <span style="width: 12px; height: 12px; border-radius: 50%; background: {{turnColor}}; border: 2px solid #fff; flex: none"></span>
+    <span style="font-size: 14px; font-weight: 800">{{turnText}}</span>
+  </div>
+
+  <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{cats}}" as="c" hint-placeholder-count="15">
+      <button onClick="{{c.pick}}" disabled="{{c.taken}}" style="position: relative; height: 64px; border: 2.5px solid #111; border-radius: 14px; background: {{c.bg}}; box-shadow: {{c.shadow}}; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: 'Cairo', sans-serif; color: #111; opacity: {{c.op}}; transition: transform .12s, opacity .2s">
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2; text-align: center">{{c.name}}</span>
+        <span style="font-size: 10.5px; font-weight: 800; opacity: .7">{{c.sub}}</span>
+        <sc-if value="{{c.taken}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; top: -8px; left: -6px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #111; background: {{c.teamColor}}"></span></sc-if>
+      </button>
+    </sc-for>
+  </section>
+
+  <span style="margin-top: auto; text-align: center; font-size: 12.5px; font-weight: 800">كل فريق بياخد ٣ فئات بالدور · أي حد في الفريق يقدر يختار</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { picks: [['كورة مصرية', 'a'], ['أفلام زمان', 'b'], ['أكل مصري', 'a']] };
+}
+renderVals() {
+const CATS = [['كورة مصرية', 'دوري ومنتخب'], ['أفلام زمان', 'أبيض وإسود'], ['مسلسلات', 'رمضان وغيره'], ['أكل مصري', 'شارع وبيت'], ['أغاني', 'من الست لويجز'], ['جغرافيا', 'مصر والعالم'], ['تاريخ', 'فراعنة لحد النهارده'], ['كمّل المثل', 'أمثال شعبية'], ['علوم', 'سهلة وغريبة'], ['ماركات', 'لوجوهات وشعارات'], ['كرتون', 'زمان ودلوقتي'], ['ألغاز', 'فكّر شوية'], ['عربيات', 'موديلات وماركات'], ['رياضة عالمية', 'مش كورة بس'], ['تكنولوجيا', 'موبايلات وتطبيقات']];
+const s = this.state;
+const taken = Object.fromEntries(s.picks);
+const turn = s.picks.length % 2 === 0 ? 'a' : 'b';
+const done = s.picks.length >= 6;
+const slot = (team) => {
+const mine = s.picks.filter(p => p[1] === team).map(p => p[0]);
+return [0, 1, 2].map(i => ({ label: mine[i] || 'فئة ' + ['١', '٢', '٣'][i], bg: mine[i] ? (team === 'a' ? '#DCEBFF' : '#FFE4D2') : 'transparent', bs: mine[i] ? 'solid' : 'dashed', anim: mine[i] && i === mine.length - 1 ? 'slotIn .45s cubic-bezier(.2, 1.4, .4, 1)' : 'none' }));
+};
+return {
+slotsA: slot('a'), slotsB: slot('b'),
+aGlow: !done && turn === 'a' ? '0 0 0 4px #4D9DFF, 4px 4px 0 4px #111' : '4px 4px 0 #111',
+bGlow: !done && turn === 'b' ? '0 0 0 4px #FF8A3D, 4px 4px 0 4px #111' : '4px 4px 0 #111',
+turnColor: done ? '#3DDC97' : turn === 'a' ? '#4D9DFF' : '#FF8A3D',
+turnText: done ? 'الفئات اكتملت! اللوحة جاهزة' : (turn === 'a' ? 'دور الفريق الأزرق يختار فئة' : 'دور الفريق البرتقالي يختار فئة'),
+cats: CATS.map(([name, sub]) => {
+const t = taken[name];
+return {
+name, sub, taken: !!t,
+teamColor: t === 'a' ? '#4D9DFF' : '#FF8A3D',
+bg: t ? (t === 'a' ? '#DCEBFF' : '#FFE4D2') : '#fff',
+shadow: t ? 'none' : '3px 3px 0 #111',
+op: t ? 0.75 : done ? 0.5 : 1,
+pick: () => { if (!t && !done) this.setState({ picks: s.picks.concat([[name, turn]]) }); }
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

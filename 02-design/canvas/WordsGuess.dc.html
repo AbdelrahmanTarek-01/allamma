@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>شبكة الكلمات · الفريق بيخمّن</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&family=Marhey:wght@700&display=swap">
+<style>
+body{margin:0}
+a{color:#111}a:hover{color:#333}
+@keyframes toastIn{0%{transform:translateY(16px) scale(.9);opacity:0}100%{transform:none;opacity:1}}
+@keyframes wob{0%,100%{transform:rotate(0)}30%{transform:rotate(-2deg)}70%{transform:rotate(2deg)}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; padding-top: 58px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <button onClick="{{openHelp}}" aria-label="إزاي تلعب" style="position: absolute; top: 12px; left: 12px; z-index: 4; width: 36px; height: 36px; border: 2.5px solid #111; border-radius: 50%; background: #fff; box-shadow: 2px 2px 0 #111; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; color: #111">؟</button>
+  <span style="position: absolute; top: 18px; right: 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px">شبكة الكلمات</span>
+
+  <section style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center">
+    <div style="background: #4D9DFF; border: 3px solid #111; border-radius: 16px; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #111">
+      <span style="font-size: 12.5px; font-weight: 900">الأزرق · دوركم</span>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">فاضل {{blueLeft}}</span>
+    </div>
+    <span style="background: #111; color: #FFD23F; border-radius: 12px; padding: 2px 10px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">٠:٥٤</span>
+    <div style="background: #fff; border: 3px solid #111; border-radius: 16px; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 12.5px; font-weight: 900">البرتقالي</span>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">فاضل {{orangeLeft}}</span>
+    </div>
+  </section>
+
+  <section style="background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 8px 12px; display: flex; align-items: center; gap: 10px">
+    <svg width="40" height="40" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#3DDC97" stroke="#111" stroke-width="3"/><rect x="13" y="25" width="13" height="9" rx="3" fill="#111"/><rect x="30" y="25" width="13" height="9" rx="3" fill="#111"/><path d="M21 39q7 8 14 0z" fill="#111"/></svg>
+    <div style="flex: 1; display: flex; flex-direction: column">
+      <span style="font-size: 11.5px; font-weight: 800">تلميح مازن (الدليل)</span>
+      <span style="font-family: 'Marhey', 'Cairo', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.2">مية · ٣</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; background: #FFF3C4; border: 2px solid #111; border-radius: 12px; padding: 2px 8px">
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px; line-height: 1.1">{{tries}}</span>
+      <span style="font-size: 10px; font-weight: 900">محاولات</span>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; perspective: 700px">
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="20">
+      <button onClick="{{c.pick}}" disabled="{{c.open}}" aria-pressed="{{c.sel}}" style="position: relative; height: 56px; border: 0; padding: 0; background: transparent; transform-style: preserve-3d; transform: rotateY({{c.rot}}deg); transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif">
+        <span style="position: absolute; inset: 0; backface-visibility: hidden; border: 2.5px solid #111; border-radius: 12px; background: {{c.frontBg}}; box-shadow: {{c.frontShadow}}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #111">{{c.word}}</span>
+        <span style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); border: 2.5px solid #111; border-radius: 12px; background: {{c.backBg}}; color: {{c.backFg}}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; opacity: .9">{{c.word}}</span>
+        <span style="position: absolute; top: -9px; left: -4px; display: flex">
+          <sc-for list="{{c.marks}}" as="m" hint-placeholder-count="0">
+            <span style="width: 18px; height: 18px; margin-left: -6px; border-radius: 50%; background: {{m}}; border: 2px solid #111"></span>
+          </sc-for>
+        </span>
+      </button>
+    </sc-for>
+  </section>
+
+  <sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; align-items: center; gap: 10px; background: {{msgBg}}; border: 3px solid #111; border-radius: 16px; padding: 8px 12px; animation: toastIn .35s cubic-bezier(.2, 1.4, .4, 1)">
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">{{msg}}</span>
+    </div>
+  </sc-if>
+
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px">
+    <span style="text-align: center; font-size: 12.5px; font-weight: 800">{{hint}}</span>
+    <div style="display: flex; gap: 8px">
+      <button onClick="{{flip}}" style="flex: 1; height: 56px; border: 3px solid #111; border-radius: 16px; background: {{flipBg}}; color: {{flipFg}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; box-shadow: {{flipShadow}}">{{flipLabel}}</button>
+      <button onClick="{{reset}}" style="width: 104px; flex: none; height: 56px; border: 2.5px solid #111; border-radius: 16px; background: #fff; box-shadow: 3px 3px 0 #111; font: 900 13.5px 'Cairo', sans-serif; line-height: 1.3">{{endLabel}}</button>
+    </div>
+  </div>
+  <sc-if value="{{helpOpen}}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{closeHelp}}" style="position: absolute; inset: 0; z-index: 10; background: rgba(17,17,17,.55); display: flex; align-items: flex-end">
+      <div onClick="{{stop}}" style="width: 100%; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: #FFD23F; border: 3px solid #111; border-bottom: 0; border-radius: 26px 26px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-family: 'Cairo', sans-serif; color: #111">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <div style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 900">إزاي تلعب</span><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.15">شبكة الكلمات</span></div>
+          <button onClick="{{closeHelp}}" style="height: 36px; padding: 0 12px; border: 2.5px solid #111; border-radius: 12px; background: #fff; font: 900 13px 'Cairo', sans-serif">فهمت</button>
+        </div>
+        <span style="font-size: 13px; font-weight: 800; line-height: 1.6">فريقين، و٢٠ كلمة. كل فريق عايز يكشف كلماته قبل التاني، والدليل بتاعه هو اللي بيوصّلهم.</span>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">١</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">الدليل بس شايف الألوان</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">كل فريق ليه دليل. الدليل شايف أنهي كلمة بتاعتكم، وأنهي بتاعتهم، والعادية، والقنبلة.</span></div>
+          <span style="display: grid; grid-template-columns: repeat(3, 12px); gap: 2px; flex: none"><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #4D9DFF"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #F3E6C4"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #FF8A3D"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #FF8A3D"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #4D9DFF"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #111"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #F3E6C4"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #4D9DFF"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #FF8A3D"></span></span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٢</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">بيدّيكم كلمة واحدة ورقم</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">مثلاً «مية · ٣» يعني فيه ٣ كلمات من بتوعكم ليهم علاقة بالمية: بحر، نيل، شاي.</span></div>
+          <span style="flex: none; font-family: 'Marhey', 'Cairo', sans-serif; font-weight: 700; font-size: 14px; background: #FFF3C4; border: 2px solid #111; border-radius: 10px; padding: 2px 8px">مية · ٣</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٣</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">اتناقشوا واقلبوا</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">كل واحد يدوس على الكلمة اللي شايفها، وبعدين اقلبوها. عندكم الرقم + محاولة زيادة.</span></div>
+          <span style="flex: none; width: 40px; height: 28px; border: 2px solid #111; border-radius: 8px; background: #4D9DFF; transform: rotate(-8deg); box-shadow: 2px 2px 0 #111"></span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٤</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">الكارت بيقولك حصل إيه</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">أزرق = صح كمّلوا · بيج = دوركم خلص · برتقالي = نقطة ليهم ودوركم خلص · أسود = قنبلة وخسرتوا.</span></div>
+          <span style="display: grid; grid-template-columns: repeat(3, 12px); gap: 2px; flex: none"><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #4D9DFF"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #F3E6C4"></span><span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #111; background: #FF8A3D"></span></span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٥</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">مين يكسب؟</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">أول فريق يقلب كل كلماته يكسب. واللي يقلب القنبلة يخسر على طول.</span></div>
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true" style="flex: none"><circle cx="28" cy="38" r="18" fill="#111"/><path d="M40 20q8-8 14-2" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="55" cy="16" r="5" fill="#FFD23F" stroke="#FF8A3D" stroke-width="2"/></svg>
+        </div>
+        <div style="background: #111; color: #FFD23F; border-radius: 14px; padding: 8px 12px; font-size: 12.5px; font-weight: 800; line-height: 1.6">نصيحة: الدليل يدّي تلميح يلم أكتر من كلمة، بس يبعد عن أي حاجة تودّي للقنبلة.</div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { open: ['كحك', 'دكتور', 'هرم', 'سينما'], sel: null, flippedNow: [], msg: null, over: false, help: false };
+}
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const W = [['بحر','b'],['كشري','n'],['نيل','b'],['هرم','o'],['شاي','b'],['فانوس','o'],['مترو','n'],['عيد','o'],['فول','n'],['توكتوك','x'],['زمالك','o'],['قهوة','b'],['سينما','n'],['مدرسة','o'],['دكتور','b'],['شمس','o'],['كحك','b'],['قطر','n'],['مطر','b'],['ملوخية','n']];
+const KEY = Object.fromEntries(W);
+const BG = { b: '#4D9DFF', o: '#FF8A3D', n: '#F3E6C4', x: '#111' };
+const TEAM = { 'بحر': ['#B48CFF'], 'شاي': ['#FF4F9A'], 'مطر': ['#B48CFF'] };
+const s = this.state;
+const blueOpen = s.open.filter(w => KEY[w] === 'b').length;
+const orangeOpen = s.open.filter(w => KEY[w] === 'o').length;
+const correct = s.flippedNow.filter(w => KEY[w] === 'b').length;
+const tries = Math.max(0, 4 - s.flippedNow.length);
+const MSG = { b: ['صح! كمّلوا', '#3DDC97'], n: ['كلمة عادية · دوركم خلص', '#fff'], o: ['دي بتاعة البرتقالي! · دوركم خلص', '#FF8A3D'], x: ['قنبلة!! الأزرق خسر', '#FF8080'] };
+const flipWord = (w) => {
+const k = KEY[w];
+const over = k !== 'b' || tries - 1 <= 0;
+this.setState({ open: s.open.concat([w]), flippedNow: s.flippedNow.concat([w]), sel: null, msg: k, over });
+};
+return {
+helpOpen: !!this.state.help,
+openHelp: () => this.setState({ help: true }),
+closeHelp: () => this.setState({ help: false }),
+stop: (e) => e.stopPropagation(),
+blueLeft: AR(7 - blueOpen), orangeLeft: AR(6 - orangeOpen),
+tries: AR(tries),
+cards: W.map(([word, k]) => {
+const open = s.open.includes(word), sel = s.sel === word;
+return {
+word, open, sel: sel ? 'true' : 'false',
+rot: open ? 180 : 0,
+frontBg: sel ? '#DCEBFF' : '#fff',
+frontShadow: sel ? '0 0 0 3px #4D9DFF' : '2px 2px 0 #111',
+backBg: BG[k], backFg: k === 'x' ? '#fff' : '#111',
+marks: open ? [] : (TEAM[word] || []).concat(sel ? ['#4D9DFF'] : []),
+pick: () => { if (!open && !s.over) this.setState({ sel: sel ? null : word }); }
+};
+}),
+hasMsg: !!s.msg,
+msg: s.msg ? MSG[s.msg][0] : '', msgBg: s.msg ? MSG[s.msg][1] : '#fff',
+hint: s.over ? 'الدور راح للبرتقالي' : s.sel ? 'اتفقتوا؟ اقلبوا الكلمة' : 'دوسوا على كلمة · كل واحد بيبان على اللي اختارها',
+flipLabel: s.over ? 'دور البرتقالي' : s.sel ? 'اقلب «' + s.sel + '»' : 'اختار كلمة الأول',
+flipBg: s.sel && !s.over ? '#111' : '#fff', flipFg: s.sel && !s.over ? '#FFD23F' : '#111',
+flipShadow: s.sel && !s.over ? '0 5px 0 #4D9DFF' : '3px 3px 0 #111',
+flip: () => { if (s.sel && !s.over) flipWord(s.sel); },
+endLabel: s.over || s.flippedNow.length ? 'ابدأ تاني' : 'كفاية كده',
+reset: () => this.setState({ open: ['كحك', 'دكتور', 'هرم', 'سينما'], sel: null, flippedNow: [], msg: null, over: false })
+};
+}
+}
+</script>
+</body>
+</html>

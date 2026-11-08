@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>شبكة الكلمات · إعدادات الهوست</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+@keyframes tileIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; padding-top: 58px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <button aria-label="إزاي تلعب" style="position: absolute; top: 12px; left: 12px; width: 36px; height: 36px; border: 2.5px solid #111; border-radius: 50%; background: #fff; box-shadow: 2px 2px 0 #111; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; line-height: 1">؟</button>
+  <span style="position: absolute; top: 18px; right: 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px">شبكة الكلمات</span>
+
+  <section style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 13px; font-weight: 900">الصعوبة</span>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px">
+      <sc-for list="{{levels}}" as="l" hint-placeholder-count="4">
+        <button onClick="{{l.pick}}" style="height: 46px; border: 2.5px solid #111; border-radius: 14px; background: {{l.bg}}; color: {{l.ink}}; box-shadow: {{l.shadow}}; transform: {{l.lift}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px; transition: transform .12s">{{l.name}}</button>
+      </sc-for>
+    </div>
+    <span style="font-size: 12.5px; font-weight: 800; text-align: center">{{tagline}}</span>
+  </section>
+
+  <section style="background: #fff; border: 3px solid #111; border-radius: 22px; box-shadow: 5px 5px 0 #111; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; gap: 12px; align-items: center">
+      <div style="display: grid; grid-template-columns: repeat(5, 18px); gap: 3px; flex: none">
+        <sc-for list="{{tiles}}" as="c" hint-placeholder-count="20">
+          <span style="width: 18px; height: 14px; border-radius: 4px; border: 1.8px solid #111; background: {{c.bg}}; animation: tileIn .3s {{c.d}}s both"></span>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 900">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; border: 2px solid #111; background: #4D9DFF"></span>{{nTeam}} كلمات لكل فريق</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; border: 2px solid #111; background: #F3E6C4"></span>{{nSafe}}</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; border: 2px solid #111; background: #111"></span>{{nBomb}}</span>
+      </div>
+    </div>
+    <div style="height: 2px; background: #111; opacity: .12"></div>
+    <sc-for list="{{rules}}" as="r" hint-placeholder-count="5">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+        <span style="font-size: 13px; font-weight: 800">{{r.k}}</span>
+        <span style="font-size: 13px; font-weight: 900; background: {{r.bg}}; border: 2px solid #111; border-radius: 99px; padding: 0 10px">{{r.v}}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 13px; font-weight: 900">عدد اللوحات</span>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px">
+      <sc-for list="{{rounds}}" as="r" hint-placeholder-count="3">
+        <button onClick="{{r.pick}}" style="height: 44px; border: 2.5px solid #111; border-radius: 14px; background: {{r.bg}}; color: {{r.ink}}; box-shadow: {{r.shadow}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">{{r.n}}</button>
+      </sc-for>
+    </div>
+    <span style="font-size: 12.5px; font-weight: 800; text-align: center">{{roundsHint}}</span>
+  </section>
+
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+    <button style="height: 58px; border: 3px solid #111; border-radius: 18px; background: #111; color: #FFD23F; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 23px; box-shadow: 0 6px 0 #4D9DFF">يلا نبدأ</button>
+    <span style="font-size: 12px; font-weight: 800; text-align: center; opacity: .75">الإعدادات دي للهوست بس · الباقي شايفها من غير ما يغيّر</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { lv: 1, rd: 1 };
+}
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const L = [
+{ name: 'سهل', tag: 'لأول مرة · براحتكم ومفيش ضغط', team: 6, bomb: 1, bombRule: 'بتخلّص دوركم بس', time: 'مفتوح', extra: 'أيوه', words: 'مشهورة وسهلة', picks: 'باينة للفريق' },
+{ name: 'متوسط', tag: 'الأصلي · الإعداد التلقائي ومظبوط على الكل', team: 7, bomb: 1, bombRule: 'بتخسّركم اللوحة', time: '٩٠ ثانية', extra: 'أيوه', words: 'عادية', picks: 'باينة للفريق' },
+{ name: 'صعب', tag: 'للي فاهمين اللعبة · كلمات قريبة من بعض', team: 8, bomb: 1, bombRule: 'بتخسّركم اللوحة', time: '٦٠ ثانية', extra: 'لأ', words: 'قريبة من بعض', picks: 'باينة للفريق' },
+{ name: 'ماكس', tag: 'مفيش رحمة · قنبلتين ومفيش كلمات أمان', team: 9, bomb: 2, bombRule: 'بتخسّركم اللوحة', time: '٤٥ ثانية', extra: 'لأ', words: 'فخاخ مقصودة', picks: 'سرّية · بالأغلبية' }
+];
+const s = this.state, l = L[s.lv];
+const safe = 20 - l.team * 2 - l.bomb;
+const order = [];
+for (let i = 0; i < l.team; i++) order.push('#4D9DFF', '#FF8A3D');
+for (let i = 0; i < l.bomb; i++) order.push('#111');
+for (let i = 0; i < safe; i++) order.push('#F3E6C4');
+const mix = order.map((c, i) => [c, (i * 7919) % 20]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+const hard = (v, bad) => bad ? '#FFD6CF' : '#fff';
+return {
+levels: L.map((x, i) => ({ name: x.name, bg: s.lv === i ? ['#3DDC97', '#4D9DFF', '#FF8A3D', '#FF4F9A'][i] : '#fff', ink: '#111', shadow: s.lv === i ? '0 0 0 #111' : '3px 3px 0 #111', lift: s.lv === i ? 'translate(3px, 3px)' : 'none', pick: () => this.setState({ lv: i }) })),
+tagline: l.tag,
+tiles: mix.map((c, i) => ({ bg: c, d: (i * 0.02).toFixed(2) })),
+nTeam: AR(l.team),
+nSafe: safe ? AR(safe) + ' كلمات أمان (بيج)' : 'مفيش كلمات أمان',
+nBomb: l.bomb === 1 ? 'قنبلة واحدة · ' + l.bombRule : 'قنبلتين · ' + l.bombRule,
+rules: [
+{ k: 'وقت الدليل', v: l.time, bg: hard(0, s.lv >= 2) },
+{ k: 'محاولة زيادة بعد الرقم', v: l.extra, bg: hard(0, l.extra === 'لأ') },
+{ k: 'نوع الكلمات', v: l.words, bg: hard(0, s.lv >= 2) },
+{ k: 'اختيارات الفريق', v: l.picks, bg: hard(0, s.lv === 3) }
+],
+rounds: [1, 3, 5].map((n, i) => ({ n: AR(n), bg: s.rd === i ? '#111' : '#fff', ink: s.rd === i ? '#FFD23F' : '#111', shadow: s.rd === i ? '0 0 0 #111' : '3px 3px 0 #111', pick: () => this.setState({ rd: i }) })),
+roundsHint: ['لوحة واحدة واللي يكسبها يكسب', 'أحسن من ٣ · اللي يكسب لوحتين يكسب الماتش', 'أحسن من ٥ · ماتش طويل للقعدات الكبيرة'][s.rd]
+};
+}
+}
+</script>
+</body>
+</html>

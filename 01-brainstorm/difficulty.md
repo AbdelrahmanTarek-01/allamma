@@ -35,9 +35,11 @@ Rules:
 | Wave | target zone | wide | normal | narrow | very narrow |
 | Wave | clue time | open | 60s | 45s | 30s |
 | Wave | near-miss points | yes | yes | half | none (exact or zero) |
-| Draw | words | simple objects | normal | verbs/ideas | proverbs/movies |
+| Draw | words | simple objects | places/things | situations/ideas | feelings/proverbs |
 | Draw | draw time | 90s | 70s | 50s | 40s |
-| Draw | letter hint | from start | after half | last 10s | none |
+| Draw | guess attempts | 4 | 3 | 2 | 2 |
+| Draw | guess time (after submit) | 30s | 20s | 15s | 10s |
+| Draw | reveal-letter card | 2 | 1 | 1 | none |
 | Draw | eraser | yes | yes | yes | none |
 | Auction | questions | easy | medium | hard | very hard |
 | Auction | bid time | 15s | 10s | 8s | 5s |

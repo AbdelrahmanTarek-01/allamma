@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الترتيب العالمي</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <header style="display: flex; align-items: center; gap: 10px">
+    <button aria-label="رجوع" style="width: 40px; height: 40px; flex: none; border: 2.5px solid #111; border-radius: 13px; background: #fff; box-shadow: 3px 3px 0 #111; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px">الترتيب العالمي</span><span style="font-size: 12px; font-weight: 800">أكتر الناس نقط في كل الألعاب</span></div>
+  </header>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+      <button onClick="{{t.pick}}" style="height: 38px; border: 2.5px solid #111; border-radius: 12px; background: {{t.bg}}; color: {{t.ink}}; box-shadow: {{t.shadow}}; font: 900 14px 'Cairo', sans-serif">{{t.n}}</button>
+    </sc-for>
+  </div>
+  <section style="background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 5px 5px 0 #111; padding: 4px 12px; display: flex; flex-direction: column">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+      <div style="display: flex; align-items: center; gap: 8px; height: 46px; border-bottom: {{r.line}}">
+        <span style="width: 30px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 9px; border: {{r.medalB}}; background: {{r.medal}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px">{{r.rank}}</span>
+        <svg width="30" height="30" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{r.c}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/></svg>
+        <div style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 900; font-size: 14px">{{r.n}}</span><span style="font-size: 11px; font-weight: 800; opacity: .7">أشطر في {{r.best}}</span></div>
+        <span style="margin-inline-start: auto; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums">{{r.pts}}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <div style="margin-top: auto">
+    <sc-if value="{{signed}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 10px; background: #111; color: #fff; border-radius: 18px; padding: 10px 14px; box-shadow: 0 6px 0 #4D9DFF">
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; color: #FFD23F">#١٢٤</span>
+        <div style="display: flex; flex-direction: column; line-height: 1.25"><span style="font-weight: 900; font-size: 15px">إنت</span><span style="font-size: 12px; font-weight: 800; opacity: .8">فاضلك ٣٨ نقطة وتعدّي «سلمى»</span></div>
+        <span style="margin-inline-start: auto; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px">٣٤٠</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{guest}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 5px 5px 0 #111; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-weight: 900; font-size: 15px">إنت بتلعب كضيف</span>
+        <span style="font-size: 12.5px; font-weight: 700; line-height: 1.6">اللعب مفتوح للكل من غير تسجيل. بس عشان نقطك تدخل الترتيب ومحدش يقلّد اسمك، سجّل مرة واحدة بحساب جوجل. شخصيتك ونقط القعدات اللي فاتت بتتنقل معاك.</span>
+        <button onClick="{{signIn}}" style="height: 54px; border: 3px solid #111; border-radius: 16px; background: #111; color: #FFD23F; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; box-shadow: 0 5px 0 #4D9DFF">سجّل بجوجل</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"signedIn":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { tab: 0, signed: null };
+}
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const s = this.state;
+const signed = s.signed ?? !!this.props.signedIn;
+const P = [['ملك الجاسوس', '#FF4F9A', 'الجاسوس'], ['نونا', '#B48CFF', 'حزّورة'], ['أبو حميد', '#3DDC97', 'فين دي؟'], ['زيزو', '#4D9DFF', 'شبكة الكلمات'], ['سلمى', '#FF8A3D', 'المزاد'], ['حمادة', '#FFD23F', 'الجاسوس'], ['ريري', '#9ADFFF', 'ارسم وخمّن'], ['كابتن', '#fff', 'حزّورة'], ['ميدو', '#3DDC97', 'فين دي؟'], ['شيكو', '#FF4F9A', 'المزاد']];
+const BASE = [[412, 380, 351, 330, 318, 302, 290, 271, 260, 244], [1820, 1704, 1650, 1590, 1512, 1488, 1410, 1395, 1340, 1302], [9840, 9120, 8870, 8410, 8205, 7990, 7600, 7480, 7215, 7002]][s.tab];
+const MED = ['#FFD23F', '#E9E9E9', '#F3C9A0'];
+return {
+signed, guest: !signed,
+signIn: () => this.setState({ signed: true }),
+tabs: ['الأسبوع', 'الشهر', 'كل الوقت'].map((n, i) => ({ n, bg: s.tab === i ? '#111' : '#fff', ink: s.tab === i ? '#FFD23F' : '#111', shadow: s.tab === i ? 'none' : '3px 3px 0 #111', pick: () => this.setState({ tab: i }) })),
+rows: P.map((p, i) => ({ rank: AR(i + 1), n: p[0], c: p[1], best: p[2], pts: AR(BASE[i]), medal: i < 3 ? MED[i] : 'transparent', medalB: i < 3 ? '2px solid #111' : '0', line: i < 9 ? '2px solid rgba(17,17,17,.08)' : '0' }))
+};
+}
+}
+</script>
+</body>
+</html>

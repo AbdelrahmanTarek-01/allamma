@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>حزّورة · السؤال</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+body{margin:0}
+a{color:#111}a:hover{color:#333}
+@keyframes cardIn{0%{transform:scale(.6) rotate(-4deg);opacity:0}70%{transform:scale(1.04) rotate(1deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+@keyframes poof{to{transform:scale(.9);opacity:.25}}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+
+  <header style="display: flex; align-items: center; gap: 8px">
+    <span style="font-size: 12px; font-weight: 900; background: #4D9DFF; border: 2px solid #111; border-radius: 99px; padding: 1px 10px">دور الأزرق</span>
+    <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 1px 10px">كورة مصرية · ٤٠٠</span>
+    <span style="font-size: 12px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 1px 10px; opacity: {{dblOp}}">×٢ متفعّل</span>
+    <span style="margin-inline-start: auto; position: relative; width: 52px; height: 52px; flex: none">
+      <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true" style="transform: rotate(-90deg)"><circle cx="26" cy="26" r="22" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="26" cy="26" r="17" fill="none" stroke="#4D9DFF" stroke-width="6" stroke-dasharray="106.8" stroke-dashoffset="40" stroke-linecap="round"/></svg>
+      <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">١٢</span>
+    </span>
+  </header>
+
+  <section style="background: #fff; border: 3px solid #111; border-radius: 24px; box-shadow: 6px 6px 0 #111; padding: 20px 18px; display: flex; flex-direction: column; gap: 6px; animation: cardIn .5s cubic-bezier(.2, 1.4, .4, 1)">
+    <span style="font-size: 12.5px; font-weight: 900; opacity: .7">سؤال ٤٠٠ نقطة</span>
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.35">النادي الأهلي اتأسس سنة كام؟</span>
+  </section>
+
+  <div style="display: flex; align-items: center; gap: 10px">
+    <span style="font-size: 12px; font-weight: 900; flex: none">كروتكم:</span>
+    <button onClick="{{fifty}}" disabled="{{fiftyUsed}}" style="flex: 1; display: flex; align-items: center; gap: 8px; height: 44px; border: 2.5px dashed #111; border-radius: 12px; background: {{fiftyBg}}; padding: 0 10px; font-family: 'Cairo', sans-serif; color: #111; opacity: {{fiftyOp}}">
+      <span style="width: 30px; height: 36px; flex: none; border: 2px solid #111; border-radius: 6px; background: #FFD23F; transform: rotate(-6deg); display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 10px; box-shadow: 2px 2px 0 #111">٥٠</span>
+      <span style="display: flex; flex-direction: column; line-height: 1.2; text-align: right">
+        <span style="font-weight: 900; font-size: 13.5px">{{fiftyTitle}}</span>
+        <span style="font-size: 11px; font-weight: 700; opacity: .8">{{fiftyDesc}}</span>
+      </span>
+    </button>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+      <button onClick="{{o.pick}}" disabled="{{o.gone}}" style="position: relative; min-height: 62px; border: 3px solid #111; border-radius: 18px; background: {{o.bg}}; box-shadow: {{o.shadow}}; transform: {{o.lift}}; display: flex; align-items: center; gap: 12px; padding: 8px 12px; font-family: 'Cairo', sans-serif; color: #111; text-align: right; transition: transform .12s, background .15s; animation: {{o.anim}}">
+        <span style="width: 36px; height: 36px; flex: none; border-radius: 11px; border: 2.5px solid #111; background: {{o.keyBg}}; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px">{{o.key}}</span>
+        <span style="flex: 1; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px">{{o.text}}</span>
+        <span style="display: flex">
+          <sc-for list="{{o.voters}}" as="v" hint-placeholder-count="1">
+            <svg width="28" height="28" viewBox="0 0 56 56" aria-hidden="true" style="margin-left: -8px"><circle cx="28" cy="30" r="25" fill="#fff"/><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{v}}" stroke="#111" stroke-width="4"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/></svg>
+          </sc-for>
+        </span>
+      </button>
+    </sc-for>
+  </section>
+
+  <button style="height: 56px; flex: none; border: 3px solid #111; border-radius: 16px; background: #111; color: #FFD23F; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 21px; box-shadow: 0 5px 0 #4D9DFF">ثبّت إجابة الفريق</button>
+  <span style="text-align: center; font-size: 12.5px; font-weight: 800">{{hint}}</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { mine: null, fifty: false };
+}
+renderVals() {
+const s = this.state;
+const OPTS = [['أ', '١٩١١', false], ['ب', '١٩٠٧', true], ['ج', '١٩٢٠', false], ['د', '١٨٩٩', false]];
+const others = { 'ب': ['#B48CFF'], 'أ': ['#FF4F9A'] };
+const removed = s.fifty ? ['ج', 'د'] : [];
+const counts = {};
+OPTS.forEach(([k]) => { counts[k] = (others[k] || []).length + (s.mine === k ? 1 : 0); });
+const max = Math.max(...Object.values(counts));
+const lead = Object.keys(counts).filter(k => counts[k] === max && max > 0);
+return {
+dblOp: '1',
+opts: OPTS.map(([key, text]) => {
+const gone = removed.includes(key), me = s.mine === key;
+return {
+key, text, gone,
+voters: (others[key] || []).concat(me ? ['#4D9DFF'] : []),
+bg: gone ? '#f3ecd0' : me ? '#DCEBFF' : '#fff',
+keyBg: me ? '#4D9DFF' : '#FFD23F',
+shadow: gone ? 'none' : me ? '0 0 0 #111' : '4px 4px 0 #111',
+lift: me ? 'translate(4px, 4px)' : 'none',
+anim: gone ? 'poof .35s forwards' : 'none',
+pick: () => { if (!gone) this.setState({ mine: me ? null : key }); }
+};
+}),
+fifty: () => this.setState({ fifty: true, mine: ['ج', 'د'].includes(s.mine) ? null : s.mine }),
+fiftyUsed: s.fifty,
+fiftyBg: s.fifty ? '#f3ecd0' : '#fff', fiftyOp: s.fifty ? '.6' : '1',
+fiftyTitle: s.fifty ? 'استخدمتوا ٥٠:٥٠' : 'استخدم كارت ٥٠:٥٠',
+fiftyDesc: s.fifty ? 'اتشال اختيارين غلط' : 'يشيل اختيارين غلط من السؤال ده',
+hint: lead.length > 1 ? 'الفريق متقسم! اتفقوا في الشات قبل ما الوقت يخلص' : lead.length === 1 ? 'الفريق مايل لـ «' + lead[0] + '» · لو الوقت خلص بتتحسب الأغلبية' : 'كل واحد في الفريق يختار، والأغلبية بتكسب'
+};
+}
+}
+</script>
+</body>
+</html>

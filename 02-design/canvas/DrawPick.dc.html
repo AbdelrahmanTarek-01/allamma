@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ارسم وخمّن · اختيار الكلمة</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+@keyframes cardIn{0%{transform:translateY(16px) scale(.92);opacity:0}100%{transform:none;opacity:1}}
+@keyframes wiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg) translateY(-4px)}}
+@keyframes slideIn{0%{transform:translateY(10px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@keyframes flipIn{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),900px) rotate(var(--r))}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; padding-top: 58px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <button onClick="{{openHelp}}" aria-label="إزاي تلعب" style="position: absolute; top: 12px; left: 12px; z-index: 4; width: 36px; height: 36px; border: 2.5px solid #111; border-radius: 50%; background: #fff; box-shadow: 2px 2px 0 #111; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; color: #111">؟</button>
+  <span style="position: absolute; top: 18px; right: 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px">ارسم وخمّن</span>
+  <span style="position: absolute; top: 20px; left: 58px; font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 10px">جولة ٣ من ٦</span>
+
+  <sc-if value="{{isDrawer}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="display: flex; flex-direction: column; flex: 1">
+        <span style="font-size: 13px; font-weight: 900">دورك ترسم!</span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.2">اختار كلمة</span>
+        <span style="font-size: 11.5px; font-weight: 800; margin-top: 2px">كلمات مستوى <span style="background: {{lvColor}}; border: 2px solid #111; border-radius: 99px; padding: 0 7px; font-weight: 900">{{lvName}}</span> · كل ما المستوى يعلى الكلمات تصعب</span>
+      </div>
+      <span style="position: relative; width: 50px; height: 50px; flex: none">
+      <svg width="50" height="50" viewBox="0 0 52 52" aria-hidden="true" style="transform: rotate(-90deg)"><circle cx="26" cy="26" r="22" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="26" cy="26" r="17" fill="none" stroke="#FF4F9A" stroke-width="6" stroke-dasharray="106.8" stroke-dashoffset="{{ringOff}}" stroke-linecap="round"/></svg>
+      <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px">{{secs}}</span>
+    </span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <sc-for list="{{words}}" as="w" hint-placeholder-count="3">
+        <button onClick="{{w.pick}}" style="position: relative; display: flex; align-items: center; gap: 12px; text-align: right; background: {{w.bg}}; border: 3px solid #111; border-radius: 22px; box-shadow: {{w.shadow}}; transform: {{w.lift}}; padding: 14px 16px; font-family: 'Cairo', sans-serif; color: #111; animation: cardIn .35s cubic-bezier(.2,1.3,.4,1) {{w.d}}s both; transition: transform .12s">
+          <div style="display: flex; flex-direction: column; flex: 1; gap: 2px">
+            <span style="font-size: 12px; font-weight: 900"><span style="background: {{w.c}}; border: 2px solid #111; border-radius: 99px; padding: 0 8px">{{w.lvl}}</span></span>
+            <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2">{{w.t}}</span>
+            <span style="font-size: 12px; font-weight: 800; opacity: .8">{{w.tip}}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; flex: none; background: #111; color: #FFD23F; border-radius: 16px; padding: 6px 12px">
+            <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 26px; line-height: 1">{{w.pts}}</span>
+            <span style="font-size: 11px; font-weight: 900">نقطة</span>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+      <button onClick="{{go}}" style="height: 58px; border: 3px solid #111; border-radius: 18px; background: {{goBg}}; color: {{goInk}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 23px; box-shadow: 0 6px 0 #FF4F9A">{{goText}}</button>
+      <span style="font-size: 12.5px; font-weight: 800; text-align: center">لو الوقت خلص من غير ما تختار، بنختارلك السهلة</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isWatcher}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center">
+      <div style="position: relative; width: 170px; height: 170px; display: flex; align-items: center; justify-content: center; background: #fff; border: 3px solid #111; border-radius: 50%; box-shadow: 6px 6px 0 #111">
+        <svg width="110" height="110" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#3DDC97" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg>
+        <svg width="64" height="64" viewBox="0 0 48 48" aria-hidden="true" style="position: absolute; bottom: -6px; left: -10px; animation: wiggle .7s ease-in-out infinite"><g transform="rotate(-45 26 22)"><rect x="12" y="17" width="24" height="10" fill="#FFD23F" stroke="#111" stroke-width="2.5"/><rect x="36" y="17" width="7" height="10" rx="2" fill="#FF4F9A" stroke="#111" stroke-width="2.5"/><path d="M12 17L4 22l8 5z" fill="#F3D9B1" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M4 22l3-1.9v3.8z" fill="#111"/></g></svg>
+      </div>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px">مازن بيختار كلمة…</span>
+      <span style="font-size: 13px; font-weight: 800">جهّز نفسك تخمّن · كل ما تخمّن أسرع تاخد أكتر</span>
+      <span style="position: relative; width: 50px; height: 50px; flex: none">
+      <svg width="50" height="50" viewBox="0 0 52 52" aria-hidden="true" style="transform: rotate(-90deg)"><circle cx="26" cy="26" r="22" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="26" cy="26" r="17" fill="none" stroke="#FF4F9A" stroke-width="6" stroke-dasharray="106.8" stroke-dashoffset="{{ringOff}}" stroke-linecap="round"/></svg>
+      <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px">{{secs}}</span>
+    </span>
+    </div>
+    <div style="background: #fff; border: 3px solid #111; border-radius: 20px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 12px; font-weight: 900">الدور على مين؟</span>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <sc-for list="{{queue}}" as="q" hint-placeholder-count="5">
+          <span style="display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: {{q.op}}"><span style="border-radius: 50%; box-shadow: {{q.ring}}; display: flex"><svg width="36" height="36" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{q.c}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg></span><span style="font-size: 11px; font-weight: 900">{{q.n}}</span></span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{helpOpen}}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{closeHelp}}" style="position: absolute; inset: 0; z-index: 20; background: rgba(17,17,17,.55); display: flex; align-items: flex-end">
+      <div onClick="{{stop}}" style="width: 100%; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: #FFD23F; border: 3px solid #111; border-bottom: 0; border-radius: 26px 26px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-family: 'Cairo', sans-serif; color: #111">
+        <div style="display: flex; justify-content: space-between; align-items: center"><div style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 900">إزاي تلعب</span><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.15">ارسم وخمّن</span></div><button onClick="{{closeHelp}}" style="height: 36px; padding: 0 12px; border: 2.5px solid #111; border-radius: 12px; background: #fff; font: 900 13px 'Cairo', sans-serif">فهمت</button></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">١</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">واحد يرسم والباقي يخمّنوا</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">الدور بيلف، وكل جولة حد جديد بيرسم.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٢</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">الرسّام يختار كلمة من ٣</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">سهلة بـ ١٠٠، متوسطة بـ ٢٠٠، صعبة بـ ٣٠٠. الصعبة نقطها أعلى بس أصعب ترسمها.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٣</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">التخمين بعد التسليم بس</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">الباقي بيتفرّجوا على الرسمة وهي بتترسم، والتخمين بيفتح لما الرسّام يدوس «سلّم». وبعدها ٢٠ ثانية بس.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٤</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">عندك ٣ محاولات بس</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">فكّر قبل ما تكتب. لو قربت هيقولك «قريب!». ولو الكلمة طويلة تقدر تستخدم كارت «اكشف حرف» يقولك حرف موجود فيها، بنص النقط.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٥</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">الرسّام بيكسب برضه</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">كل واحد يخمّن صح، الرسّام ياخد نقط. ارسم واضح عشان تكسب.</span></div></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["drawer","watcher"],"default":"drawer"},"level":{"editor":"enum","options":["easy","medium","hard","max"],"default":"medium"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { pick: null, help: false };
+}
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const s = this.state, drawer = (this.props.role ?? 'drawer') === 'drawer';
+const SETS = { easy: [['شمس', 'حاجة بسيطة'], ['عجلة', 'شكل واضح'], ['فانوس', 'تفاصيل أكتر']], medium: [['هرم', 'شكل واضح'], ['فانوس', 'تفاصيل أكتر'], ['زحمة', 'معنى مش حاجة']], hard: [['مترو', 'مكان وناس'], ['عزومة', 'موقف كامل'], ['حلم', 'معنى صعب يترسم']], max: [['امتحان', 'موقف ومشاعر'], ['إشاعة', 'معنى بحت'], ['اللي اختشوا ماتوا', 'مثل شعبي']] };
+const LV = this.props.level ?? 'medium';
+const LVN = { easy: ['سهل', '#3DDC97'], medium: ['متوسط', '#4D9DFF'], hard: ['صعب', '#FF8A3D'], max: ['ماكس', '#FF4F9A'] }[LV];
+const W = SETS[LV].map((w, i) => [w[0], ['سهلة', 'متوسطة', 'صعبة'][i], ['#3DDC97', '#4D9DFF', '#FF4F9A'][i], [100, 200, 300][i], w[1]]);
+return Object.assign({
+isDrawer: drawer, isWatcher: !drawer, secs: AR(7), ringOff: '32', lvName: LVN[0], lvColor: LVN[1],
+words: W.map(([t, lvl, c, p, tip], i) => { const on = s.pick === i; return { t, lvl, c, tip, pts: AR(p), d: (i * 0.08).toFixed(2), bg: on ? '#FFF3C4' : '#fff', shadow: on ? '0 0 0 #111' : '5px 5px 0 #111', lift: on ? 'translate(5px, 5px)' : 'none', pick: () => this.setState({ pick: on ? null : i }) }; }),
+goText: s.pick === null ? 'اختار كلمة' : 'يلا ارسم «' + W[s.pick][0] + '»', goBg: s.pick === null ? '#fff' : '#111', goInk: s.pick === null ? '#111' : '#FFD23F', go: () => {},
+queue: [['مازن', '#3DDC97'], ['سارة', '#B48CFF'], ['إنت', '#4D9DFF'], ['نور', '#FF4F9A'], ['كريم', '#FF8A3D']].map(([n, c], i) => ({ n, c, op: i === 0 ? '1' : '.6', ring: i === 0 ? '0 0 0 3px #FFD23F, 0 0 0 5px #111' : 'none' }))
+}, {
+helpOpen: !!this.state.help,
+openHelp: () => this.setState({ help: true }),
+closeHelp: () => this.setState({ help: false }),
+stop: (e) => e.stopPropagation(),
+});
+}
+
+}
+</script>
+</body>
+</html>

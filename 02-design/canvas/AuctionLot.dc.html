@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>مزاد المعلومات · المزاد</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.18) rotate(-3deg)}100%{transform:scale(1)}}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-14deg);opacity:0}60%{transform:scale(.92) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes slideIn{0%{transform:translateX(-20px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes slam{0%{transform:rotate(-38deg)}55%{transform:rotate(14deg)}70%{transform:rotate(6deg)}100%{transform:rotate(9deg)}}
+@keyframes thud{0%,100%{transform:none}30%{transform:scale(.94,.9) translateY(4px)}60%{transform:scale(1.03)}}
+@keyframes burst{0%{transform:scale(.3);opacity:0}30%{opacity:1}100%{transform:scale(1.4);opacity:0}}
+@keyframes stampOn{0%{transform:translate(-50%,-50%) scale(2.6) rotate(-16deg);opacity:0}60%{transform:translate(-50%,-50%) scale(.92) rotate(-9deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1) rotate(-9deg);opacity:1}}
+@keyframes coinUp{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-140px) scale(1);opacity:0}}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),900px) rotate(var(--r))}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; padding-top: 58px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <button onClick="{{openHelp}}" aria-label="إزاي تلعب" style="position: absolute; top: 12px; left: 12px; z-index: 4; width: 36px; height: 36px; border: 2.5px solid #111; border-radius: 50%; background: #fff; box-shadow: 2px 2px 0 #111; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; color: #111">؟</button>
+  <span style="position: absolute; top: 18px; right: 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px">مزاد المعلومات</span>
+
+  <section style="position: relative; background: #fff; border: 3px solid #111; border-radius: 22px; box-shadow: 5px 5px 0 #111; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 4px">
+    <span style="position: absolute; top: -13px; right: 14px; font-size: 12px; font-weight: 900; background: #B48CFF; border: 2px solid #111; border-radius: 99px; padding: 0 10px">المعلومة ٣ من ٨</span>
+    <span style="font-size: 12px; font-weight: 900; opacity: .65; margin-top: 4px">المزاد على سؤال في</span>
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.2">أفلام عادل إمام</span>
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; background: #F6F1E3; border: 2px dashed #111; border-radius: 14px; padding: 7px 10px">
+      <span style="font-weight: 900; font-size: 12.5px; flex: none">السؤال:</span>
+      <span aria-hidden="true" style="display: flex; gap: 4px; align-items: center; flex: 1"><span style="height: 9px; width: 44px; border-radius: 99px; background: #111; opacity: .25"></span><span style="height: 9px; width: 28px; border-radius: 99px; background: #111; opacity: .25"></span><span style="height: 9px; width: 36px; border-radius: 99px; background: #111; opacity: .25"></span><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 16px">؟</span></span>
+      <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(2, 16px); gap: 3px; flex: none"><span style="height: 11px; border: 1.8px solid #111; border-radius: 3px; background: #fff"></span><span style="height: 11px; border: 1.8px solid #111; border-radius: 3px; background: #fff"></span><span style="height: 11px; border: 1.8px solid #111; border-radius: 3px; background: #fff"></span><span style="height: 11px; border: 1.8px solid #111; border-radius: 3px; background: #fff"></span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="flex: none"><rect x="5" y="10" width="14" height="11" rx="3" fill="#FFD23F" stroke="#111" stroke-width="2.4"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="#111" stroke-width="2.4"/></svg>
+    </div>
+    <span style="font-size: 12px; font-weight: 800; line-height: 1.6"><span style="background: #4D9DFF; border: 2px solid #111; border-radius: 99px; padding: 0 8px; font-weight: 900">متوسط</span> سؤال واحد عن الموضوع ده بـ ٤ اختيارات، زي «فيلم كذا اتعرض سنة كام؟». اللي يكسب المزاد بس هو اللي يشوفه ويجاوب.</span>
+  </section>
+
+  <section style="position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+    <div style="position: relative; width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; animation: {{thud}}">
+      <svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true" style="position: absolute; inset: 0; transform: rotate(-90deg)"><circle cx="105" cy="105" r="96" fill="#fff" stroke="#111" stroke-width="3.5"/><circle cx="105" cy="105" r="86" fill="none" stroke="{{ringC}}" stroke-width="10" stroke-linecap="round" stroke-dasharray="540.4" stroke-dashoffset="{{ring}}"/></svg>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px">
+        <span style="font-size: 12px; font-weight: 900; opacity: .65">أعلى سعر</span>
+        <span style="display: flex; align-items: center; gap: 6px; animation: bump .35s ease-out"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10" fill="#FFD23F" stroke="#111" stroke-width="2.4"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#111" stroke-width="1.4" opacity=".5"/><text x="12" y="16" text-anchor="middle" font-family="Cairo" font-weight="900" font-size="10" fill="#111">ج</text></svg><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 50px; line-height: 1; font-variant-numeric: tabular-nums">{{bid}}</span></span>
+        <span style="display: flex; align-items: center; gap: 6px; background: {{byBg}}; border: 2px solid #111; border-radius: 99px; padding: 1px 10px 1px 4px"><svg width="24" height="24" viewBox="0 0 56 56" aria-hidden="true" style="flex: none;"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{byC}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg><span style="font-weight: 900; font-size: 14px">{{by}}</span></span>
+      </div>
+      <svg width="104" height="104" viewBox="0 0 100 100" aria-hidden="true" style="position: absolute; z-index: 3; top: -46px; left: -50px; overflow: visible; transform-origin: 12% 88%; transform: rotate({{hamRest}}deg); animation: {{hammerAnim}}">
+        <path d="M12 88L60 40" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+        <path d="M12 88L60 40" stroke="#F3E6C4" stroke-width="5" stroke-linecap="round"/>
+        <g transform="translate(66 34) rotate(45)">
+          <rect x="-21" y="-12" width="42" height="24" rx="5" fill="#FF8A3D" stroke="#111" stroke-width="3.5"/>
+          <rect x="-21" y="-12" width="9" height="24" rx="3" fill="#111"/>
+          <rect x="12" y="-12" width="9" height="24" rx="3" fill="#111"/>
+          <path d="M-8 -6h16" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+        </g>
+      </svg>
+      <sc-if value="{{sold}}" hint-placeholder-val="{{ false }}">
+        <svg width="90" height="90" viewBox="-45 -45 90 90" aria-hidden="true" style="position: absolute; z-index: 2; top: -8px; left: -6px; animation: burst .45s ease-out .2s both">
+          <path d="M0-40v14M28-28l-10 10M40 0H26M28 28l-10-10M0 40V26M-28 28l10-10M-40 0h14M-28-28l10 10" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div style="position: absolute; z-index: 4; top: 56%; left: 50%; white-space: nowrap; background: #E2433B; color: #fff; border: 4px solid #111; border-radius: 14px; padding: 4px 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; box-shadow: 4px 4px 0 #111; animation: stampOn .45s cubic-bezier(.2,1.4,.4,1) .3s both">اتباعت لـ {{by}}</div>
+      </sc-if>
+    </div>
+    <sc-if value="{{notSold}}" hint-placeholder-val="{{ true }}">
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; height: 44px; display: flex; align-items: center">{{status}}</span>
+    </sc-if>
+    <sc-if value="{{sold}}" hint-placeholder-val="{{ false }}">
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; height: 44px; display: flex; align-items: center; animation: slideIn .3s ease-out .7s both">{{by}} هيجاوب دلوقتي…</span>
+    </sc-if>
+    <div style="display: flex; gap: 6px; height: 26px">
+      <sc-for list="{{log}}" as="l" hint-placeholder-count="3">
+        <span style="display: flex; align-items: center; gap: 4px; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 8px 0 3px; font-size: 12px; font-weight: 900; opacity: {{l.op}}; animation: slideIn .3s ease-out"><svg width="18" height="18" viewBox="0 0 56 56" aria-hidden="true" style="flex: none;"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{l.c}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg>{{l.t}}</span>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display: flex; justify-content: space-between; gap: 4px">
+    <sc-for list="{{players}}" as="p" hint-placeholder-count="5">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 1px; flex: 1">
+        <span style="border-radius: 50%; box-shadow: {{p.ring}}; display: flex"><svg width="36" height="36" viewBox="0 0 56 56" aria-hidden="true" style="flex: none;"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="{{p.c}}" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg></span>
+        <span style="font-size: 11.5px; font-weight: 900">{{p.name}}</span>
+        <span style="font-size: 11px; font-weight: 800; opacity: .75">{{p.cash}} ج</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px">
+      <sc-for list="{{bids}}" as="b" hint-placeholder-count="3">
+        <button onClick="{{b.go}}" disabled="{{b.off}}" style="height: 58px; border: 3px solid #111; border-radius: 16px; background: {{b.bg}}; box-shadow: {{b.shadow}}; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; color: #111; opacity: {{b.op}}">{{b.t}}</button>
+      </sc-for>
+    </div>
+    <span style="font-size: 12px; font-weight: 800; text-align: center">معاك <b>{{mine}} ج</b> · اللي يدفع أكتر يجاوب · صح ياخد الضعف، غلط يخسر اللي دفعه</span>
+  </div>
+  <sc-if value="{{helpOpen}}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{closeHelp}}" style="position: absolute; inset: 0; z-index: 10; background: rgba(17,17,17,.55); display: flex; align-items: flex-end">
+      <div onClick="{{stop}}" style="width: 100%; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: #FFD23F; border: 3px solid #111; border-bottom: 0; border-radius: 26px 26px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-family: 'Cairo', sans-serif; color: #111">
+        <div style="display: flex; justify-content: space-between; align-items: center"><div style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 900">إزاي تلعب</span><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.15">مزاد المعلومات</span></div><button onClick="{{closeHelp}}" style="height: 36px; padding: 0 12px; border: 2.5px solid #111; border-radius: 12px; background: #fff; font: 900 13px 'Cairo', sans-serif">فهمت</button></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">١</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">بتبدأ ومعاك فلوس</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">كل واحد معاه ١٠٠٠ ج في المتوسط. اللي يخلّص الجولات وهو أغنى واحد يكسب.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٢</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">بيظهر موضوع المعلومة بس</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">مثلاً «أفلام عادل إمام». السؤال نفسه مستخبي لحد ما المزاد يخلص.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٣</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">زايدوا</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">كل واحد يزوّد ٥٠ أو ١٠٠ أو ٢٠٠. كل مزايدة بترجّع العداد من الأول: على واحد… على اتنين… بيع!</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٤</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">اللي اشترى يجاوب</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">صح؟ ياخد ضعف اللي دفعه. غلط؟ يخسر اللي دفعه. الباقي بيتوقعوا هيجاوب صح ولا لأ وياخدوا ٥٠ ج لو توقعهم صح.</span></div></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #111; color: #FFD23F; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px">٥</span><div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 900; font-size: 14px">اعرف نفسك</span><span style="font-size: 12px; font-weight: 700; line-height: 1.5">لو بتفهم في الموضوع زايد جامد، لو مش فاهم سيبه لغيرك يدفع فيه كتير ويغلط.</span></div></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { bid: 250, by: 'كريم', log: [['مازن', 150], ['سارة', 200], ['كريم', 250]], last: Date.now(), now: Date.now(), out: 0, k: 0, help: false };
+this.iv = 0;
+}
+componentWillUnmount() { clearInterval(this.iv); }
+renderVals() {
+if (!this.iv) this.iv = setInterval(() => this.tick(), 100);
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const C = { 'أنت': '#4D9DFF', 'كريم': '#FF8A3D', 'سارة': '#B48CFF', 'مازن': '#3DDC97', 'نور': '#FF4F9A' };
+const CASH = { 'أنت': 1000, 'كريم': 850, 'سارة': 1200, 'مازن': 600, 'نور': 950 };
+const s = this.state, D = 6;
+const left = Math.max(0, D - (s.now - s.last) / 1000);
+const sold = left <= 0;
+const status = sold ? 'بيع!' : left > 3.5 ? 'مين يزوّد؟' : left > 1.8 ? 'على واحد…' : 'على اتنين…';
+return Object.assign({
+bid: AR(s.bid), bidKey: s.k, by: s.by, byC: C[s.by], byBg: s.by === 'أنت' ? '#DCEBFF' : '#fff',
+ring: (540.4 * (1 - left / D)).toFixed(1), ringC: left > 3.5 ? '#3DDC97' : left > 1.8 ? '#FFD23F' : '#E2433B',
+status, sold, notSold: !sold, hammerAnim: sold ? 'slam .32s cubic-bezier(.55,0,.8,.3) forwards' : 'none',
+hamRest: sold ? '9' : left > 1.8 ? (-14 + 2 * Math.sin(s.now / 160)).toFixed(1) : (-14 - 24 * (1 - left / 1.8)).toFixed(1),
+thud: sold ? 'thud .35s ease-out .2s' : 'none',
+log: s.log.slice(-3).map((l, i, a) => ({ t: AR(l[1]), c: C[l[0]], op: i === a.length - 1 ? '1' : '.6' })),
+players: Object.keys(C).map(n => ({ name: n, c: C[n], cash: AR(CASH[n]), ring: n === s.by ? '0 0 0 3px #FFD23F, 0 0 0 5px #111' : 'none' })),
+mine: AR(CASH['أنت']),
+bids: [50, 100, 200].map(v => { const off = sold || s.bid + v > CASH['أنت'] || s.by === 'أنت'; return { t: '+' + AR(v), off, op: off ? '.45' : '1', bg: v === 200 ? '#FF8A3D' : v === 100 ? '#fff' : '#fff', shadow: off ? 'none' : '4px 4px 0 #111', go: () => { if (!off) this.raise('أنت', v); } }; })
+}, {
+helpOpen: !!this.state.help,
+openHelp: () => this.setState({ help: true }),
+closeHelp: () => this.setState({ help: false }),
+stop: (e) => e.stopPropagation(),
+});
+}
+raise(who, v) {
+const s = this.state;
+this.setState({ bid: s.bid + v, by: who, log: s.log.concat([[who, s.bid + v]]), last: Date.now(), k: s.k + 1 });
+}
+tick() {
+const s = this.state, now = Date.now();
+const left = 6 - (now - s.last) / 1000;
+if (left < -2.5) { this.setState({ bid: 250, by: 'كريم', log: [['مازن', 150], ['سارة', 200], ['كريم', 250]], last: now, now, out: 0, k: s.k + 1 }); return; }
+if (s.by === 'أنت' && s.out < 2 && now - s.last > 1700) { const who = s.out ? 'سارة' : 'كريم'; this.setState({ out: s.out + 1, now }); this.raise(who, 100); return; }
+this.setState({ now });
+}
+}
+</script>
+</body>
+</html>

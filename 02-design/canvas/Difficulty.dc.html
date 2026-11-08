@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الصعوبة · نظام موحّد لكل الألعاب</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+.tabs::-webkit-scrollbar{display:none}
+@keyframes rowIn{0%{transform:translateY(8px);opacity:0}100%{transform:none;opacity:1}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <div style="display: flex; flex-direction: column">
+    <span style="font-size: 12px; font-weight: 900">نظام واحد لكل الألعاب</span>
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.2">الصعوبة</span>
+  </div>
+
+  <div class="tabs" style="display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none">
+    <sc-for list="{{games}}" as="g" hint-placeholder-count="7">
+      <button onClick="{{g.pick}}" style="flex: none; height: 36px; padding: 0 12px; border: 2.5px solid #111; border-radius: 99px; background: {{g.bg}}; color: {{g.ink}}; font: 900 13px 'Cairo', sans-serif; box-shadow: {{g.shadow}}">{{g.name}}</button>
+    </sc-for>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 6px">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px">
+      <sc-for list="{{levels}}" as="l" hint-placeholder-count="4">
+        <button onClick="{{l.pick}}" style="height: 50px; border: 2.5px solid #111; border-radius: 14px; background: {{l.bg}}; box-shadow: {{l.shadow}}; transform: {{l.lift}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px; color: #111; transition: transform .12s">
+          <span style="line-height: 1">{{l.name}}</span>
+          <span style="display: flex; gap: 2px"><sc-for list="{{l.bars}}" as="b" hint-placeholder-count="4"><span style="width: 7px; height: 4px; border-radius: 2px; background: {{b}}"></span></sc-for></span>
+        </button>
+      </sc-for>
+    </div>
+    <span style="font-size: 12.5px; font-weight: 800; text-align: center">{{tagline}}</span>
+  </section>
+
+  <section style="background: #fff; border: 3px solid #111; border-radius: 22px; box-shadow: 5px 5px 0 #111; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 19px">{{gameName}}</span>
+      <span style="font-size: 12px; font-weight: 900; background: {{lvColor}}; border: 2px solid #111; border-radius: 99px; padding: 0 10px">{{lvName}}</span>
+    </div>
+    <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; animation: rowIn .25s {{r.d}}s both">
+        <span style="font-size: 13px; font-weight: 800">{{r.k}}</span>
+        <span style="font-size: 12.5px; font-weight: 900; background: {{r.bg}}; border: 2px solid #111; border-radius: 99px; padding: 0 10px; text-align: center">{{r.v}}</span>
+      </div>
+    </sc-for>
+    <sc-if value="{{hasTwist}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #111; color: #FFD23F; border-radius: 12px; padding: 6px 10px; font-size: 12.5px; font-weight: 800">تويست ماكس: {{twist}}</div>
+    </sc-if>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; font-weight: 900">كده بيبان للاعيبة في الأوضة</span>
+    <div style="display: flex; align-items: center; gap: 8px; background: #fff; border: 2.5px solid #111; border-radius: 16px; padding: 8px 10px">
+      <span style="font-weight: 900; font-size: 14px">{{gameName}}</span>
+      <span style="font-size: 12px; font-weight: 900; background: {{lvColor}}; border: 2px solid #111; border-radius: 99px; padding: 0 10px">{{lvName}}</span>
+      <span style="margin-inline-start: auto; font-size: 11.5px; font-weight: 800; opacity: .7">الهوست بس يغيّرها</span>
+    </div>
+  </section>
+
+  <div style="margin-top: auto; background: #FFF3C4; border: 2.5px solid #111; border-radius: 16px; padding: 8px 12px; font-size: 12.5px; font-weight: 800; line-height: 1.7">
+    القاعدة: كل لعبة فيها نفس الـ٤ مستويات بنفس الألوان. التلقائي <b>متوسط</b>. وكل مستوى لازم يغيّر حاجات حقيقية: الوقت، صعوبة المحتوى، المساعدات، وعقاب الغلط.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { g: 0, lv: 1 };
+}
+renderVals() {
+const LV = [['سهل', '#3DDC97', 'لأول مرة · براحتكم'], ['متوسط', '#4D9DFF', 'التلقائي · مظبوط على الكل'], ['صعب', '#FF8A3D', 'للي فاهمين اللعبة'], ['ماكس', '#FF4F9A', 'مفيش رحمة']];
+const G = [
+{ name: 'مين الجاسوس؟', rules: [
+['الأماكن', ['مشهورة ومختلفة', 'عادية', 'من نفس العيلة', 'من نفس العيلة']],
+['وقت الأسئلة', ['٨ دقايق', '٦ دقايق', '٥ دقايق', '٤ دقايق']],
+['الجاسوس يخمّن من', ['٦ أماكن', '٩ أماكن', '١٢ مكان', '١٢ مكان']],
+['عدد الجواسيس', ['واحد', 'واحد', 'واحد', 'اتنين لو ٦+']]], twist: 'جاسوسين مش عارفين بعض' },
+{ name: 'فين دي؟', rules: [
+['الأماكن', ['مشهورة جداً', 'معروفة', 'أقل شهرة', 'أقل شهرة']],
+['وقت الدبوس', ['٣٠ ثانية', '٢٠ ثانية', '١٥ ثانية', '١٠ ثواني']],
+['التلميحات', ['اتنين', 'واحد', 'مفيش', 'مفيش']],
+['الخريطة', ['بالأسامي', 'بالحدود', 'بالحدود', 'من غير حدود']]], twist: 'خريطة فاضية من غير حدود ولا أسامي' },
+{ name: 'حزّورة', rules: [
+['الأسئلة', ['سهلة', 'متوسطة', 'صعبة', 'صعبة جداً']],
+['وقت الإجابة', ['٣٠ ثانية', '٢٠ ثانية', '١٥ ثانية', '١٠ ثواني']],
+['كروت ٥٠:٥٠', ['اتنين', 'واحد', 'واحد', 'مفيش']],
+['الإجابة الغلط', ['مفيش خصم', 'مفيش خصم', 'خصم النص', 'خصم كله']]], twist: 'الغلط بيخصم نقط السؤال كلها' },
+{ name: 'شبكة الكلمات', rules: [
+['كلمات كل فريق', ['٦', '٧', '٨', '٩']],
+['كلمات الأمان', ['٧', '٥', '٣', 'مفيش']],
+['وقت الدليل', ['مفتوح', '٩٠ ثانية', '٦٠ ثانية', '٤٥ ثانية']],
+['القنبلة', ['بتخلّص دوركم', 'بتخسّركم اللوحة', 'بتخسّركم اللوحة', 'قنبلتين']]], twist: 'قنبلتين واختيارات الفريق سرّية' },
+{ name: 'الموجة', rules: [
+['المنطقة الصح', ['عريضة', 'عادية', 'ضيقة', 'ضيقة جداً']],
+['وقت الراوي', ['مفتوح', '٦٠ ثانية', '٤٥ ثانية', '٣٠ ثانية']],
+['نقط القريب', ['أيوه', 'أيوه', 'نص', 'مفيش']],
+['المواضيع', ['واضحة', 'عادية', 'محيّرة', 'محيّرة']]], twist: 'يا تجيبها بالظبط يا صفر' },
+{ name: 'ارسم وخمّن', rules: [
+['الكلمات', ['حاجات بسيطة', 'أماكن وحاجات', 'مواقف ومعاني', 'أمثال ومشاعر']],
+['وقت الرسم', ['٩٠ ثانية', '٧٠ ثانية', '٥٠ ثانية', '٤٠ ثانية']],
+['محاولات التخمين', ['٤', '٣', '٢', '٢']],
+['كارت اكشف حرف', ['مرتين', 'مرة', 'مرة', 'مفيش']]], twist: 'مفيش ممحاة ولا كروت · محاولتين بس' },
+{ name: 'مزاد المعلومات', rules: [
+['الأسئلة', ['سهلة', 'متوسطة', 'صعبة', 'صعبة جداً']],
+['وقت المزايدة', ['١٥ ثانية', '١٠ ثواني', '٨ ثواني', '٥ ثواني']],
+['فلوس البداية', ['١٥٠٠', '١٠٠٠', '٨٠٠', '٥٠٠']],
+['الغلط', ['ترجع فلوسك', 'نص فلوسك', 'تخسرها', 'تخسرها ×٢']]], twist: 'الغلط بيخسّرك ضعف اللي زايدت بيه' }
+];
+const s = this.state, g = G[s.g];
+const bars = (i) => [0, 1, 2, 3].map(k => k <= i ? '#111' : 'rgba(17,17,17,.18)');
+return {
+games: G.map((x, i) => ({ name: x.name, bg: s.g === i ? '#111' : '#fff', ink: s.g === i ? '#FFD23F' : '#111', shadow: s.g === i ? 'none' : '2px 2px 0 #111', pick: () => this.setState({ g: i }) })),
+levels: LV.map((l, i) => ({ name: l[0], bars: bars(i), bg: s.lv === i ? l[1] : '#fff', shadow: s.lv === i ? '0 0 0 #111' : '3px 3px 0 #111', lift: s.lv === i ? 'translate(3px, 3px)' : 'none', pick: () => this.setState({ lv: i }) })),
+tagline: LV[s.lv][2],
+gameName: g.name, lvName: LV[s.lv][0], lvColor: LV[s.lv][1],
+rules: g.rules.map(([k, v], i) => ({ k, v: v[s.lv], bg: v[s.lv] !== v[1] && s.lv > 1 ? '#FFD6CF' : v[s.lv] !== v[1] && s.lv === 0 ? '#D4F7E8' : '#fff', d: (i * 0.05).toFixed(2) })),
+hasTwist: s.lv === 3, twist: g.twist
+};
+}
+}
+</script>
+</body>
+</html>

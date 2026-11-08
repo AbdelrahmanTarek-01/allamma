@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الأوضة · الهيدر الجديد</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+.strip::-webkit-scrollbar{display:none}
+@keyframes copied{0%{transform:translateY(6px);opacity:0}20%,80%{transform:none;opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+
+  <header style="display: flex; align-items: center; gap: 10px">
+    <button aria-label="اخرج" style="width: 42px; height: 42px; flex: none; border: 2.5px solid #111; border-radius: 14px; background: #fff; box-shadow: 3px 3px 0 #111; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2">
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 900">القعدة<span style="display: flex; align-items: center; gap: 3px; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 7px; font-size: 11px"><svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3" fill="#111"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="#111" stroke-width="3"/></svg>خاصة</span></span>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">قعدة عبدالرحمن</span>
+    </div>
+    <div style="display: flex; align-items: center; flex: none; background: #fff; border: 2.5px solid #111; border-radius: 16px; box-shadow: 3px 3px 0 #111; overflow: hidden">
+      <button aria-label="ترتيب القعدة" style="width: 42px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 8h28v14a14 14 0 01-28 0z" fill="#FFD23F" stroke="#111" stroke-width="5" stroke-linejoin="round"/><path d="M18 12H9a8 8 0 008 10M46 12h9a8 8 0 01-8 10" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><path d="M27 36h10v8H27zM20 44h24v10H20z" fill="#111"/></svg></button>
+      <span style="width: 2px; height: 24px; background: #111; opacity: .15"></span>
+      <button aria-label="إعدادات القعدة" style="width: 42px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2 .4.6 2.4 1.9 1.1 2.4-.7 1.4 1.5-.7 2.4 1.1 1.9 2.4.6v2l-2.4.6-1.1 1.9.7 2.4-1.4 1.5-2.4-.7-1.9 1.1-.6 2.4-2 .4-2-.4-.6-2.4-1.9-1.1-2.4.7-1.4-1.5.7-2.4L4.2 14 1.8 13.4v-2l2.4-.6 1.1-1.9-.7-2.4L6 5l2.4.7 1.9-1.1.6-2.4z" fill="#B48CFF" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.4" fill="#fff" stroke="#111" stroke-width="1.8"/></svg></button>
+      <span style="width: 2px; height: 24px; background: #111; opacity: .15"></span>
+      <button aria-label="الصوت" style="width: 42px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#111"/><path d="M16 8.5a5 5 0 010 7" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    </div>
+  </header>
+
+  <div style="display: flex; gap: 10px; align-items: stretch">
+    <button onClick="{{copy}}" style="position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: #fff; border: 2.5px solid #111; border-radius: 18px; box-shadow: 4px 4px 0 #111; padding: 8px 14px; font-family: 'Cairo', sans-serif; color: #111; text-align: right">
+      <span aria-hidden="true" style="position: absolute; top: 50%; right: -9px; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: #FFD23F; border-left: 2.5px solid #111"></span>
+      <span aria-hidden="true" style="position: absolute; top: 50%; left: -9px; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: #FFD23F; border-right: 2.5px solid #111"></span>
+      <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.1; padding-right: 6px">
+        <span style="font-size: 11.5px; font-weight: 900; opacity: .65">كود الأوضة</span>
+        <span dir="ltr" style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: 5px; text-align: right">YSF7K</span>
+      </div>
+      <span style="border-right: 2.5px dashed #111; opacity: .25; align-self: stretch"></span>
+      <span style="display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 11px; font-weight: 900; padding-left: 4px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" fill="#FFF3C4"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>{{copyLbl}}</span>
+    </button>
+    <button style="flex: none; width: 92px; border: 3px solid #111; border-radius: 18px; background: #111; color: #FFD23F; box-shadow: 0 5px 0 #3DDC97; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0112 0M18 8v6M15 11h6"/></svg>ادعي</button>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 8px">
+    <span style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 900"><span>اللي في القعدة</span><span style="opacity: .7">٤ من ١٢</span></span>
+    <div class="strip" style="display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; background: #fff; border: 2.5px solid #111; border-radius: 18px; padding: 12px 8px 8px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; width: 58px">
+          <span style="position: relative; display: flex"><svg width="48" height="48" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#3DDC97" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg><svg width="22" height="16" viewBox="0 0 26 22" aria-hidden="true" style="position: absolute; top: -9px; left: 13px"><path d="M2 19L4 6l6 6 3-9 3 9 6-6 2 13z" fill="#FFD23F" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/></svg></span>
+          <span style="font-size: 11.5px; font-weight: 900; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">عبدالرحمن</span>
+        </div><div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; width: 58px">
+          <span style="position: relative; display: flex"><svg width="48" height="48" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#B48CFF" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg></span>
+          <span style="font-size: 11.5px; font-weight: 900; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">سارة</span>
+        </div><div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; width: 58px">
+          <span style="position: relative; display: flex"><svg width="48" height="48" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#4D9DFF" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg></span>
+          <span style="font-size: 11.5px; font-weight: 900; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">مازن</span>
+        </div><div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; width: 58px">
+          <span style="position: relative; display: flex"><svg width="48" height="48" viewBox="0 0 56 56" aria-hidden="true" style="flex: none"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#FF4F9A" stroke="#111" stroke-width="3.5"/><circle cx="21" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="35" cy="30" r="5" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="21" cy="31" r="2.3" fill="#111"/><circle cx="35" cy="31" r="2.3" fill="#111"/></svg></span>
+          <span style="font-size: 11.5px; font-weight: 900; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">نور</span>
+        </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; width: 58px"><span style="width: 44px; height: 44px; border-radius: 50%; border: 2.5px dashed #111; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span style="font-size: 11.5px; font-weight: 900; opacity: .6">مستني</span></div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 8px">
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px">هتلعبوا إيه؟</span>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+      <button onClick="{{g0}}" style="display: flex; align-items: center; gap: 8px; text-align: right; background: {{gb0}}; border: 2.5px solid #111; border-radius: 16px; box-shadow: {{gs0}}; padding: 8px; font-family: 'Cairo', sans-serif; color: #111"><span style="width: 40px; height: 40px; border-radius: 12px; flex: none; background: #FF4F9A; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 20l3-11c5 2.5 11 2.5 16 0l3 11z" fill="#111" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M14.4 15h19.2" stroke="#FFD23F" stroke-width="3"/><path d="M6 21h36" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="16" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><circle cx="32" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><path d="M22.5 30h3" stroke="#111" stroke-width="2.5"/><path d="M13 29a3 3 0 013-3M29 29a3 3 0 013-3" fill="none" stroke="#4D9DFF" stroke-width="2" stroke-linecap="round"/><path d="M24 41c-2.5-3-7.5-3.5-10 0 3.5 2 7 1.5 10 0zm0 0c2.5-3 7.5-3.5 10 0-3.5 2-7 1.5-10 0z" fill="#111" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 900; font-size: 13.5px">مين الجاسوس؟</span><span style="font-size: 11px; font-weight: 800; opacity: .7">من ٣+ لاعيبة</span></span></button><button onClick="{{g1}}" style="display: flex; align-items: center; gap: 8px; text-align: right; background: {{gb1}}; border: 2.5px solid #111; border-radius: 16px; box-shadow: {{gs1}}; padding: 8px; font-family: 'Cairo', sans-serif; color: #111"><span style="width: 40px; height: 40px; border-radius: 12px; flex: none; background: #3DDC97; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 11l12-5 14 5 12-5v31l-12 5-14-5-12 5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 6v31M31 11v31" stroke="#111" stroke-width="2.5"/><path d="M24 30s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="19" r="2.6" fill="#fff" stroke="#111" stroke-width="1.8"/></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 900; font-size: 13.5px">فين دي؟</span><span style="font-size: 11px; font-weight: 800; opacity: .7">من ٢+ لاعيبة</span></span></button><button onClick="{{g2}}" style="display: flex; align-items: center; gap: 8px; text-align: right; background: {{gb2}}; border: 2.5px solid #111; border-radius: 16px; box-shadow: {{gs2}}; padding: 8px; font-family: 'Cairo', sans-serif; color: #111"><span style="width: 40px; height: 40px; border-radius: 12px; flex: none; background: #4D9DFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 36a19 19 0 0138 0z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L14.5 19.5A19 19 0 0133.5 19.5z" fill="#FFD23F" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L19.2 27.8A9.5 9.5 0 0128.8 27.8z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36l8-13" stroke="#111" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="36" r="3.5" fill="#111"/><path d="M3 36h42" stroke="#111" stroke-width="3" stroke-linecap="round"/></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 900; font-size: 13.5px">الموجة</span><span style="font-size: 11px; font-weight: 800; opacity: .7">من ٣+ لاعيبة</span></span></button><button onClick="{{g3}}" style="display: flex; align-items: center; gap: 8px; text-align: right; background: {{gb3}}; border: 2.5px solid #111; border-radius: 16px; box-shadow: {{gs3}}; padding: 8px; font-family: 'Cairo', sans-serif; color: #111"><span style="width: 40px; height: 40px; border-radius: 12px; flex: none; background: #B48CFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6h30a5 5 0 015 5v17a5 5 0 01-5 5H24l-9 8v-8H9a5 5 0 01-5-5V11a5 5 0 015-5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M28.5 15.5c0-2.8-2.2-4.5-4.6-4.5s-4.4 1.8-4.4 4.2c0 3.3 4.5 3.6 4.5 7.3" fill="none" stroke="#111" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="27.5" r="2" fill="#111"/></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 900; font-size: 13.5px">حزّورة</span><span style="font-size: 11px; font-weight: 800; opacity: .7">من ٤+ لاعيبة</span></span></button>
+    </div>
+    <button style="height: 40px; border: 2.5px solid #111; border-radius: 14px; background: transparent; font: 900 13.5px 'Cairo', sans-serif; color: #111">كل الألعاب</button>
+  </section>
+
+  <div style="margin-top: auto; display: flex; gap: 10px">
+    <button aria-label="الشات" style="position: relative; width: 58px; height: 58px; flex: none; border: 3px solid #111; border-radius: 18px; background: #fff; box-shadow: 4px 4px 0 #111; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 012 2v9a2 2 0 01-2 2h-8l-5 4v-4H4a2 2 0 01-2-2V7a2 2 0 012-2z" fill="#fff" stroke="#111" stroke-width="2.2" stroke-linejoin="round"/><path d="M7 10h10M7 13.5h6" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg><span style="position: absolute; top: -8px; left: -8px; min-width: 22px; height: 22px; border-radius: 99px; background: #FF4F9A; border: 2px solid #111; font: 900 12px 'Cairo', sans-serif; display: flex; align-items: center; justify-content: center">٣</span></button>
+    <button style="flex: 1; height: 58px; border: 3px solid #111; border-radius: 18px; background: #111; color: #FFD23F; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px; box-shadow: 0 6px 0 #FF4F9A">ابدأ {{game}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { g: 0, copied: false };
+}
+renderVals() {
+const s = this.state, G = ["مين الجاسوس؟", "فين دي؟", "الموجة", "حزّورة"];
+const o = { game: G[s.g], copyLbl: s.copied ? 'اتنسخ' : 'انسخ', copy: () => { this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1400); } };
+G.forEach((_, i) => { const on = s.g === i; o['g' + i] = () => this.setState({ g: i }); o['gb' + i] = on ? '#FFF3C4' : '#fff'; o['gs' + i] = on ? '0 0 0 3px #111' : '3px 3px 0 #111'; });
+return o;
+}
+}
+</script>
+</body>
+</html>
