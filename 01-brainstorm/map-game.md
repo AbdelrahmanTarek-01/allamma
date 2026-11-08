@@ -36,3 +36,28 @@ Theme, difficulty (سهل / متوسط / صعب / مكس), places per game (5/10
 - The true location is secret until the reveal. Pins stay private until the reveal (only "locked" status is broadcast).
 - Server timer per place; auto-lock whatever pin exists when time ends.
 - Maps are static SVG files in the client (no paid map API, works on weak connections). Store each map's projection parameters so the client converts tap -> lat/lon and the server only deals with lat/lon.
+
+## Update (design round 2)
+- **Map scope chosen by the host**: مصر / الوطن العربي / العالم. Each scope has its own themes (places, landmarks, stadiums, "where is this dish from"). World map style reference: stylized Natural Earth projection (white countries, black outlines, pale blue sea, Egypt highlighted).
+- **Personal hints**: every place has a pool of 3-4 hints of similar strength. Each player gets a different random hint, visible only to them, behind a "تلميح" button. Using it costs 25% of that round's points. The server only sends a player their own hint, and only after they tap the button.
+- **Map controls**: pinch to zoom and drag to pan on phones (mouse wheel on desktop), plus + / − / fit-to-map buttons. A tap without dragging drops or moves the pin. The pin keeps the same size at any zoom.
+- **Who locked**: show at most 3 avatars + a "+N" chip + "٦ من ١٠ ثبّتوا". Tapping opens a sheet with every player's status.
+- **Reveal animation**: the camera zooms from the whole map to the area around all pins and the target. Pins drop one by one (farthest first, closest last). Each pin draws a curved line to the target like a line chart, with a moving dot at its head and a distance tag that counts up. Below the map, a distance bar chart grows in sync and re-sorts, and the closest gets a crown. Then the "X الأقرب!" banner shows how much closer they were than you.
+
+## Update (design round 3)
+- **Hint types** (each player gets one random type, all similar in strength, -25% points):
+  - text: a written clue only that player sees
+  - circle: an animated pink dashed circle grows on the map; the place is somewhere inside it. The circle center is offset randomly so the target is never in the middle.
+  - half: one side of the map gets shaded with a sweep animation ("the place isn't here"). On the world map this can rule out whole continents.
+  - Only use map hints where they don't give the answer away (circle radius scales with difficulty and map size).
+- **Reveal screen** uses the yellow game look (no black background), black-outlined cards like the rest of the app.
+- Settings label "التيمة" is shown to players as "هتدوّروا على إيه؟" (the type of places in the game).
+
+## Update (design round 4)
+- **Map hint rules (so hints never give the answer away)**, checked on the server when picking a player's hint type:
+  - circle: radius at least 30% of the map's short side; the target sits randomly between 35% and 75% of the radius from the center (never in the middle); allowed only if the circle also contains at least 3 other places from the same pack, so it doesn't single out one spot. Otherwise fall back.
+  - half: allowed only if the unshaded side still contains at least 40% of the pack's places.
+  - text: always allowed, the fallback.
+  - Hard places get text hints only.
+- **Reveal celebration**: after the lines finish, a winner card pops in (character bounces, a crown drops onto its head, "+points" sticker), with a confetti burst over the screen. The distance bars stay above it.
+- **Results ranking animation**: rows start in the previous order, the "+points" chips appear and totals count up, then rows slide to their new positions (overtakers move above, with a springy ease). Each row that moved shows "▲ n" (green) or "▼ n" (red). The leader gets a highlighted card. A replay button re-runs it.
