@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, GAMES } from '../components/art';
 import { GameTile } from '../components/GameTile';
+import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
 
-const MINUTES = [300, 480, 600];
-const ROUNDS = [1, 3, 5];
+const LockMini = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#111" /><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="#111" strokeWidth={3} /></svg>
+);
 
 export function Room({ room }: { room: RoomView }) {
   const me = room.players.find((p) => p.id === room.youId)!;
@@ -16,16 +18,17 @@ export function Room({ room }: { room: RoomView }) {
   const [confirmKick, setConfirmKick] = useState(false);
   const target = room.players.find((p) => p.id === manageId && p.id !== room.youId);
   const closeManage = () => { setManageId(null); setConfirmKick(false); };
-  const [renaming, setRenaming] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const game = GAMES.find((g) => g.id === room.selectedGame) ?? GAMES[0];
+  const schema = room.settingsSchema ?? [];
+  // one compact line for everyone, built from the schema: "٨ دقايق · ٣ جولات · جاسوس واحد · مكس"
+  const summary = schema.map((f) => f.options.find((o) => o.value === room.settings[f.key])?.label).filter(Boolean).join(' · ');
   const saveName = async () => {
     const n = draft.trim();
     if (!n) return toast('اكتب اسم للقعدة');
-    setRenaming(false);
     if (n !== room.name) await send('room:rename', { name: n });
   };
-  const roundsText = (r: number) => (r === 1 ? 'جولة' : `${AR(r)} جولات`);
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
 
   // sound for people joining and leaving (chat sounds and bubbles come from the floating chat)
@@ -81,18 +84,20 @@ export function Room({ room }: { room: RoomView }) {
         </button>
       )}
 
-      <div className="col" style={{ gap: 0 }}>
-        <div className="row" style={{ gap: 8 }}>
-          <span className="label" style={{ fontSize: 12 }}>القعدة</span>
-          <span className="chip soft">{room.privacy === 'public' ? 'عامة' : 'خاصة'}</span>
-          {room.locked && <span className="chip dark">مقفولة</span>}
+      <div className="row" style={{ gap: 10 }}>
+        <div className="col grow" style={{ gap: 0, minWidth: 0 }}>
+          <div className="row" style={{ gap: 8 }}>
+            <span className="label" style={{ fontSize: 12 }}>القعدة</span>
+            <span className="chip soft">{room.privacy === 'public' ? 'عامة' : 'خاصة'}</span>
+            {room.locked && <span className="chip dark">مقفولة</span>}
+          </div>
+          <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>
         </div>
-        {isHost ? (
-          <button className="row" aria-label="غيّر اسم القعدة" onClick={() => { setDraft(room.name); setRenaming(true); }} style={{ border: 0, background: 'none', padding: 0, gap: 8, textAlign: 'right' }}>
-            <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style={{ flex: 'none' }}><path d="M4 20l1-5L16 4l4 4L9 19z" fill="#fff" stroke="#111" strokeWidth={2} strokeLinejoin="round" /><path d="M14 6l4 4" stroke="#111" strokeWidth={2} /></svg>
+        {isHost && (
+          <button className="btn icon" aria-label="إعدادات اللعبة والقعدة" onClick={() => { setDraft(room.name); setSettingsOpen(true); }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
           </button>
-        ) : <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>}
+        )}
       </div>
 
       <div className="col" style={{ gap: 6 }}>
@@ -109,55 +114,15 @@ export function Room({ room }: { room: RoomView }) {
         </div>
       </div>
 
-      <section className="card col" style={{ gap: 10, padding: '14px 16px' }}>
-        <div className="row">
-          <span className="icontile" style={{ background: game.color, width: 46, height: 46 }}>{game.icon}</span>
-          <div className="col grow" style={{ gap: 0 }}>
-            <span className="label" style={{ fontSize: 12 }}>إعدادات اللعبة</span>
-            <span className="display h2">{game.name}</span>
-          </div>
+      {/* the selected game stays a small card: icon, name, one summary line, "?" help. Settings live behind the host's gear. */}
+      <section className="card row" style={{ gap: 12, padding: '12px 14px' }}>
+        <span className="icontile" style={{ background: game.color, width: 46, height: 46, flex: 'none' }}>{game.icon}</span>
+        <div className="col grow" style={{ gap: 0, minWidth: 0 }}>
+          <span className="display" style={{ fontSize: 19 }}>{game.name}</span>
+          {summary && <span style={{ fontSize: 13, fontWeight: 800 }}>{summary}</span>}
         </div>
-        {room.selectedGame !== 'spy' ? null : isHost ? (
-          <div className="col" style={{ gap: 10 }}>
-            <div className="col" style={{ gap: 4 }}>
-              <span className="label" style={{ fontSize: 12 }}>وقت الجولة</span>
-              <div className="seg" role="group" aria-label="وقت الجولة">
-                {MINUTES.map((s) => (
-                  <button key={s} aria-pressed={room.settings.discussSeconds === s} onClick={() => send('room:settings', { discussSeconds: s })}>
-                    {AR(s / 60)} دقايق
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="col" style={{ gap: 4 }}>
-              <span className="label" style={{ fontSize: 12 }}>عدد الجولات</span>
-              <div className="seg" role="group" aria-label="عدد الجولات">
-                {ROUNDS.map((r) => (
-                  <button key={r} aria-pressed={room.settings.rounds === r} onClick={() => send('room:settings', { rounds: r })}>
-                    {roundsText(r)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <span style={{ fontWeight: 800, fontSize: 14 }}>{AR(room.settings.discussSeconds / 60)} دقايق · {roundsText(room.settings.rounds)}</span>
-        )}
+        <HelpButton gameId={game.id} />
       </section>
-
-      {isHost && (
-        <section className="card col" style={{ gap: 10, padding: '14px 16px' }}>
-          <span className="label" style={{ fontSize: 12 }}>مين يقدر يدخل؟</span>
-          <div className="seg" role="group" aria-label="خصوصية القعدة">
-            <button aria-pressed={room.privacy === 'private'} onClick={() => send('room:privacy', { privacy: 'private' })}>خاصة</button>
-            <button aria-pressed={room.privacy === 'public'} onClick={() => send('room:privacy', { privacy: 'public' })}>عامة</button>
-          </div>
-          <span className="muted" style={{ fontSize: 12 }}>{room.privacy === 'public' ? 'القعدة ظاهرة لأي حد في "قعدات مفتوحة"' : 'بالكود أو اللينك بس'}</span>
-          <button className={`btn sm ${room.locked ? 'black' : ''}`} aria-pressed={room.locked} onClick={() => send('room:lock', { locked: !room.locked })}>
-            {room.locked ? 'الدخول مقفول، دوس تفتحه' : 'اقفل الدخول'}
-          </button>
-        </section>
-      )}
 
       <div className="row" style={{ gap: 10 }}>
         <h2 className="display h2">اللاعيبة</h2>
@@ -211,12 +176,51 @@ export function Room({ room }: { room: RoomView }) {
           </>
         )}
       </div>
-      {isHost && renaming && (
-        <Sheet title="اسم القعدة" onClose={() => setRenaming(false)}>
-          <form className="col" style={{ gap: 10 }} onSubmit={(e) => { e.preventDefault(); saveName(); }}>
-            <input className="input" aria-label="اسم القعدة" autoFocus value={draft} maxLength={24} onChange={(e) => setDraft(e.target.value)} />
-            <button className="btn big full" type="submit">احفظ</button>
-          </form>
+      {isHost && settingsOpen && (
+        <Sheet title="الإعدادات" onClose={() => setSettingsOpen(false)}>
+          {/* a) the selected game's settings, rendered generically from its schema */}
+          <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
+            <span className="display" style={{ fontSize: 18 }}>إعدادات اللعبة</span>
+            {schema.map((f) => (
+              <div key={f.key} className="col" style={{ gap: 4 }}>
+                <span className="label" style={{ fontSize: 12.5 }}>{f.label}</span>
+                <div className="seg" role="group" aria-label={f.label}>
+                  {f.options.map((o) => {
+                    const locked = !!o.minPlayers && online < o.minPlayers;
+                    return (
+                      <button key={String(o.value)} className={locked ? 'locked' : ''} disabled={locked} aria-pressed={room.settings[f.key] === o.value} onClick={() => send('room:settings', { [f.key]: o.value })}>
+                        <span>{o.label}</span>
+                        {locked && <small><LockMini /> محتاج {AR(o.minPlayers!)} لاعيبة</small>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {/* b) the lounge itself, shared by every game */}
+          <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
+            <span className="display" style={{ fontSize: 18 }}>إعدادات القعدة</span>
+            <form className="col" style={{ gap: 4 }} onSubmit={(e) => { e.preventDefault(); saveName(); }}>
+              <label htmlFor="roomname" className="label" style={{ fontSize: 12.5 }}>اسم القعدة</label>
+              <div className="row" style={{ gap: 6 }}>
+                <input id="roomname" className="input" style={{ height: 44, fontSize: 16 }} value={draft} maxLength={24} onChange={(e) => setDraft(e.target.value)} />
+                <button className="btn black" style={{ height: 44 }} type="submit" disabled={!draft.trim() || draft.trim() === room.name}>احفظ</button>
+              </div>
+            </form>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12.5 }}>مين يقدر يدخل؟</span>
+              <div className="seg" role="group" aria-label="خصوصية القعدة">
+                <button aria-pressed={room.privacy === 'private'} onClick={() => send('room:privacy', { privacy: 'private' })}>خاصة</button>
+                <button aria-pressed={room.privacy === 'public'} onClick={() => send('room:privacy', { privacy: 'public' })}>عامة</button>
+              </div>
+              <span className="muted" style={{ fontSize: 12 }}>{room.privacy === 'public' ? 'القعدة ظاهرة لأي حد في "قعدات مفتوحة"' : 'بالكود أو اللينك بس'}</span>
+            </div>
+            <button className={`btn sm ${room.locked ? 'black' : ''}`} aria-pressed={room.locked} onClick={() => send('room:lock', { locked: !room.locked })}>
+              {room.locked ? 'الدخول مقفول، دوس تفتحه' : 'اقفل الدخول'}
+            </button>
+          </section>
         </Sheet>
       )}
       {isHost && target && (

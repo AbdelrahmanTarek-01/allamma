@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, SpyIcon } from '../components/art';
+import { HelpButton } from '../components/HelpSheet';
 import { Confetti, MuteButton, Sheet, Timer, useCountUp } from '../components/ui';
 import { AR, send, type GameView, type PlayerView, type RoomView } from '../net';
 import { buzz, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: GameView };
+
+const spyLabel = (n: number) => (n === 1 ? 'جاسوس واحد' : n === 2 ? 'جاسوسين' : `${AR(n)} جواسيس`);
+/** "صعب ×٢": this round's difficulty and its points multiplier. */
+const DIFF_NAME = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' } as const;
+const diffLabel = (g: GameView) => `${DIFF_NAME[g.difficulty]} ×${AR(String(g.multiplier).replace('.', '٫'))}`;
 
 const usePlayers = (room: RoomView) => {
   const byId = (id: string | null) => room.players.find((p) => p.id === id);
@@ -30,7 +36,10 @@ function Header({ g, title, tag }: { g: GameView; title: string; tag?: string })
   return (
     <header className="row between" style={{ gap: 10 }}>
       <div className="col" style={{ gap: 0 }}>
-        <span className="chip pink" style={{ alignSelf: 'flex-start' }}>{tag ?? `الجولة ${AR(g.round)} من ${AR(g.totalRounds)}`}</span>
+        <div className="row" style={{ gap: 6, alignSelf: 'flex-start' }}>
+          <span className="chip pink">{tag ?? `الجولة ${AR(g.round)} من ${AR(g.totalRounds)}${g.spyCount > 1 ? ` · ${spyLabel(g.spyCount)}` : ''}`}</span>
+          <HelpButton gameId="spy" />
+        </div>
         <span className="display" style={{ fontSize: 26 }}>{title}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>
@@ -99,6 +108,7 @@ function Discuss({ room, g }: P) {
             </div>
             <div className="face back">
               {/* One layout for every role: only the words differ, so a glance from the next seat tells nothing. */}
+              <span className="chip card-chip">{diffLabel(g)}</span>
               <span className={`stamp${open ? ' slam' : ''}`} style={{ marginTop: 10, width: 230, boxSizing: 'border-box', textAlign: 'center', whiteSpace: 'nowrap' }}>
                 {g.you.isSpy ? 'إنت الجاسوس' : 'محقق'}
               </span>
@@ -268,14 +278,14 @@ function Guess({ room, g }: P) {
   const { byId } = usePlayers(room);
   const [picked, setPicked] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const spy = byId(g.spyId);
+  const spy = byId(g.caughtSpyId); // the one spy the votes caught: only they guess
 
   useEffect(() => { if (g.guessOptions) { sfx.turn(); buzz([80, 60, 80]); } }, []);
 
   if (!g.guessOptions) {
     return (
       <main className="screen dark">
-        <div className="row between"><span className="chip pink">الفرصة الأخيرة</span>{g.endsAt && <Timer endsAt={g.endsAt} />}</div>
+        <div className="row between"><div className="row" style={{ gap: 6 }}><span className="chip pink">الفرصة الأخيرة</span><HelpButton gameId="spy" /></div>{g.endsAt && <Timer endsAt={g.endsAt} />}</div>
         <div className="col center grow" style={{ justifyContent: 'center', gap: 12 }}>
           {spy && <span className="float"><Character id={spy.avatar} size={140} spy /></span>}
           <span className="display h1">{spy?.name} بيخمّن المكان…</span>
@@ -296,6 +306,7 @@ function Guess({ room, g }: P) {
           <span style={{ fontSize: 13, fontWeight: 800, color: '#FF9CC5' }}>مسكوك</span>
           <span className="display" style={{ fontSize: 26 }}>فرصتك الأخيرة</span>
         </div>
+        <HelpButton gameId="spy" />
         {g.endsAt && <Timer endsAt={g.endsAt} />}
       </header>
       <p style={{ margin: 0, fontWeight: 700, lineHeight: 1.7 }}>خمّن المكان صح وتاخد الجولة. الأماكن كلها شبه بعض، فافتكر أسئلتهم كويس.</p>
@@ -319,7 +330,7 @@ function Guess({ room, g }: P) {
 function ScoreRow({ p, i, room, g, showRound }: { p: PlayerView; i: number } & P & { showRound: boolean }) {
   const pts = showRound ? g.roundPoints[p.id] : undefined;
   const shown = useCountUp(p.score, p.score - (pts ?? 0), 1100);
-  const isSpy = p.id === g.spyId;
+  const isSpy = !!g.spyIds?.includes(p.id);
   return (
     <div className="row" style={{ gap: 10, padding: '6px 10px', borderRadius: 16, background: i === 0 ? 'var(--yellow)' : isSpy && showRound ? '#FFE3EF' : 'transparent', border: i === 0 ? '2.5px solid #111' : '2.5px solid transparent', animationDelay: `${i * 110}ms` }}>
       <span style={{ width: 28, height: 28, flex: 'none', borderRadius: '50%', background: i === 0 ? '#111' : 'transparent', color: i === 0 ? 'var(--yellow)' : '#111', border: '2.5px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>{AR(i + 1)}</span>
@@ -350,10 +361,16 @@ function Result({ room, g }: P) {
   const isHost = room.hostId === room.youId;
   const last = g.round >= g.totalRounds;
   const won = (g.roundPoints[room.youId] ?? 0) > 0;
-  const title = g.outcome === 'detectives' ? 'المحققين كسبوا الجولة!' : g.outcome === 'spy-guessed' ? 'الجاسوس خمّن المكان!' : 'الجاسوس هرب!';
+  const many = g.spyCount > 1;
+  const spyNames = (g.spyIds ?? []).map((id) => name(id)).join(' و ');
+  const caughtName = g.caughtSpyId ? name(g.caughtSpyId) : null;
+  const title = g.outcome === 'detectives' ? 'المحققين كسبوا الجولة!' : g.outcome === 'spy-guessed' ? 'الجاسوس خمّن المكان!' : many ? 'الجواسيس هربوا!' : 'الجاسوس هرب!';
   const sub = g.outcome === 'detectives'
-    ? (g.spyGuess ? `${name(g.spyId)} اتمسك وخمّن ${g.spyGuess} غلط` : `${name(g.spyId)} اتمسك وماعرفش المكان`)
-    : g.outcome === 'spy-guessed' ? `${name(g.spyId)} اتمسك بس عرف إنه ${g.place}` : `${name(g.spyId)} كان الجاسوس ومحدش مسكه`;
+    ? (caughtName
+        ? (g.spyGuess ? `${caughtName} اتمسك وخمّن ${g.spyGuess} غلط` : `${caughtName} اتمسك وماعرفش المكان`)
+        : 'الجاسوس سابنا في نص الجولة')
+    : g.outcome === 'spy-guessed' ? `${caughtName} اتمسك بس عرف إنه ${g.place}`
+    : many ? `${spyNames} كانوا الجواسيس ومحدش اتمسك` : `${spyNames} كان الجاسوس ومحدش مسكه`;
 
   useEffect(() => {
     music.dip(2.5);
@@ -365,12 +382,18 @@ function Result({ room, g }: P) {
       <Confetti fire={boom} />
       <div className="col" style={{ gap: 2, paddingTop: 6 }}>
         <div className="row between">
-          <span className="chip" style={{ alignSelf: 'flex-start' }}>الجولة {AR(g.round)} من {AR(g.totalRounds)}</span>
+          <div className="row" style={{ gap: 6 }}>
+            <span className="chip">الجولة {AR(g.round)} من {AR(g.totalRounds)}</span>
+            <HelpButton gameId="spy" />
+          </div>
           <MuteButton />
         </div>
         <h1 className="display pop-in" style={{ fontSize: 36, lineHeight: 1.15 }}>{title}</h1>
         <span style={{ fontWeight: 700 }}>{sub}</span>
-        <span className="chip soft" style={{ alignSelf: 'flex-start', fontSize: 13, marginTop: 4 }}>المكان كان: {g.place}</span>
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+          <span className="chip soft" style={{ fontSize: 13 }}>المكان كان: {g.place}</span>
+          <span className="chip dark" style={{ fontSize: 13 }}>{diffLabel(g)}</span>
+        </div>
       </div>
       <WatchBanner g={g} />
       <Leaderboard room={room} g={g} showRound />
@@ -404,7 +427,8 @@ function Final({ room, g }: P) {
   return (
     <main className="screen">
       <Confetti fire={boom} amount={boom === 2 ? 180 : 140} from={boom === 2 ? 'top' : 'center'} />
-      <div className="col center" style={{ gap: 6, paddingTop: 20 }}>
+      <div className="row" style={{ justifyContent: 'flex-end' }}><HelpButton gameId="spy" /></div>
+      <div className="col center" style={{ gap: 6 }}>
         <div className="row" style={{ justifyContent: 'center' }}>{top.map((p) => <span key={p.id} className="pop-in float"><Character id={p.avatar} size={top.length > 1 ? 90 : 130} /></span>)}</div>
         <h1 className="display pop-in" style={{ fontSize: 34, textAlign: 'center' }}>{top.length > 1 ? 'تعادل!' : `${top[0]?.name} كسب اللمّة!`}</h1>
         <span className="muted">بعد {AR(g.totalRounds)} {g.totalRounds === 1 ? 'جولة' : 'جولات'}</span>

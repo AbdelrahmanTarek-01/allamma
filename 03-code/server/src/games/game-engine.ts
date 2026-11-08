@@ -36,14 +36,31 @@ export interface GameEngine {
   isOver(): boolean;
 }
 
+/** One choice of a setting. `minPlayers`: needs at least this many connected players (shown locked until then). */
+export interface SettingOption {
+  value: number | string;
+  label: string;
+  minPlayers?: number;
+}
+
+/**
+ * A setting a game exposes. The schema is sent to the client, which renders the settings sheet generically
+ * (one segmented control per field), and the server validates every change against it. A new game only adds a schema.
+ */
+export interface SettingField {
+  key: string;
+  label: string;
+  options: SettingOption[];
+}
+
 /** A game the lounge can pick. Settings are stored per game on the room. */
 export interface GameDef<S = any> {
   id: string;
   /** Display name used in chat dividers. */
   name: string;
   minPlayers: number;
+  /** The settings schema: key, label and the allowed options (validation comes from here). */
+  settings: SettingField[];
   defaultSettings(): S;
-  /** Merge a client patch into the current settings, ignoring invalid values. */
-  parseSettings(current: S, patch: unknown): S;
   create(settings: S): GameEngine;
 }

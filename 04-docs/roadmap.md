@@ -9,6 +9,14 @@
 - Skeleton screens while waking or reconnecting.
 - One-service deploy ready for Render free.
 
+## Done (since v0.3)
+- **Lounges (قعدة):** persistent rooms that play game after game, lounge scores across games, "play again" and a game picker, game engine interface (Spy lives in `games/spy/`).
+- **Public and private lounges:** lobby list on Home, quick play, lock joining, bans after a kick, bad-words filter and chat rate limit.
+- **Chat:** floating chat with quick replies and bubbles everywhere, history once on join then one message at a time, system dividers, last 50 messages in memory.
+- **Spy rules:** 1-3 spies by player count, difficulty per place (easy / medium / hard / mix) with point multipliers, settings behind the host's gear (generic schema per game).
+- **How to play:** "?" help sheet per game, opened once automatically the first time a game starts.
+- Host controls (kick, make host), phone layout pass (players strip, docked start button, game tiles), onboarding edit mode with a back button and back gesture, same role card for every role.
+
 ## Next
 1. **Deploy and play with friends**, and write down what feels slow or confusing.
 2. ~~Sounds, vibration and animations~~ (done in v0.2).

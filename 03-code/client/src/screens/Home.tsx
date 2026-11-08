@@ -86,7 +86,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
         {GAMES.map((g, i) => (
-          <GameTile key={g.id} g={g} style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }} />
+          <GameTile key={g.id} g={g} help style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }} />
         ))}
       </div>
 

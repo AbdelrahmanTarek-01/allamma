@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { EngineCtx } from '../games/game-engine';
 import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
+import { applySettings } from '../games/settings';
 import { maskBad } from '../common/profanity';
 import { AVATARS, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
@@ -295,7 +296,8 @@ export class RoomsService implements OnModuleDestroy {
     const room = this.mustHost(playerId);
     if (room.engine) throw new GameError('مينفعش تغيّر الإعدادات واللعبة شغالة');
     const def = GAME_DEFS[room.selectedGame];
-    room.settings[def.id] = def.parseSettings(room.settings[def.id], patch);
+    const connected = [...room.players.values()].filter((p) => p.connected).length;
+    room.settings[def.id] = applySettings(def.settings, room.settings[def.id], patch, connected);
     this.emit(room);
   }
 
@@ -374,6 +376,8 @@ export class RoomsService implements OnModuleDestroy {
       players,
       selectedGame: room.selectedGame,
       settings: room.settings[room.selectedGame],
+      // the selected game's settings schema: the lounge renders its settings sheet from this (not needed during a game)
+      settingsSchema: e ? null : GAME_DEFS[room.selectedGame].settings,
       game: e ? e.viewFor(playerId) : null,
       serverNow: Date.now()
     };

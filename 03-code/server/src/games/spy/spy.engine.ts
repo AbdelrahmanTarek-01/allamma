@@ -1,13 +1,22 @@
+import { arabicNum } from '../../common/ar';
 import { GameError } from '../../rooms/rooms.types';
-import type { EngineCtx, GameDef, GameEngine } from '../game-engine';
-import { PLACE_FAMILIES } from './places';
+import type { EngineCtx, GameDef, GameEngine, SettingField } from '../game-engine';
+import { PLACE_FAMILIES, type Difficulty } from './places';
 import type { SpyGame, SpyOutcome, SpySettings } from './spy.types';
 
 export const VOTE_SECONDS = 45;
 export const REVEAL_SECONDS = 6;
 export const GUESS_SECONDS = 20;
 
-const arabicNum = (n: number) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+/** Points multiplier per round difficulty. Every award is multiplied, then rounded up to the nearest 10. */
+export const MULTIPLIER: Record<Difficulty, number> = { easy: 1, medium: 1.5, hard: 2 };
+const up10 = (n: number) => Math.ceil(n / 10) * 10;
+
+/** Spies allowed by connected players: 3-5 => 1, 6-8 => up to 2, 9-10 => up to 3. */
+export const MIN_PLAYERS_FOR_SPIES: Record<number, number> = { 1: 3, 2: 6, 3: 9 };
+export const maxSpiesFor = (players: number) => (players >= 9 ? 3 : players >= 6 ? 2 : 1);
+const spyWord = (n: number) => (n === 1 ? 'جاسوس واحد' : n === 2 ? 'جاسوسين' : `${arabicNum(n)} جواسيس`);
+
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const shuffle = <T>(arr: T[]): T[] => {
   const a = [...arr];
@@ -18,20 +27,27 @@ const shuffle = <T>(arr: T[]): T[] => {
   return a;
 };
 
+/** The settings schema: the client renders the settings sheet from this, the server validates against it. */
+const SETTINGS: SettingField[] = [
+  { key: 'discussSeconds', label: 'وقت الجولة', options: [{ value: 300, label: '٥ دقايق' }, { value: 480, label: '٨ دقايق' }, { value: 600, label: '١٠ دقايق' }] },
+  { key: 'rounds', label: 'عدد الجولات', options: [{ value: 1, label: 'جولة' }, { value: 3, label: '٣ جولات' }, { value: 5, label: '٥ جولات' }] },
+  {
+    key: 'spies', label: 'عدد الجواسيس',
+    options: [
+      { value: 1, label: spyWord(1), minPlayers: MIN_PLAYERS_FOR_SPIES[1] },
+      { value: 2, label: spyWord(2), minPlayers: MIN_PLAYERS_FOR_SPIES[2] },
+      { value: 3, label: spyWord(3), minPlayers: MIN_PLAYERS_FOR_SPIES[3] }
+    ]
+  },
+  { key: 'difficulty', label: 'الصعوبة', options: [{ value: 'easy', label: 'سهل' }, { value: 'medium', label: 'متوسط' }, { value: 'hard', label: 'صعب' }, { value: 'mix', label: 'مكس' }] }
+];
+
 export const spyDef: GameDef<SpySettings> = {
   id: 'spy',
   name: 'مين الجاسوس؟',
   minPlayers: 3,
-  defaultSettings: () => ({ discussSeconds: 480, rounds: 3 }),
-  parseSettings(current, patch) {
-    const p = (patch ?? {}) as { discussSeconds?: unknown; rounds?: unknown };
-    const secs = Number(p.discussSeconds);
-    const rounds = Number(p.rounds);
-    return {
-      discussSeconds: [300, 480, 600].includes(secs) ? secs : current.discussSeconds,
-      rounds: [1, 3, 5].includes(rounds) ? rounds : current.rounds
-    };
-  },
+  settings: SETTINGS,
+  defaultSettings: () => ({ discussSeconds: 480, rounds: 3, spies: 1, difficulty: 'mix' }),
   create: (settings) => new SpyEngine(settings)
 };
 
@@ -41,8 +57,11 @@ export class SpyEngine implements GameEngine {
 
   private g!: SpyGame;
   private scores: Record<string, number> = {};
+  private readonly settings: SpySettings;
 
-  constructor(private readonly settings: SpySettings) {}
+  constructor(settings: SpySettings) {
+    this.settings = { ...settings }; // the room's saved choice stays untouched when a round clamps the spy count
+  }
 
   // ---------- GameEngine ----------
 
@@ -69,9 +88,17 @@ export class SpyEngine implements GameEngine {
     if (!g.participants.includes(playerId)) return;
     g.participants = g.participants.filter((id) => id !== playerId);
     delete g.votes[playerId];
-    if (g.spyId === playerId && ['discuss', 'vote', 'reveal', 'guess'].includes(g.phase)) {
-      this.finishRound(ctx, 'detectives');
-      return;
+    // votes that pointed at the player who left no longer count: those voters can pick again
+    Object.keys(g.votes).forEach((voter) => { if (g.votes[voter] === playerId) delete g.votes[voter]; });
+
+    const live = ['discuss', 'vote', 'reveal', 'guess'].includes(g.phase);
+    if (live && g.spyIds.includes(playerId)) {
+      const spiesLeft = g.spyIds.filter((id) => g.participants.includes(id));
+      const caughtOneLeft = g.caught && g.accusedId === playerId && (g.phase === 'reveal' || g.phase === 'guess');
+      if (spiesLeft.length === 0 || caughtOneLeft) {
+        this.finishRound(ctx, 'detectives');
+        return;
+      }
     }
     if (g.askerId === playerId || g.targetId === playerId) this.rotateTurn(true);
     this.checkAllVoted(ctx);
@@ -92,10 +119,12 @@ export class SpyEngine implements GameEngine {
   viewFor(playerId: string) {
     const g = this.g;
     const inRound = g.participants.includes(playerId);
-    const isSpy = g.spyId === playerId;
+    const isSpy = g.spyIds.includes(playerId);
     const ended = g.phase === 'result' || g.phase === 'final';
+    const revealed = ['reveal', 'guess', 'result', 'final'].includes(g.phase);
     const counts: Record<string, number> = {};
     Object.values(g.votes).forEach((t) => (counts[t] = (counts[t] || 0) + 1));
+    const caughtSpyId = revealed && g.caught ? g.accusedId : null;
     return {
       type: 'spy',
       round: g.round,
@@ -106,14 +135,18 @@ export class SpyEngine implements GameEngine {
       participants: g.participants,
       askerId: g.askerId,
       targetId: g.targetId,
+      spyCount: g.spyIds.length, // how many spies there are is public, who they are is not
+      difficulty: g.difficulty,
+      multiplier: g.multiplier,
       you: inRound ? { isSpy, place: isSpy && !ended ? null : g.place.name, role: isSpy ? null : g.roles[playerId] } : null,
       votedIds: Object.keys(g.votes),
       voteCounts: counts,
       myVote: g.votes[playerId] ?? null,
-      accusedId: ['reveal', 'guess', 'result', 'final'].includes(g.phase) ? g.accusedId : null,
-      caught: ['reveal', 'guess', 'result', 'final'].includes(g.phase) ? g.caught : null,
-      spyId: ended || (g.phase !== 'discuss' && g.phase !== 'vote' && g.caught) ? g.spyId : null,
-      guessOptions: g.phase === 'guess' && isSpy ? g.guessOptions : null,
+      accusedId: revealed ? g.accusedId : null,
+      caught: revealed ? g.caught : null,
+      caughtSpyId, // the one spy the votes caught: shown from the reveal on
+      spyIds: ended ? g.spyIds : null, // everyone's spies only when the round is over
+      guessOptions: g.phase === 'guess' && caughtSpyId === playerId ? g.guessOptions : null, // only the caught spy
       place: ended || (!isSpy && inRound) ? g.place.name : null,
       spyGuess: ended ? g.spyGuess : null,
       outcome: g.outcome,
@@ -124,30 +157,42 @@ export class SpyEngine implements GameEngine {
   // ---------- rules ----------
 
   private startRound(ctx: EngineCtx, round: number, participants: string[]) {
-    const family = pick(PLACE_FAMILIES);
-    const place = pick(family.places);
+    const s = this.settings;
+    // round 1 is announced by the room ("بدأت لعبة ..."); later rounds get their own divider
+    if (round > 1) ctx.system(`بدأت الجولة ${arabicNum(round)}`);
+
+    // not enough players for the wanted number of spies (people left): clamp for this round and say so
+    const spies = Math.min(s.spies, maxSpiesFor(participants.length));
+    if (spies < s.spies) ctx.system(`اللاعيبة قلّوا، فعدد الجواسيس بقى ${spyWord(spies)}`);
+
+    // difficulty: fixed, or a random one per round for "mix"; the place comes from that difficulty
+    const difficulty: Difficulty = s.difficulty === 'mix' ? pick<Difficulty>(['easy', 'medium', 'hard']) : s.difficulty;
+    const all = PLACE_FAMILIES.flatMap((f) => f.places.map((place) => ({ family: f, place })));
+    const pool = all.filter((x) => x.place.difficulty === difficulty);
+    const { family, place } = pick(pool.length ? pool : all);
+
     const familyNames = family.places.map((p) => p.name);
     const others = shuffle(PLACE_FAMILIES.filter((f) => f !== family).flatMap((f) => f.places.map((p) => p.name)));
     const board = shuffle([...familyNames, ...others.slice(0, Math.max(0, 12 - familyNames.length))]);
     const guessOptions = shuffle([place.name, ...shuffle(familyNames.filter((n) => n !== place.name)).slice(0, 5)]);
-    const spyId = pick(participants);
-    const roles: Record<string, string> = {};
-    let pool: string[] = [];
+
+    const spyIds = shuffle(participants).slice(0, spies);
+    const roles: Record<string, string> = {}; // only detectives get a role; spies just get the spy card
+    let pool2: string[] = [];
     participants.forEach((id) => {
-      if (id === spyId) return;
-      if (pool.length === 0) pool = shuffle(place.roles);
-      roles[id] = pool.pop()!;
+      if (spyIds.includes(id)) return;
+      if (pool2.length === 0) pool2 = shuffle(place.roles);
+      roles[id] = pool2.pop()!;
     });
+
     const askerId = pick(participants);
-    const seconds = this.settings.discussSeconds;
-    // round 1 is announced by the room ("بدأت لعبة ..."); later rounds get their own divider
-    if (round > 1) ctx.system(`بدأت الجولة ${arabicNum(round)}`);
     this.g = {
       round,
-      totalRounds: this.settings.rounds,
+      totalRounds: s.rounds,
       phase: 'discuss',
-      endsAt: Date.now() + seconds * 1000,
-      place, board, guessOptions, spyId, roles, participants,
+      endsAt: Date.now() + s.discussSeconds * 1000,
+      place, difficulty, multiplier: MULTIPLIER[difficulty],
+      board, guessOptions, spyIds, roles, participants,
       askerId,
       targetId: pick(participants.filter((id) => id !== askerId)),
       votes: {},
@@ -157,7 +202,7 @@ export class SpyEngine implements GameEngine {
       outcome: null,
       roundPoints: {}
     };
-    ctx.schedule(seconds, () => this.startVote(ctx));
+    ctx.schedule(s.discussSeconds, () => this.startVote(ctx));
     ctx.emit();
   }
 
@@ -217,6 +262,7 @@ export class SpyEngine implements GameEngine {
     if (voters.length > 0 && voters.every((id) => g.votes[id])) this.tally(ctx);
   }
 
+  /** The votes reveal ONE player: the single top-voted one (a tie reveals nobody). If that player is a spy, that spy is caught. */
   private tally(ctx: EngineCtx) {
     const g = this.g;
     if (!g || g.phase !== 'vote') return;
@@ -225,7 +271,7 @@ export class SpyEngine implements GameEngine {
     const max = Math.max(0, ...Object.values(counts));
     const top = Object.keys(counts).filter((id) => counts[id] === max);
     g.accusedId = max > 0 && top.length === 1 ? top[0] : null;
-    g.caught = g.accusedId === g.spyId;
+    g.caught = g.accusedId !== null && g.spyIds.includes(g.accusedId);
     g.phase = 'reveal';
     g.endsAt = Date.now() + REVEAL_SECONDS * 1000;
     ctx.schedule(REVEAL_SECONDS, () => {
@@ -244,7 +290,7 @@ export class SpyEngine implements GameEngine {
 
   private guess(ctx: EngineCtx, playerId: string, placeName: unknown) {
     const g = this.mustPhase('guess');
-    if (g.spyId !== playerId) throw new GameError('الجاسوس بس اللي بيخمّن');
+    if (!g.caught || g.accusedId !== playerId) throw new GameError('الجاسوس اللي اتمسك بس اللي بيخمّن');
     const name = String(placeName ?? '');
     if (!g.guessOptions.includes(name)) throw new GameError('اختار من الاختيارات');
     this.resolveGuess(ctx, name);
@@ -257,18 +303,36 @@ export class SpyEngine implements GameEngine {
     this.finishRound(ctx, name === g.place.name ? 'spy-guessed' : 'detectives');
   }
 
+  /**
+   * Base points, then x difficulty multiplier rounded up to 10:
+   *  - a spy who was not caught: 400 (every spy the votes did not catch, even when another spy was)
+   *  - the caught spy: 300 if they guess the place, otherwise 0
+   *  - a spy is caught: detectives who voted for them 200, other detectives 100
+   *    (if the caught spy then guesses the place, the ones who voted for them get 100 instead of 200)
+   *  - nobody is caught: detectives who voted for any spy 100, the rest 0
+   */
   private finishRound(ctx: EngineCtx, outcome: SpyOutcome) {
     const g = this.g;
     ctx.clearTimer();
     g.outcome = outcome;
     g.phase = 'result';
     g.endsAt = null;
+    const caught = g.caught ? g.accusedId : null;
     const pts: Record<string, number> = {};
     g.participants.forEach((id) => {
-      const votedSpy = g.votes[id] === g.spyId;
-      if (id === g.spyId) pts[id] = outcome === 'spy-escaped' ? 400 : outcome === 'spy-guessed' ? 300 : 0;
-      else if (outcome === 'detectives') pts[id] = votedSpy ? 200 : 100;
-      else pts[id] = votedSpy ? 100 : 0;
+      const votedFor = g.votes[id];
+      let base: number;
+      if (g.spyIds.includes(id)) {
+        base = id === caught ? (outcome === 'spy-guessed' ? 300 : 0) : 400;
+      } else if (outcome === 'spy-escaped') {
+        base = votedFor && g.spyIds.includes(votedFor) ? 100 : 0;
+      } else if (outcome === 'spy-guessed') {
+        base = 100;
+      } else {
+        const hit = caught ? votedFor === caught : !!votedFor && g.spyIds.includes(votedFor); // caught is null when every spy left
+        base = hit ? 200 : 100;
+      }
+      pts[id] = base ? up10(base * g.multiplier) : 0;
     });
     g.roundPoints = pts;
     Object.entries(pts).forEach(([id, n]) => {

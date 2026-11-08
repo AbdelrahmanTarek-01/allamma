@@ -20,7 +20,7 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `room:chat` | `{ text }` | member | Up to 200 chars. The last 50 messages per room are kept in memory only. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. Delivered to everyone as `chat:new`. |
 | `room:rename` | `{ name }` | host | Lounge name, trimmed, max 24 chars, not empty. |
 | `room:selectGame` | `{ game }` | host | Only in the lounge (no game running). Only `spy` is playable, anything else is rejected with "اللعبة دي جاية قريب". |
-| `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Settings of the selected game (shown here: spy). Only while no game is running. Kept per game. |
+| `room:settings` | a patch of the selected game's settings, e.g. `{ spies: 2 }` | host | Validated against the game's schema (`settingsSchema` in `room:state`): unknown values are ignored, an option that needs more connected players than there are is rejected ("محتاج ٦ لاعيبة"). Only while no game is running. Kept per game. Spy: `discussSeconds` 300/480/600, `rounds` 1/3/5, `spies` 1/2/3 (need 3/6/9 players), `difficulty` easy/medium/hard/mix. |
 | `game:start` | – | host | Starts the selected game from the lounge. Needs the game's minimum of connected players (spy: 3). |
 | `game:again` | – | host, final screen | Same game, same settings, fresh round scores. |
 | `spy:nextTurn` | – | current asker | Passes the question to the next pair. |
@@ -58,7 +58,8 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
               score /* this game's points, 0 in the lounge */,
               lounge /* lounge total across games */ }],
   selectedGame,                       // 'spy'
-  settings: { discussSeconds, rounds }, // settings of the selected game
+  settings: { discussSeconds, rounds, spies, difficulty }, // settings of the selected game
+  settingsSchema,                    // [{ key, label, options: [{ value, label, minPlayers? }] }], null during a game
   serverNow,
   game: null | {
     type: 'spy', round, totalRounds,
@@ -66,9 +67,11 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
     endsAt, board, participants, askerId, targetId,
     you: null | { isSpy, place /* null for spy until the end */, role },
     votedIds, voteCounts, myVote,
-    accusedId, caught,      // from reveal on
-    spyId,                  // when caught, or at the end
-    guessOptions,           // spy only, guess phase
+    spyCount, difficulty, multiplier,   // public: how many spies, this round's difficulty ('easy'|'medium'|'hard') and points multiplier
+    accusedId, caught,      // from reveal on: the single top-voted player, and whether they are a spy
+    caughtSpyId,            // the caught spy, from reveal on
+    spyIds,                 // every spy, only once the round is over (null before)
+    guessOptions,           // only the caught spy, guess phase
     place, spyGuess, outcome, roundPoints
   }
 }

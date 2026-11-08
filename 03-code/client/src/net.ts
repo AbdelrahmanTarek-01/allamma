@@ -24,13 +24,24 @@ export interface GameView {
   myVote: string | null;
   accusedId: string | null;
   caught: boolean | null;
-  spyId: string | null;
+  /** How many spies there are (public). Who they are is only revealed at the end of the round. */
+  spyCount: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  multiplier: number;
+  /** The one spy the votes caught, from the reveal on. */
+  caughtSpyId: string | null;
+  /** Every spy, only once the round is over. */
+  spyIds: string[] | null;
   guessOptions: string[] | null;
   place: string | null;
   spyGuess: string | null;
   outcome: 'detectives' | 'spy-escaped' | 'spy-guessed' | null;
   roundPoints: Record<string, number>;
 }
+/** A game's settings schema: the lounge renders its settings sheet generically from this. */
+export interface SettingOption { value: number | string; label: string; minPlayers?: number }
+export interface SettingField { key: string; label: string; options: SettingOption[] }
+
 /** One row of the public lobby list (home screen). */
 export interface LobbyRoom {
   code: string;
@@ -50,7 +61,10 @@ export interface RoomView {
   hostId: string;
   youId: string;
   players: PlayerView[];
-  settings: { discussSeconds: number; rounds: number };
+  /** Settings of the selected game (keys come from its schema). */
+  settings: Record<string, any>;
+  /** The selected game's schema while in the lounge, null during a game. */
+  settingsSchema: SettingField[] | null;
   game: GameView | null;
   serverNow: number;
 }

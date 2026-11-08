@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { GAMES } from './art';
+import { HelpButton } from './HelpSheet';
 
 type Game = (typeof GAMES)[number];
 
@@ -14,14 +15,15 @@ const Lock = () => (
  * The game tile used on Home and in the lounge picker.
  * min-height (not height) so a two-line title never clips the tagline; the "coming soon" chip sits
  * inside the tile in the corner opposite the icon; coming-soon tiles stay white with a greyscale icon.
+ * `help` adds the "?" button (a sibling of the tile button, since buttons can't nest).
  */
-export function GameTile({ g, selected, onClick, style }: { g: Game; selected?: boolean; onClick?: () => void; style?: CSSProperties }) {
+export function GameTile({ g, selected, onClick, style, help }: { g: Game; selected?: boolean; onClick?: () => void; style?: CSSProperties; help?: boolean }) {
   const Tag = onClick ? 'button' : 'div';
-  return (
+  const tile = (
     <Tag
       className={`tile game-tile${selected ? ' selected' : ''}`}
       {...(onClick ? { type: 'button' as const, onClick, ...(selected !== undefined ? { 'aria-pressed': selected } : {}) } : {})}
-      style={style}
+      style={help ? undefined : style}
     >
       {!g.ready && <span className="chip corner"><Lock /> قريباً</span>}
       {g.ready && selected && <span className="chip dark corner">مختارة</span>}
@@ -29,5 +31,12 @@ export function GameTile({ g, selected, onClick, style }: { g: Game; selected?: 
       <span className="display game-title">{g.name}</span>
       <span className="game-tag">{g.tagline}</span>
     </Tag>
+  );
+  if (!help) return tile;
+  return (
+    <div className="tile-wrap" style={style}>
+      {tile}
+      <HelpButton gameId={g.id} className="on-tile" />
+    </div>
   );
 }
