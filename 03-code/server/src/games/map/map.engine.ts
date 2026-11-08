@@ -1,12 +1,12 @@
 import { arabicNum } from '../../common/ar';
 import { GameError, type Room } from '../../rooms/rooms.types';
+import type { Level } from '../difficulty';
 import type { EngineCtx, GameDef, GameEngine, SettingField } from '../game-engine';
 import { poolFor, type Difficulty, type MapPlace, type MapScope, type MapTheme } from './places';
 
 export interface MapSettings {
   scope: MapScope;
   theme: MapTheme | 'all';
-  difficulty: Difficulty | 'mix';
   places: number;
   seconds: number;
 }
@@ -50,7 +50,13 @@ export const REVEAL_BASE_SECONDS = 6;
 export const REVEAL_PER_PIN_SECONDS = 0.8;
 export const FAST_LOCK_MS = 5000;
 export const HINT_PENALTY = 0.25;
-const MULT: Record<Difficulty, number> = { easy: 1, medium: 1.5, hard: 2 };
+/** The lounge's shared level for this game: which places are preferred and the points multiplier (same x1 / x1.5 / x2 / x2.5 as Spy). */
+export const MAP_LEVELS: Record<Level, { prefer: Difficulty; multiplier: number }> = {
+  easy: { prefer: 'easy', multiplier: 1 },
+  medium: { prefer: 'medium', multiplier: 1.5 },
+  hard: { prefer: 'hard', multiplier: 2 },
+  max: { prefer: 'hard', multiplier: 2.5 }
+};
 /** points = round(1000 * exp(-km / scale)), per map scope. */
 export const SCALE_KM: Record<MapScope, number> = { egypt: 150, arab: 400, world: 1500 };
 /** The map's short side in km, used for the circle hint radius. */
@@ -92,10 +98,10 @@ const shuffle = <T>(arr: T[]): T[] => {
   return a;
 };
 
-/** Pure scoring, exported for the simulation: distance points x place difficulty, +50 for a fast lock, -25% with a hint. */
-export function scorePin(km: number, scope: MapScope, difficulty: Difficulty, opts: { fast: boolean; hinted: boolean }) {
+/** Pure scoring, exported for the simulation: distance points x level multiplier, +50 for a fast lock, -25% with a hint. */
+export function scorePin(km: number, scope: MapScope, multiplier: number, opts: { fast: boolean; hinted: boolean }) {
   const base = Math.round(1000 * Math.exp(-km / SCALE_KM[scope]));
-  const total = base * MULT[difficulty] + (opts.fast ? 50 : 0);
+  const total = base * multiplier + (opts.fast ? 50 : 0);
   return Math.round(total * (opts.hinted ? 1 - HINT_PENALTY : 1));
 }
 
@@ -113,10 +119,6 @@ const SETTINGS: SettingField[] = [
     ]
   },
   {
-    key: 'difficulty', label: 'الصعوبة', hint: 'مضاعف النقط: سهل ×١ · متوسط ×١٫٥ · صعب ×٢',
-    options: [{ value: 'easy', label: 'سهل' }, { value: 'medium', label: 'متوسط' }, { value: 'hard', label: 'صعب' }, { value: 'mix', label: 'مكس' }]
-  },
-  {
     key: 'places', label: 'عدد الأماكن', hint: 'كام مكان في اللعبة',
     options: [{ value: 5, label: '٥', full: '٥ أماكن' }, { value: 10, label: '١٠', full: '١٠ أماكن' }, { value: 15, label: '١٥', full: '١٥ مكان' }]
   },
@@ -131,8 +133,9 @@ export const mapDef: GameDef<MapSettings> = {
   name: 'فين دي؟',
   minPlayers: 2,
   settings: SETTINGS,
-  defaultSettings: () => ({ scope: 'egypt', theme: 'cities', difficulty: 'mix', places: 5, seconds: 20 }),
-  create: (settings) => new MapEngine(settings)
+  defaultSettings: () => ({ scope: 'egypt', theme: 'cities', places: 5, seconds: 20 }),
+  levels: MAP_LEVELS,
+  create: (settings, level) => new MapEngine(settings, level)
 };
 
 export class MapEngine implements GameEngine {
@@ -151,7 +154,7 @@ export class MapEngine implements GameEngine {
   private participants: string[] = [];
   private r!: RoundState;
 
-  constructor(settings: MapSettings) {
+  constructor(settings: MapSettings, private readonly level: Level = 'medium') {
     this.settings = { ...settings };
   }
 
@@ -220,7 +223,7 @@ export class MapEngine implements GameEngine {
       participants: this.participants,
       lockedIds: this.phase === 'guess' ? Object.keys(r.locked) : [],
       place: place && this.phase !== 'final'
-        ? { name: place.name, theme: place.theme, difficulty: place.difficulty, multiplier: MULT[place.difficulty], hardText: place.difficulty === 'hard' }
+        ? { name: place.name, theme: place.theme, difficulty: this.level, multiplier: MAP_LEVELS[this.level].multiplier, hardText: place.difficulty === 'hard' }
         : null,
       you: inRound
         ? {
@@ -241,9 +244,10 @@ export class MapEngine implements GameEngine {
 
   /** The places of this game: the pool shuffled, preferring the chosen difficulty, capped by what the pack has. */
   private buildQueue(): Place[] {
-    const { difficulty, places } = this.settings;
+    const { places } = this.settings;
+    const prefer = MAP_LEVELS[this.level].prefer;
     const all = shuffle(this.pool);
-    const ordered = difficulty === 'mix' ? all : [...all.filter((x) => x.difficulty === difficulty), ...all.filter((x) => x.difficulty !== difficulty)];
+    const ordered = [...all.filter((x) => x.difficulty === prefer), ...all.filter((x) => x.difficulty !== prefer)];
     return shuffle(ordered.slice(0, Math.min(places, ordered.length)));
   }
 
@@ -372,7 +376,7 @@ export class MapEngine implements GameEngine {
       const manual = id in r.locked;
       const fast = manual && r.locked[id] - r.startedAt <= FAST_LOCK_MS;
       const hinted = !!r.hints[id];
-      return { id, lat: pin.lat, lon: pin.lon, km: +km.toFixed(1), points: scorePin(km, this.settings.scope, place.difficulty, { fast, hinted }), hinted, fast, auto: !manual };
+      return { id, lat: pin.lat, lon: pin.lon, km: +km.toFixed(1), points: scorePin(km, this.settings.scope, MAP_LEVELS[this.level].multiplier, { fast, hinted }), hinted, fast, auto: !manual };
     });
     entries.sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity));
     r.entries = entries;

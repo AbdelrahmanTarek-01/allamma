@@ -12,7 +12,7 @@ import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 type P = { room: RoomView; g: MapGameView };
 
 const THEME_LABEL = { cities: 'مدينة', landmarks: 'معلم', stadiums: 'ملعب', dishes: 'الأكلة دي جاية منين؟' } as const;
-const DIFF_NAME = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' } as const;
+const DIFF_NAME = { easy: 'سهل', medium: 'متوسط', hard: 'صعب', max: 'ماكس' } as const;
 const mult = (n: number) => AR(String(n).replace('.', '٫'));
 const fmtKm = (km: number) => (km < 1 ? 'أقل من ١ كم' : `${AR(Math.round(km))} كم`);
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

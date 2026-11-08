@@ -58,7 +58,7 @@ export interface MapGameView {
   participants: string[];
   /** Who locked (ids only; never where). */
   lockedIds: string[];
-  place: { name: string; theme: 'cities' | 'landmarks' | 'stadiums' | 'dishes'; difficulty: 'easy' | 'medium' | 'hard'; multiplier: number; hardText: boolean } | null;
+  place: { name: string; theme: 'cities' | 'landmarks' | 'stadiums' | 'dishes'; difficulty: Level; multiplier: number; hardText: boolean } | null;
   you: { pin: { lat: number; lon: number } | null; locked: boolean; hint: MapHint | null; canHint: boolean } | null;
   reveal: { target: { lat: number; lon: number }; fact: string; entries: MapEntry[] } | null;
   roundPoints: Record<string, number>;
