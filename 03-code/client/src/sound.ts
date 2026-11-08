@@ -178,6 +178,10 @@ export const sfx = {
   blip: play(() => tone(260, 0.09, 'sine', 0.06, 0, 190)), // rank down: a low soft blip
   coin: (step = 0) => play(() => { const f = 1320 * Math.pow(1.06, step); tone(f, 0.09, 'triangle', 0.1); tone(f * 1.5, 0.16, 'triangle', 0.1, 0.08); })(),
   gavel: play(() => { noise(0.07, 0.3, 0, 900, 'bandpass'); tone(190, 0.12, 'square', 0.12, 0, 110); tone(95, 0.2, 'sine', 0.2, 0, 60); buzz(70); }),
+  // welcome door: a wooden knock, the door creak, the party crowd (muffled behind the door, clear once inside)
+  knock: play(() => { noise(0.07, 0.32, 0, 520, 'lowpass'); tone(150, 0.09, 'sine', 0.3, 0, 85); buzz(30); }),
+  creak: play(() => { tone(190, 0.9, 'sawtooth', 0.035, 0, 330); tone(95, 0.9, 'sawtooth', 0.03, 0.05, 160); noise(0.9, 0.02, 0, 1400, 'bandpass'); }),
+  cheer: (clear = false) => play(() => { noise(1.1, clear ? 0.07 : 0.045, 0, clear ? 1800 : 700, clear ? 'bandpass' : 'lowpass'); [0, 0.18, 0.4].forEach((d, i) => tone(clear ? 700 + i * 160 : 330 + i * 60, 0.25, 'triangle', clear ? 0.06 : 0.03, d)); })(),
   fanfare: play(() => { [392, 523, 659, 784, 659, 784, 1047, 1047].forEach((f, i) => tone(f, i === 7 ? 0.6 : 0.18, 'triangle', 0.13, i * 0.12)); buzz([60, 80, 60, 80, 200]); })
 };
 

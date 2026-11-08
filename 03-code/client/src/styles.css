@@ -830,3 +830,63 @@ button:disabled { cursor: not-allowed; }
 .rs-row { position: absolute; left: 10px; right: 10px; height: 54px; display: flex; align-items: center; gap: 8px; border-radius: 14px; padding: 0 8px; will-change: top; }
 .go-podium { position: relative; display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; height: 230px; }
 .go-rest { display: grid; grid-template-columns: 1fr 1fr; margin-top: -12px; background: var(--white); border: 3px solid var(--ink); border-radius: 0 0 18px 18px; overflow: hidden; }
+
+/* welcome: knock on the door (canvas artboard WelcomeDoor). Animations use transform and opacity only. */
+.wl-screen { position: relative; min-height: 100dvh; max-width: 480px; margin: 0 auto; box-sizing: border-box; padding: max(18px, env(safe-area-inset-top)) 18px max(26px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; overflow: hidden; background-image: repeating-linear-gradient(90deg, rgba(17, 17, 17, .035) 0 22px, transparent 22px 44px); }
+.wl-skip-sm { height: 32px; padding: 0 12px; border: 2px solid var(--ink); border-radius: 99px; background: transparent; font: 900 12.5px 'Cairo', sans-serif; color: var(--ink); }
+.wl-status { display: flex; align-items: center; gap: 8px; background: var(--white); border: 2.5px solid var(--ink); border-radius: 99px; padding: 3px 12px 3px 6px; box-shadow: 3px 3px 0 var(--ink); font-size: 13px; font-weight: 900; }
+.wl-status i { width: 8px; height: 8px; border-radius: 50%; background: #E2433B; animation: wlGlow .8s ease-in-out infinite; }
+.wl-stage { position: relative; flex: 1; min-height: 360px; display: flex; align-items: flex-end; justify-content: center; transform-origin: 50% 46%; transition: transform 1.3s cubic-bezier(.65, 0, .35, 1), opacity .55s ease-in .6s; will-change: transform, opacity; }
+.wl-door-wrap { position: relative; width: 236px; height: min(392px, 52dvh); margin-bottom: 34px; perspective: 1100px; cursor: pointer; }
+.wl-frame { position: absolute; inset: -12px -12px 0; border: 6px solid var(--ink); border-bottom: 0; border-radius: 130px 130px 0 0; background: var(--white); box-shadow: 8px 0 0 var(--ink); }
+.wl-room { position: absolute; inset: 0; border-radius: 118px 118px 0 0; overflow: hidden; background: radial-gradient(circle at 50% 55%, #FFF7D6 0%, #FFE27A 45%, #FFB23F 100%); }
+.wl-table { position: absolute; left: 50%; top: 60%; width: 132px; height: 132px; margin: -66px 0 0 -66px; border-radius: 50%; background: var(--white); border: 3.5px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); animation: wlPopIn .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+.wl-card { position: absolute; width: 26px; height: 36px; margin: -18px 0 0 -13px; border: 2.5px solid var(--ink); border-radius: 6px; box-shadow: 2px 2px 0 var(--ink); animation: wlPopIn .4s .3s both; }
+.wl-hello { display: block; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; padding: 2px 14px; box-shadow: 3px 3px 0 var(--ink); animation: wlPopIn .45s cubic-bezier(.2, 1.4, .4, 1) .9s both; }
+.wl-leaf { position: absolute; inset: 0; transform-origin: 0% 50%; transition: transform 1s cubic-bezier(.6, -.05, .3, 1.1); transform-style: preserve-3d; will-change: transform; }
+.wl-panel { position: absolute; inset: 0; border: 4px solid var(--ink); border-bottom: 0; border-radius: 118px 118px 0 0; background: var(--blue); box-shadow: inset -10px 0 0 rgba(0, 0, 0, .12); overflow: hidden; }
+.wl-pane { position: absolute; left: 34px; right: 34px; border: 3.5px solid var(--ink); background: #6FB0FF; }
+.wl-knob { position: absolute; top: 98px; left: 50%; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 4px #FFD23F, 0 0 0 7px var(--ink); }
+.wl-plate { position: absolute; top: 140px; left: 50%; transform: translateX(-50%) rotate(-4deg); background: var(--white); border: 3px solid var(--ink); border-radius: 10px; padding: 2px 14px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; box-shadow: 3px 3px 0 var(--ink); white-space: nowrap; }
+.wl-plate i { color: var(--pink); font-style: normal; }
+.wl-glow { position: absolute; left: 4px; right: 4px; bottom: -4px; height: 8px; border-radius: 4px; overflow: hidden; animation: wlGlow .8s ease-in-out infinite; }
+.wl-glow::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 300%; background: repeating-linear-gradient(90deg, #FFD23F 0 14%, #FF4F9A 14% 28%, #4D9DFF 28% 42%, #3DDC97 42% 56%); animation: wlParty 1.6s linear infinite; }
+.wl-note { position: absolute; bottom: 2px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px; opacity: 0; animation: wlNote 3s ease-out infinite; }
+.wl-leak { position: absolute; white-space: nowrap; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 13px; background: rgba(255, 255, 255, .9); border: 2px solid var(--ink); border-radius: 12px; padding: 0 8px; opacity: 0; animation: wlLeak 7.5s ease-in-out infinite; }
+.wl-tok { position: absolute; top: 150px; left: -30px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 30px; animation: wlTok .6s ease-out forwards; }
+.wl-reply { display: block; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 17px; background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; padding: 2px 12px; box-shadow: 3px 3px 0 var(--ink); animation: wlBubble 1.6s ease-out forwards; }
+.wl-mat { position: absolute; bottom: 0; left: 50%; width: 270px; margin-left: -135px; height: 34px; border: 3px solid var(--ink); border-radius: 10px; background: var(--orange); box-shadow: 4px 4px 0 var(--ink); display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 2px; }
+.wl-floor { position: absolute; bottom: 34px; left: -18px; right: -18px; height: 3px; background: var(--ink); }
+.wl-knock-btn { height: 72px; border: 3px solid var(--ink); border-radius: 24px; background: var(--ink); color: #FFD23F; box-shadow: 0 7px 0 var(--blue); display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; }
+.wl-knock-btn:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 1px 0 var(--blue); }
+.wl-in { position: absolute; inset: 0; z-index: 20; overflow: hidden; }
+.wl-bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 38%, #FFF7D6 0%, #FFE27A 40%, #FFD23F 75%); }
+.wl-bars { position: absolute; top: 14px; left: 18px; right: 18px; z-index: 5; display: flex; gap: 6px; }
+.wl-bars > span { flex: 1; height: 6px; border-radius: 99px; background: rgba(17, 17, 17, .15); overflow: hidden; }
+.wl-bars i { display: block; height: 100%; background: var(--ink); border-radius: 99px; }
+.wl-skip { position: absolute; top: 30px; left: 18px; z-index: 7; height: 32px; padding: 0 12px; border: 2px solid var(--ink); border-radius: 99px; background: var(--white); font: 900 12.5px 'Cairo', sans-serif; color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.wl-tap { position: absolute; inset: 30px 0 190px; z-index: 4; background: transparent; border: 0; }
+.wl-scene { position: absolute; inset: 40px 18px 190px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 30px; transform-origin: 50% 55%; will-change: transform, opacity; pointer-events: none; }
+.wl-bigtable { position: absolute; left: 50%; top: 50%; width: 176px; height: 176px; margin: -88px 0 0 -88px; border-radius: 50%; background: var(--white); border: 3.5px solid var(--ink); box-shadow: 7px 7px 0 var(--ink); }
+.wl-fan { position: absolute; left: 50%; bottom: 0; width: 112px; height: 158px; margin-left: -56px; z-index: var(--z, 5); transform-origin: 50% 170%; }
+.wl-gcard { width: 100%; height: 100%; box-sizing: border-box; background: var(--white); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.wl-chat { flex: 1; min-height: 0; background: var(--white); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 6px 6px 0 var(--ink); padding: 12px; display: flex; flex-direction: column; gap: 9px; overflow: hidden; background-image: radial-gradient(rgba(17, 17, 17, .06) 1.4px, transparent 1.6px); background-size: 14px 14px; }
+.wl-cta { position: absolute; left: 18px; right: 18px; bottom: 26px; z-index: 6; display: flex; flex-direction: column; gap: 10px; animation: wlUp .45s .5s both; }
+.wl-pill { font-size: 11.5px; font-weight: 900; background: var(--white); border: 2px solid var(--ink); border-radius: 99px; padding: 0 9px; }
+@keyframes wlUp { 0% { transform: translateY(16px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes wlFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes wlKnockA { 0%, 100% { transform: none; } 20% { transform: translateX(-4px) rotate(-.6deg); } 40% { transform: translateX(4px) rotate(.6deg); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@keyframes wlKnockB { 0%, 100% { transform: none; } 20% { transform: translateX(4px) rotate(.6deg); } 40% { transform: translateX(-4px) rotate(-.6deg); } 60% { transform: translateX(3px); } 80% { transform: translateX(-2px); } }
+@keyframes wlTok { 0% { transform: scale(.3) rotate(-12deg); opacity: 0; } 30% { transform: scale(1.15) rotate(-8deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg) translateY(-14px); opacity: 0; } }
+@keyframes wlLeak { 0%, 4% { transform: scale(.6); opacity: 0; } 8%, 18% { transform: scale(1); opacity: .95; } 24%, 100% { transform: scale(.9); opacity: 0; } }
+@keyframes wlNote { 0% { transform: translateY(0) rotate(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-70px) rotate(20deg); opacity: 0; } }
+@keyframes wlParty { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
+@keyframes wlGlow { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes wlPopIn { 0% { transform: scale(.2) translateY(30px); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes wlBubble { 0% { transform: scale(.3); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 30%, 80% { transform: scale(1); opacity: 1; } 100% { opacity: 0; } }
+@keyframes wlWave { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-6px); } }
+@keyframes wlPush { 0% { transform: scale(1.35); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes wlEnter { 0% { transform: scale(.86); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes wlZup { 0%, 2%, 18%, 100% { z-index: var(--z, 5); } 3%, 17% { z-index: 30; } }
+@keyframes wlLift { 0%, 3%, 17%, 100% { transform: none; } 6%, 13% { transform: translateY(-34px) scale(1.12); } }
+@keyframes wlDesc { 0%, 2%, 16%, 100% { opacity: 0; transform: translateY(6px); } 5%, 13% { opacity: 1; transform: none; } }
