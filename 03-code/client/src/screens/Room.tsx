@@ -51,6 +51,13 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
     const who = room.players.filter((p) => room.gameVotes?.[p.id] === id);
     return { avatars: who.map((p) => p.avatar), count: who.length, mine: room.gameVotes?.[room.youId] === id };
   };
+  // "don't ask again" for the selected game (in the footer of the start sheet, under the card in the gear sheet)
+  const skipRow = (
+    <label className="row" style={{ gap: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer', padding: '2px 0' }}>
+      <input type="checkbox" className="ck" checked={dontAsk} onChange={(e) => { e.target.checked ? sfx.toggleOn() : sfx.toggleOff(); setDontAsk(e.target.checked); if (setup === 'edit') setSkipped(room.code, room.selectedGame, e.target.checked); }} />
+      ماتسألنيش تاني عن «{game.name}»
+    </label>
+  );
   const [shaking, setShaking] = useState<string | null>(null);
   /** Tapping a locked option: shake, error sound, and say how many players it needs. */
   const tapLocked = (key: string, min: number) => {
@@ -383,16 +390,18 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         </Sheet>
       )}
       {isHost && setup && (
-        <Sheet title="ظبّط اللعبة" onClose={() => setSetup(null)}>
+        <Sheet
+          title="ظبّط اللعبة" onClose={() => setSetup(null)} fit
+          // the footer (skip checkbox + start) is always visible; only the settings card scrolls. The gear-opened sheet has no start button.
+          footer={setup === 'start' ? (
+            <>
+              {skipRow}
+              <button className="btn big full" style={{ height: 58 }} disabled={online < room.minPlayers} onClick={begin}>يلا نبدأ</button>
+            </>
+          ) : undefined}
+        >
           {gameFields()}
-          <div className="col" style={{ gap: 4 }}>
-            <label className="row" style={{ gap: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-              <input type="checkbox" className="ck" checked={dontAsk} onChange={(e) => { e.target.checked ? sfx.toggleOn() : sfx.toggleOff(); setDontAsk(e.target.checked); if (setup === 'edit') setSkipped(room.code, room.selectedGame, e.target.checked); }} />
-              ماتسألنيش تاني عن «{game.name}» في القعدة دي
-            </label>
-            <span className="muted setting-hint">تقدر تغيّر الإعدادات دي في أي وقت من «إعدادات اللعبة» في كارت اللعبة</span>
-          </div>
-          {setup === 'start' && <button className="btn big full" disabled={online < room.minPlayers} onClick={begin}>يلا نبدأ</button>}
+          {setup === 'edit' && skipRow}
         </Sheet>
       )}
       {isHost && settingsOpen && (

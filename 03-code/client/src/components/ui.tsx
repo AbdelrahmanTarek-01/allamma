@@ -145,8 +145,25 @@ function useScrollLock() {
  * Every sheet renders through ONE portal on document.body (z-index scale in styles.css: dock < sheet < toast),
  * so no screen layout, sticky header, rail or dock can ever cover it. While it is open the page behind can't scroll or be tapped.
  */
-export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+/**
+ * Bottom sheet. `fit`: the sheet is header / scrolling body / fixed `footer` (always visible), sized to fit a small phone; the body shows a soft fade
+ * at its bottom edge while there is more below.
+ */
+export function Sheet({ title, onClose, children, fit = false, footer }: { title: string; onClose: () => void; children: ReactNode; fit?: boolean; footer?: ReactNode }) {
   useScrollLock();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+  const measure = () => { const el = bodyRef.current; if (el) setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 4); };
+  useEffect(() => {
+    if (!fit) return;
+    measure();
+    const el = bodyRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => ro.disconnect();
+  }, [fit]);
   useEffect(() => {
     sfx.whoosh();
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -156,12 +173,13 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   const close = () => { sfx.close(); onClose(); };
   return createPortal(
     <div className="sheet-bg" onClick={close}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div className={`sheet${fit ? ' sheet-fit' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="row between">
           <h2 className="display h2">{title}</h2>
           <button className="btn sm" data-sfx="none" onClick={close}>اقفل</button>
         </div>
-        {children}
+        {fit ? <div ref={bodyRef} className={`sheet-body${more ? ' more' : ''}`} onScroll={measure}>{children}</div> : children}
+        {fit && footer && <div className="sheet-foot">{footer}</div>}
       </div>
     </div>,
     document.body
