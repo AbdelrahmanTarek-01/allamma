@@ -7,6 +7,7 @@ export const VOTE_SECONDS = 45;
 export const REVEAL_SECONDS = 6;
 export const GUESS_SECONDS = 20;
 
+const arabicNum = (n: number) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const shuffle = <T>(arr: T[]): T[] => {
   const a = [...arr];
@@ -19,6 +20,7 @@ const shuffle = <T>(arr: T[]): T[] => {
 
 export const spyDef: GameDef<SpySettings> = {
   id: 'spy',
+  name: 'مين الجاسوس؟',
   minPlayers: 3,
   defaultSettings: () => ({ discussSeconds: 480, rounds: 3 }),
   parseSettings(current, patch) {
@@ -138,6 +140,8 @@ export class SpyEngine implements GameEngine {
     });
     const askerId = pick(participants);
     const seconds = this.settings.discussSeconds;
+    // round 1 is announced by the room ("بدأت لعبة ..."); later rounds get their own divider
+    if (round > 1) ctx.system(`بدأت الجولة ${arabicNum(round)}`);
     this.g = {
       round,
       totalRounds: this.settings.rounds,

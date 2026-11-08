@@ -4,7 +4,9 @@ import { sfx } from './sound';
 
 /** `score` is this game's points; `lounge` is the lounge total across games. */
 export interface PlayerView { id: string; name: string; avatar: string; ready: boolean; connected: boolean; score: number; lounge: number }
-export interface ChatView { id: string; from: string; text: string; at: number }
+/** `from` is a player id, or '' for a system divider ("بدأت الجولة ٢"). */
+export interface ChatView { id: string; from: string; text: string; at: number; system?: boolean }
+export const MAX_CHAT = 50;
 export type Phase = 'discuss' | 'vote' | 'reveal' | 'guess' | 'result' | 'final';
 export interface GameView {
   type: 'spy';
@@ -48,7 +50,6 @@ export interface RoomView {
   hostId: string;
   youId: string;
   players: PlayerView[];
-  chat: ChatView[];
   settings: { discussSeconds: number; rounds: number };
   game: GameView | null;
   serverNow: number;
@@ -56,14 +57,15 @@ export interface RoomView {
 export interface Profile { id: string; name: string; avatar: string }
 type Status = 'waking' | 'online' | 'offline';
 
-interface State { status: Status; room: RoomView | null; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean }
+// chat is not part of the room snapshot: the server sends the history once (chat:history), then each message (chat:new)
+interface State { status: Status; room: RoomView | null; chat: ChatView[]; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean }
 
 const KEY = 'allamma.profile';
 const loadProfile = (): Profile | null => {
   try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
 };
 
-let state: State = { status: 'waking', room: null, offset: 0, toast: null, profile: loadProfile(), hasConnected: false };
+let state: State = { status: 'waking', room: null, chat: [], offset: 0, toast: null, profile: loadProfile(), hasConnected: false };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()); };
 export const useStore = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => state);
@@ -100,7 +102,7 @@ async function hello() {
   const res = await send('hello', { playerId: p.id, name: p.name, avatar: p.avatar });
   if (!res.ok) return;
   if (!res.roomCode) {
-    set({ room: null });
+    set({ room: null, chat: [] });
     const invite = inviteCodeFromUrl();
     if (invite) {
       history.replaceState(null, '', location.pathname);
@@ -113,7 +115,12 @@ socket.on('connect', () => { set({ status: 'online', hasConnected: true }); hell
 socket.on('disconnect', () => set({ status: 'offline' }));
 socket.on('connect_error', () => set({ status: state.hasConnected ? 'offline' : 'waking' }));
 socket.on('room:state', (room: RoomView) => set({ room, offset: room.serverNow - Date.now() }));
-socket.on('room:kicked', () => { set({ room: null }); sfx.leave(); toast('المضيف طلّعك من الأوضة'); });
+socket.on('room:kicked', () => { set({ room: null, chat: [] }); sfx.leave(); toast('المضيف طلّعك من الأوضة'); });
+socket.on('chat:history', (list: ChatView[]) => set({ chat: list.slice(-MAX_CHAT) }));
+socket.on('chat:new', (m: ChatView) => {
+  if (state.chat.some((x) => x.id === m.id)) return;
+  set({ chat: [...state.chat, m].slice(-MAX_CHAT) });
+});
 
 export function saveProfile(name: string, avatar: string) {
   const id = state.profile?.id ?? (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
@@ -129,7 +136,7 @@ export function start() {
 
 export async function leaveRoom() {
   await send('room:leave');
-  set({ room: null });
+  set({ room: null, chat: [] });
 }
 
 export const serverNow = () => Date.now() + state.offset;

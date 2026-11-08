@@ -16,9 +16,12 @@ export interface Player {
 
 export interface ChatMsg {
   id: string;
+  /** Player id, or '' for a system message. */
   from: string;
   text: string;
   at: number;
+  /** System divider ("بدأت الجولة ٢"): shown centered and muted, not counted as unread. */
+  system?: boolean;
 }
 
 export type Privacy = 'private' | 'public';

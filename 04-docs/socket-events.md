@@ -17,7 +17,7 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `lobby:leave` | – | anyone | Unsubscribes from `lobby:update` (home screen closed). |
 | `lobby:quick` | – | anyone | Joins the fullest public waiting room with a free seat (never one that banned you), otherwise creates a new public room. Ack `{ code, created }`. |
 | `room:ready` | `{ ready }` | member | |
-| `room:chat` | `{ text }` | member | Up to 200 chars. The last 40 are kept. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. |
+| `room:chat` | `{ text }` | member | Up to 200 chars. The last 50 messages per room are kept in memory only. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. Delivered to everyone as `chat:new`. |
 | `room:rename` | `{ name }` | host | Lounge name, trimmed, max 24 chars, not empty. |
 | `room:selectGame` | `{ game }` | host | Only in the lounge (no game running). Only `spy` is playable, anything else is rejected with "اللعبة دي جاية قريب". |
 | `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Settings of the selected game (shown here: spy). Only while no game is running. Kept per game. |
@@ -33,6 +33,14 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 Game events (`spy:*`, `game:next`) are routed by `RoomsService.gameAction` to the room's active engine. Actions an engine lists in `hostActions` (spy: `next`) are host-only.
 
 ## Server → client
+**Chat is not part of `room:state`.** The server sends the history once when a socket enters a room (after `hello` finds the player already in a room, and after `room:create`, `room:join`, `lobby:quick`), then pushes each new message on its own. The client keeps its own list, capped at 50.
+- `chat:history` (`ChatMsg[]`, up to 50): replaces the client's list.
+- `chat:new` (`ChatMsg`): append.
+```ts
+ChatMsg = { id, from /* player id, '' for system */, text, at, system?: true }
+```
+Chat is never cleared between rounds or games. Instead the server adds a **system message** (`system: true`) when a game starts ("بدأت لعبة مين الجاسوس؟") and when a later round starts ("بدأت الجولة ٢"). Clients show these centered and muted. Everything is deleted with the room.
+
 `lobby:update` (`LobbyRoom[]`): pushed to sockets subscribed through `lobby:list`, at most once per second and only when the list changed.
 ```ts
 LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'waiting' | 'playing' }
@@ -49,7 +57,6 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
   players: [{ id, name, avatar, ready, connected,
               score /* this game's points, 0 in the lounge */,
               lounge /* lounge total across games */ }],
-  chat: [{ id, from, text, at }],
   selectedGame,                       // 'spy'
   settings: { discussSeconds, rounds }, // settings of the selected game
   serverNow,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AR, send, type ChatView, type RoomView } from '../net';
+import { AR, send, useStore, type ChatView, type RoomView } from '../net';
 import { sfx } from '../sound';
 import { Character } from './art';
 import { Sheet } from './ui';
@@ -13,7 +13,8 @@ const BUBBLE_MS = 2000;
  * Mounted once in App (outside the per-phase keyed screen) so unread state survives phase changes.
  */
 export function GameChat({ room, visible }: { room: RoomView; visible: boolean }) {
-  const lastMsg = room.chat[room.chat.length - 1];
+  const { chat } = useStore(); // the client's own list (server sends history once, then each new message)
+  const lastMsg = chat[chat.length - 1];
   const lastId = lastMsg?.id;
   const [open, setOpen] = useState(false);
   const [readId, setReadId] = useState(lastId); // lobby messages before the game count as read
@@ -27,7 +28,7 @@ export function GameChat({ room, visible }: { room: RoomView; visible: boolean }
   useEffect(() => {
     if (lastId === prevId.current) return;
     prevId.current = lastId;
-    if (!lastMsg || lastMsg.from === room.youId || !visible) return;
+    if (!lastMsg || lastMsg.system || lastMsg.from === room.youId || !visible) return;
     sfx.chat();
     if (!open) setBubble(lastMsg);
   }, [lastId]);
@@ -42,12 +43,12 @@ export function GameChat({ room, visible }: { room: RoomView; visible: boolean }
   useEffect(() => { if (open) { setReadId(lastId); setBubble(null); } }, [open, lastId]);
   // the dark reveal screens have no chat
   useEffect(() => { if (!visible) { setOpen(false); setBubble(null); } }, [visible]);
-  useEffect(() => { if (open) listRef.current?.scrollTo({ top: 1e6 }); }, [open, room.chat.length]);
+  useEffect(() => { if (open) listRef.current?.scrollTo({ top: 1e6 }); }, [open, chat.length]);
 
   if (!visible) return null;
 
-  const readIdx = room.chat.findIndex((m) => m.id === readId);
-  const unread = room.chat.slice(readIdx + 1).filter((m) => m.from !== room.youId).length;
+  const readIdx = chat.findIndex((m) => m.id === readId);
+  const unread = chat.slice(readIdx + 1).filter((m) => !m.system && m.from !== room.youId).length;
 
   const submit = async () => {
     const t = text.trim();
@@ -84,8 +85,9 @@ export function GameChat({ room, visible }: { room: RoomView; visible: boolean }
       {open && (
         <Sheet title="الشات" onClose={() => setOpen(false)}>
           <div className="chat-list" ref={listRef} aria-live="polite">
-            {room.chat.length === 0 && <span className="muted">قول حاجة لصحابك…</span>}
-            {room.chat.map((m) => {
+            {chat.length === 0 && <span className="muted">قول حاجة لصحابك…</span>}
+            {chat.map((m) => {
+              if (m.system) return <span key={m.id} className="chat-system">{m.text}</span>;
               const mine = m.from === room.youId;
               const p = who(m.from);
               return (

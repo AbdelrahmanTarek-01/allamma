@@ -21,6 +21,9 @@ A room is a **lounge**: it outlives any single game and can play game after game
 - **Safety:** `common/profanity.ts` masks bad words (Egyptian Arabic + English) with `***` in player names (always), and in room names and chat while the room is public. Chat is limited to 1 message per second per player. This is a first line of defence: extend the lists as needed.
 - **Joining mid-game** is allowed: the newcomer watches and chats, and plays from the next round.
 
+## Chat
+In memory only, last 50 messages per room, deleted with the room. It is **not** inside `room:state` (that snapshot is sent on every change, so chat would be resent constantly): the server sends `chat:history` once when a socket enters a room and then one `chat:new` per message. The client keeps its own list (`net.ts`, capped at 50). It is never cleared between rounds or games: the server adds system dividers instead ("بدأت الجولة ٢").
+
 ## Server (`03-code/server`)
 - **RoomsService** (`rooms/`) owns room concerns only: players, host, kick, chat, settings, lounge scores and lifecycle. State is in memory: `rooms: Map<code, Room>` and `playerRoom: Map<playerId, code>`. It delegates every game action to the room's active engine. The client only sends intents.
 - **GameEngine** (`games/game-engine.ts`): the interface a game implements: `start`, `handle(action)`, `onLeave`, `onPresenceChange`, `viewFor(player)`, `scoreOf`, `isOver`, plus `hostActions` (the actions only the host may trigger, enforced by RoomsService). A new engine instance is created per game and gets an `EngineCtx` (the room, `emit`, and the single per-room timer).

@@ -3,10 +3,11 @@ import { randomUUID } from 'crypto';
 import type { EngineCtx } from '../games/game-engine';
 import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
 import { maskBad } from '../common/profanity';
-import { AVATARS, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
+import { AVATARS, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
 const MAX_PLAYERS = 10;
 const CHAT_GAP_MS = 1000;
+const MAX_CHAT = 50; // chat lives in memory only, last 50 messages per room, gone with the room
 const LOBBY_THROTTLE_MS = 1000;
 const MAX_ROOM_NAME = 24;
 const EMPTY_ROOM_TTL_MS = 15 * 60 * 1000;
@@ -23,6 +24,7 @@ export class RoomsService implements OnModuleDestroy {
   private rooms = new Map<string, Room>();
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room) => void = () => {};
+  private onChat: (room: Room, msg: ChatMsg) => void = () => {};
   private sweeper = setInterval(() => this.sweep(), 60 * 1000);
   private lastChatAt = new Map<string, number>();
   private lobbyListener: (list: LobbyRoom[]) => void = () => {};
@@ -42,6 +44,11 @@ export class RoomsService implements OnModuleDestroy {
 
   setLobbyListener(fn: (list: LobbyRoom[]) => void) {
     this.lobbyListener = fn;
+  }
+
+  /** Called for every new chat message (player or system). The gateway pushes it as `chat:new`. */
+  setChatListener(fn: (room: Room, msg: ChatMsg) => void) {
+    this.onChat = fn;
   }
 
   getRoom(code: string) {
@@ -190,9 +197,19 @@ export class RoomsService implements OnModuleDestroy {
     if (now - (this.lastChatAt.get(playerId) ?? 0) < CHAT_GAP_MS) throw new GameError('استنى ثانية');
     this.lastChatAt.set(playerId, now);
     if (room.privacy === 'public') t = maskBad(t);
-    room.chat.push({ id: randomUUID(), from: playerId, text: t, at: Date.now() });
-    if (room.chat.length > 40) room.chat.splice(0, room.chat.length - 40);
-    this.emit(room);
+    this.pushChat(room, { id: randomUUID(), from: playerId, text: t, at: now });
+  }
+
+  /** A system divider in the chat ("بدأت الجولة ٢"). Chat is never cleared between rounds or games. */
+  private systemMessage(room: Room, text: string) {
+    this.pushChat(room, { id: randomUUID(), from: '', text, at: Date.now(), system: true });
+  }
+
+  /** Keep the last MAX_CHAT messages and push just this one (no full room snapshot). */
+  private pushChat(room: Room, msg: ChatMsg) {
+    room.chat.push(msg);
+    if (room.chat.length > MAX_CHAT) room.chat.splice(0, room.chat.length - MAX_CHAT);
+    this.onChat(room, msg);
   }
 
   renameRoom(playerId: string, name: unknown) {
@@ -324,6 +341,7 @@ export class RoomsService implements OnModuleDestroy {
     this.clearTimer(room);
     room.engine = def.create(room.settings[def.id]);
     room.settled = false;
+    this.systemMessage(room, `بدأت لعبة ${def.name}`);
     room.engine.start(this.ctx(room), online.map((p) => p.id));
   }
 
@@ -354,7 +372,6 @@ export class RoomsService implements OnModuleDestroy {
       hostId: room.hostId,
       youId: playerId,
       players,
-      chat: room.chat.slice(-30),
       selectedGame: room.selectedGame,
       settings: room.settings[room.selectedGame],
       game: e ? e.viewFor(playerId) : null,
@@ -369,7 +386,8 @@ export class RoomsService implements OnModuleDestroy {
       room,
       emit: () => this.emit(room),
       schedule: (seconds, fn) => this.schedule(room, seconds, fn),
-      clearTimer: () => this.clearTimer(room)
+      clearTimer: () => this.clearTimer(room),
+      system: (text) => this.systemMessage(room, text)
     };
   }
 

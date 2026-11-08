@@ -8,6 +8,8 @@ export interface EngineCtx {
   /** Run `fn` after `seconds`. Replaces any pending timer of the room. */
   schedule(seconds: number, fn: () => void): void;
   clearTimer(): void;
+  /** Post a system divider into the room chat (e.g. a new round started). */
+  system(text: string): void;
 }
 
 /**
@@ -37,6 +39,8 @@ export interface GameEngine {
 /** A game the lounge can pick. Settings are stored per game on the room. */
 export interface GameDef<S = any> {
   id: string;
+  /** Display name used in chat dividers. */
+  name: string;
   minPlayers: number;
   defaultSettings(): S;
   /** Merge a client patch into the current settings, ignoring invalid values. */

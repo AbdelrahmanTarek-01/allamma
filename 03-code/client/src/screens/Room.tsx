@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, GAMES } from '../components/art';
 import { MuteButton, Sheet } from '../components/ui';
-import { AR, leaveRoom, send, toast, type RoomView } from '../net';
+import { AR, leaveRoom, send, toast, useStore, type RoomView } from '../net';
 import { sfx } from '../sound';
 
 const MINUTES = [300, 480, 600];
 const ROUNDS = [1, 3, 5];
 
 export function Room({ room }: { room: RoomView }) {
+  const { chat } = useStore();
   const me = room.players.find((p) => p.id === room.youId)!;
   const isHost = room.hostId === room.youId;
   const online = room.players.filter((p) => p.connected).length;
@@ -29,17 +30,17 @@ export function Room({ room }: { room: RoomView }) {
   const chatRef = useRef<HTMLDivElement>(null);
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
 
-  useEffect(() => { chatRef.current?.scrollTo({ top: 1e6 }); }, [room.chat.length]);
+  useEffect(() => { chatRef.current?.scrollTo({ top: 1e6 }); }, [chat.length]);
 
   // sounds for people joining and new chat messages from others
-  const seen = useRef({ players: room.players.length, chat: room.chat[room.chat.length - 1]?.id });
+  const seen = useRef({ players: room.players.length, chat: chat[chat.length - 1]?.id });
   useEffect(() => {
     if (room.players.length > seen.current.players) sfx.join();
     else if (room.players.length < seen.current.players) sfx.leave();
-    const last = room.chat[room.chat.length - 1];
-    if (last && last.id !== seen.current.chat && last.from !== room.youId) sfx.chat();
+    const last = chat[chat.length - 1];
+    if (last && last.id !== seen.current.chat && !last.system && last.from !== room.youId) sfx.chat();
     seen.current = { players: room.players.length, chat: last?.id };
-  }, [room.players.length, room.chat]);
+  }, [room.players.length, chat]);
 
   const copyCode = async () => {
     try { await navigator.clipboard.writeText(room.code); sfx.select(); toast('الكود اتنسخ'); } catch { /* ignore */ }
@@ -219,8 +220,10 @@ export function Room({ room }: { room: RoomView }) {
 
       <section className="card flat col" style={{ padding: 10, gap: 8 }}>
         <div className="chat" ref={chatRef} aria-live="polite">
-          {room.chat.length === 0 && <span className="muted">قول حاجة لصحابك وانتو مستنيين…</span>}
-          {room.chat.map((m) => (
+          {chat.length === 0 && <span className="muted">قول حاجة لصحابك وانتو مستنيين…</span>}
+          {chat.map((m) => m.system ? (
+            <span key={m.id} className="chat-system">{m.text}</span>
+          ) : (
             <div key={m.id} className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
               <b style={{ fontSize: 13, fontWeight: 900, flex: 'none' }}>{nameOf(m.from)}</b>
               <span style={{ fontSize: 13, fontWeight: 600, overflowWrap: 'anywhere' }}>{m.text}</span>

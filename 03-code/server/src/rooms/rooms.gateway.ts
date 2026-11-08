@@ -22,6 +22,15 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   afterInit() {
     this.rooms.setListener((room) => this.broadcast(room));
     this.rooms.setLobbyListener((list) => this.server.to('lobby').emit('lobby:update', list));
+    // chat is not part of room:state: each new message is pushed on its own
+    this.rooms.setChatListener((room, msg) => {
+      room.players.forEach((p) => p.socketIds.forEach((sid) => this.server.to(sid).emit('chat:new', msg)));
+    });
+  }
+
+  /** The last messages, sent once when a socket enters a room (join, create, reconnect). */
+  private sendHistory(client: Socket, room: Room) {
+    client.emit('chat:history', room.chat);
   }
 
   private broadcast(room: Room) {
@@ -58,6 +67,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
       client.data.name = name;
       client.data.avatar = avatar;
       const room = this.rooms.attachSocket(id, client.id, name, avatar);
+      if (room) this.sendHistory(client, room);
       return { ok: true, roomCode: room?.code ?? null };
     } catch (e) {
       return { ok: false, error: e instanceof GameError ? e.message : 'حصلت مشكلة' };
@@ -66,12 +76,20 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   @SubscribeMessage('room:create')
   create(@ConnectedSocket() c: Socket): Ack {
-    return this.run(c, (id) => ({ code: this.rooms.createRoom(id, c.data.name, c.data.avatar, c.id).code }));
+    return this.run(c, (id) => {
+      const room = this.rooms.createRoom(id, c.data.name, c.data.avatar, c.id);
+      this.sendHistory(c, room);
+      return { code: room.code };
+    });
   }
 
   @SubscribeMessage('room:join')
   join(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
-    return this.run(c, (id) => ({ code: this.rooms.joinRoom(b?.code, id, c.data.name, c.data.avatar, c.id).code }));
+    return this.run(c, (id) => {
+      const room = this.rooms.joinRoom(b?.code, id, c.data.name, c.data.avatar, c.id);
+      this.sendHistory(c, room);
+      return { code: room.code };
+    });
   }
 
   // The home screen asks for the list once (this also subscribes it to pushes) and unsubscribes when it closes.
@@ -91,6 +109,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   quick(@ConnectedSocket() c: Socket): Ack {
     return this.run(c, (id) => {
       const { room, created } = this.rooms.quickPlay(id, c.data.name, c.data.avatar, c.id);
+      this.sendHistory(c, room);
       return { code: room.code, created };
     });
   }
