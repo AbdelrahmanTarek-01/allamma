@@ -109,7 +109,7 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6h30a5 5 0 015 5v17a5 5 0 01-5 5H24l-9 8v-8H9a5 5 0 01-5-5V11a5 5 0 015-5z" fill="#fff" {...S} /><path d="M28.5 15.5c0-2.8-2.2-4.5-4.6-4.5s-4.4 1.8-4.4 4.2c0 3.3 4.5 3.6 4.5 7.3" fill="none" stroke="#111" strokeWidth={3.2} strokeLinecap="round" /><circle cx="24" cy="27.5" r="2" fill="#111" /></svg>)
   },
   {
-    id: 'draw', name: 'ارسم وخمّن', tagline: 'ارسم وصحابك يخمّنوا', color: '#FFD23F', ready: false,
+    id: 'draw', name: 'ارسم وخمّن', tagline: 'ارسم وصحابك يخمّنوا', color: '#FFD23F', ready: true,
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 42q6-6 12-1t12-2" fill="none" stroke="#FF4F9A" strokeWidth={3.5} strokeLinecap="round" /><g transform="rotate(-45 26 22)"><rect x="12" y="17" width="24" height="10" fill="#fff" {...S} /><rect x="36" y="17" width="7" height="10" rx="2" fill="#FF4F9A" {...S} /><path d="M12 17L4 22l8 5z" fill="#F3D9B1" {...S} /><path d="M4 22l3-1.9v3.8z" fill="#111" /></g></svg>)
   }
 ];

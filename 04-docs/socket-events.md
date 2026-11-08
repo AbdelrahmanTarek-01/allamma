@@ -98,8 +98,9 @@ One generic event: `game:act` with `{ game: 'quiz' | 'words' | 'auction' | 'draw
 - quiz actions: `pickCategory {cat}`, `pickCell {r,c}`, `card {card: 'double'|'fifty'|'steal'}`, `vote {option}`, `lock`, `teamChat {text}`, `next` (host).
 - words actions: `clue {word,num}`, `mark {i}`, `flip`, `endTurn`, `teamChat {text}`, `next` (host).
 - auction actions: `bid {step: 50|100|200}`, `pick {option}` (buyer), `lock` (buyer), `predict {yes}` (everyone else), `next` (host).
+- draw actions: `pickWord {i}`, `strokeStart {id,c,w}`, `strokePts {id,pts}`, `undo`, `clear`, `submit` (drawer), `guess {text}`, `hint`, `like {round}` (final), `next` (host). Live strokes reach the guessers as the `draw:delta` event `{ round, base, rev, ops }` (applied only when `base` matches the local revision; the next snapshot repairs a gap).
 - Teams are edited with `room:teams` (shuffle / move), the same editor as الموجة teams mode.
-- Secrets: words' colour key only to the two guides (everyone sees a card's colour when it is flipped); marks only to the marking team (on ماكس not even there). auction: the question only exists in snapshots once the lot is sold, the buyer's pick is private until locked. quiz: the right answer only at the reveal; teammates' votes only to the answering team; a team's chat only to that team.
+- Secrets: words' colour key only to the two guides (everyone sees a card's colour when it is flipped); marks only to the marking team (on ماكس not even there). draw: the word only to the drawer until the reveal, a hint letter only to its owner, "قريب!" only to the guesser, guessing closed until the drawing is submitted. auction: the question only exists in snapshots once the lot is sold, the buyer's pick is private until locked. quiz: the right answer only at the reveal; teammates' votes only to the answering team; a team's chat only to that team.
 
 ## HTTP
 - `GET /api/health` → `{ ok, rooms, players }`. Also used to wake the free server, and by the keep-alive ping.

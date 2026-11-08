@@ -23,6 +23,9 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   afterInit() {
     this.rooms.setListener((room, only) => this.broadcast(room, only));
     this.rooms.setLobbyListener((list) => this.server.to('lobby').emit('lobby:update', list));
+    this.rooms.setPushListener((room, ids, event, data) => {
+      room.players.forEach((p) => { if (ids.includes(p.id)) p.socketIds.forEach((sid) => this.server.to(sid).emit(event, data)); });
+    });
     // chat is not part of room:state: each new message is pushed on its own
     this.rooms.setChatListener((room, msg) => {
       room.players.forEach((p) => p.socketIds.forEach((sid) => this.server.to(sid).emit('chat:new', msg)));

@@ -199,6 +199,34 @@ export interface AuctionGameView {
   revealCorrect: number | null;
 }
 
+/** ارسم وخمّن (draw). The word only reaches the drawer until the reveal; strokes stream live through the `draw:delta` event. */
+export interface DrawStroke { id: number; c: string; w: number; pts: number[] }
+export type DrawOp = { op: 'start'; id: number; c: string; w: number } | { op: 'pts'; id: number; pts: number[] } | { op: 'undo' } | { op: 'clear' };
+export interface DrawGameView {
+  type: 'draw';
+  phase: 'pick' | 'draw' | 'guess' | 'reveal' | 'final';
+  endsAt: number | null;
+  level: string;
+  participants: string[];
+  scores: Record<string, number>;
+  round: number;
+  rounds: number;
+  cfg: { eraser: boolean; drawSecs: number; guessSecs: number; attempts: number; hints: number; colors: string[] };
+  queue: string[];
+  drawer: string | null;
+  isDrawer: boolean;
+  choices: { i: number; w: string; shape: number; pts: number }[] | null;
+  word: string | null;
+  pts: number;
+  strokes: DrawStroke[];
+  rev: number;
+  solvedIds: string[];
+  feed: { id: string; text: string | null; ok: boolean }[];
+  me: { attemptsLeft: number; guessed: boolean; gain: number; mine: { text: string; near: boolean }[]; hintLetter: string | null; hintsLeft: number; canHint: boolean } | null;
+  result: { word: string | null; skipped: boolean; gains: { id: string; gain: number; left: number; hinted: boolean }[]; outOf: string[]; drawerGain: number; total: number } | null;
+  final: { ranked: string[]; gallery: { round: number; drawer: string; word: string; strokes: DrawStroke[]; likes: number; mine: boolean }[]; artist: { id: string; hearts: number } | null } | null;
+}
+
 export interface BoardRow {
   id: string; name: string; avatar: string;
   /** Still in the lounge (rows of players who left stay, greyed). */
@@ -249,7 +277,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | MapGameView | WaveGameView | QuizGameView | WordsGameView | AuctionGameView | null;
+  game: GameView | MapGameView | WaveGameView | QuizGameView | WordsGameView | AuctionGameView | DrawGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }

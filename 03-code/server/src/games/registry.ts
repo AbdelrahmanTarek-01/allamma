@@ -3,6 +3,7 @@ import { mapDef } from './map/map.engine';
 import { quizDef } from './quiz/quiz.engine';
 import { wordsDef } from './words/words.engine';
 import { auctionDef } from './auction/auction.engine';
+import { drawDef } from './draw/draw.engine';
 import { spyDef } from './spy/spy.engine';
 import { waveDef } from './wave/wave.engine';
 
@@ -13,7 +14,8 @@ export const GAME_DEFS: Record<string, GameDef> = {
   [waveDef.id]: waveDef,
   [quizDef.id]: quizDef,
   [wordsDef.id]: wordsDef,
-  [auctionDef.id]: auctionDef
+  [auctionDef.id]: auctionDef,
+  [drawDef.id]: drawDef
 };
 
 export const DEFAULT_GAME = spyDef.id;

@@ -33,6 +33,7 @@ export class RoomsService implements OnModuleDestroy {
   private rooms = new Map<string, Room>();
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room, only?: string[]) => void = () => {};
+  private onPush: (room: Room, ids: string[], event: string, data: unknown) => void = () => {};
   private onChat: (room: Room, msg: ChatMsg) => void = () => {};
   private sweeper = setInterval(() => this.sweep(), 60 * 1000);
   private lastChatAt = new Map<string, number>();
@@ -49,6 +50,11 @@ export class RoomsService implements OnModuleDestroy {
 
   setListener(fn: (room: Room, only?: string[]) => void) {
     this.onChange = fn;
+  }
+
+  /** Custom engine events (live strokes): the gateway sends them to the listed players only. */
+  setPushListener(fn: (room: Room, ids: string[], event: string, data: unknown) => void) {
+    this.onPush = fn;
   }
 
   setLobbyListener(fn: (list: LobbyRoom[]) => void) {
@@ -512,6 +518,7 @@ export class RoomsService implements OnModuleDestroy {
       room,
       emit: () => this.emit(room),
       emitTo: (ids) => { if (this.rooms.has(room.code)) this.onChange(room, ids); },
+      push: (ids, event, data) => { if (this.rooms.has(room.code)) this.onPush(room, ids, event, data); },
       schedule: (seconds, fn) => this.schedule(room, seconds, fn),
       clearTimer: () => this.clearTimer(room),
       system: (text) => this.systemMessage(room, text)

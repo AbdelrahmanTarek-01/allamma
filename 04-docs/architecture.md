@@ -104,3 +104,8 @@ result ──host──▶ back to the lounge
 ## مزاد المعلومات (auction)
 - Engine `server/src/games/auction/auction.engine.ts`; lots reuse the حزّورة question pack (topic = category, tier from the level). Phases per lot: bid (countdown resets on every bid) → sold (gavel + stamp) → answer (buyer, 15 s; others predict, +50) → reveal → next lot or final. Setting `lots` 5/8/12.
 - Difficulty table `AUCTION_LEVELS`: bid time 15/10/8/5 s, start money 1500/1000/800/500, wrong answer refund / half / bid / 2x bid (floored at 0), question tier. Richest wins; money is the lounge score.
+
+## ارسم وخمّن (draw)
+- Engine `server/src/games/draw/draw.engine.ts`, pool `draw-words.ts` (316 words, group per level x drawing difficulty 1-3). Phases per round: pick (10 s, 1 of 3 words worth 100/200/300) → draw (live strokes via `ctx.push`) → guess (opens only after submit or draw time) → reveal (8 s) → final with the likes gallery. Setting `cycles` 1/2.
+- Difficulty table `DRAW_LEVELS`: draw 90/70/50/40 s, guess 30/20/15/10 s, attempts 4/3/2/2, reveal-letter cards 2/1/1/0, no eraser on ماكس, word pool objects / places and things / situations / feelings and proverbs.
+- `EngineCtx.push(ids, event, data)` sends small custom events (not snapshots) through the gateway.

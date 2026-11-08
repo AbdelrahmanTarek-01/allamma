@@ -9,6 +9,8 @@ export interface EngineCtx {
   /** Same, but only these players get a snapshot (e.g. a team's live needle: the other team must not receive it). */
   emitTo(playerIds: string[]): void;
   /** Run `fn` after `seconds`. Replaces any pending timer of the room. */
+  /** Send a small custom event (not a snapshot) to these players, e.g. live drawing strokes. */
+  push(playerIds: string[], event: string, data: unknown): void;
   schedule(seconds: number, fn: () => void): void;
   clearTimer(): void;
   /** Post a system divider into the room chat (e.g. a new round started). */

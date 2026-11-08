@@ -17,6 +17,7 @@ const WaveGame = lazy(() => import('./screens/WaveGame').then((m) => ({ default:
 const QuizGame = lazy(() => import('./screens/QuizGame').then((m) => ({ default: m.QuizGame })));
 const WordsGame = lazy(() => import('./screens/WordsGame').then((m) => ({ default: m.WordsGame })));
 const AuctionGame = lazy(() => import('./screens/AuctionGame').then((m) => ({ default: m.AuctionGame })));
+const DrawGame = lazy(() => import('./screens/DrawGame').then((m) => ({ default: m.DrawGame })));
 const MapGame = lazy(() => import('./screens/MapGame').then((m) => ({ default: m.MapGame })));
 
 export function App() {
@@ -63,6 +64,10 @@ export function App() {
     key = `auction-${room.game.lotNo}-${room.game.phase === 'sold' ? 'bid' : room.game.phase}`;
     screen = <Suspense fallback={<SkeletonHome note="بنجهّز اللعبة…" />}><AuctionGame room={room} g={room.game} /></Suspense>;
   }
+  else if (room.game.type === 'draw') {
+    key = `draw-${room.game.round}-${room.game.phase}`;
+    screen = <Suspense fallback={<SkeletonHome note="بنجهّز اللعبة…" />}><DrawGame room={room} g={room.game} /></Suspense>;
+  }
   else { key = `spy-${room.game.round}-${room.game.phase}`; screen = <SpyGame room={room} g={room.game} />; }
 
   // the first time a game starts for this player, open its how-to-play once (remembered per game on this device)
@@ -75,9 +80,12 @@ export function App() {
   const isWave = room?.game?.type === 'wave';
   const isQuiz = room?.game?.type === 'quiz';
   const isWords = room?.game?.type === 'words';
+  const isDraw = room?.game?.type === 'draw';
   const isAuction = room?.game?.type === 'auction';
   // spy: tense while talking, silent on the dark reveal/guess. map: tense while the clock runs, lively for the yellow reveal
-  const track: MusicName = isAuction
+  const track: MusicName = isDraw
+    ? (phase === 'draw' || phase === 'guess' ? 'tension' : 'lobby')
+    : isAuction
     ? (phase === 'bid' || phase === 'answer' ? 'tension' : 'lobby')
     : isWords
     ? (phase === 'boardEnd' ? null : phase === 'guess' ? 'tension' : 'lobby')
@@ -111,7 +119,7 @@ export function App() {
       <div key={key} className="enter">{screen}</div>
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
-      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && !isQuiz && !isWords && !isAuction && phase === 'discuss'} visible={!board && (!room.game || (isWave || isQuiz || isWords || isAuction ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
+      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && !isQuiz && !isWords && !isAuction && !isDraw && phase === 'discuss'} visible={!board && (!room.game || (isWave || isQuiz || isWords || isAuction || isDraw ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
       {toast && <div key={toast} className="toast" role="status">{toast}</div>}
     </>
   );
