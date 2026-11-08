@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Character, SpyIcon } from '../components/art';
+import { Character, GAMES } from '../components/art';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
@@ -16,6 +16,15 @@ export function Room({ room }: { room: RoomView }) {
   const [confirmKick, setConfirmKick] = useState(false);
   const target = room.players.find((p) => p.id === manageId && p.id !== room.youId);
   const closeManage = () => { setManageId(null); setConfirmKick(false); };
+  const [renaming, setRenaming] = useState(false);
+  const [draft, setDraft] = useState('');
+  const game = GAMES.find((g) => g.id === room.selectedGame) ?? GAMES[0];
+  const saveName = async () => {
+    const n = draft.trim();
+    if (!n) return toast('اكتب اسم للقعدة');
+    setRenaming(false);
+    if (n !== room.name) await send('room:rename', { name: n });
+  };
   const roundsText = (r: number) => (r === 1 ? 'جولة' : `${AR(r)} جولات`);
   const chatRef = useRef<HTMLDivElement>(null);
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
@@ -38,7 +47,7 @@ export function Room({ room }: { room: RoomView }) {
 
   const invite = async () => {
     const link = `${location.origin}/?room=${room.code}`;
-    const text = `تعالى العب معانا مين الجاسوس في اللمّة! الكود ${room.code}`;
+    const text = `تعالى العب معانا ${game.name} في اللمّة! الكود ${room.code}`;
     try {
       if (navigator.share) { await navigator.share({ title: 'اللمّة', text, url: link }); return; }
     } catch { return; }
@@ -49,7 +58,7 @@ export function Room({ room }: { room: RoomView }) {
   // WhatsApp can't start a call from a link, so this opens a message to a group/contact: they start the voice call there.
   const whatsapp = () => {
     const link = `${location.origin}/?room=${room.code}`;
-    const text = `تعالوا نلعب مين الجاسوس في اللمّة ونفتح مكالمة صوت! الكود ${room.code}\n${link}`;
+    const text = `تعالوا نلعب ${game.name} في اللمّة ونفتح مكالمة صوت! الكود ${room.code}\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   };
 
@@ -82,15 +91,49 @@ export function Room({ room }: { room: RoomView }) {
         افتحوا مكالمة واتساب
       </button>
 
+      <div className="col" style={{ gap: 0 }}>
+        <span className="label" style={{ fontSize: 12 }}>القعدة</span>
+        {isHost ? (
+          <button className="row" aria-label="غيّر اسم القعدة" onClick={() => { setDraft(room.name); setRenaming(true); }} style={{ border: 0, background: 'none', padding: 0, gap: 8, textAlign: 'right' }}>
+            <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style={{ flex: 'none' }}><path d="M4 20l1-5L16 4l4 4L9 19z" fill="#fff" stroke="#111" strokeWidth={2} strokeLinejoin="round" /><path d="M14 6l4 4" stroke="#111" strokeWidth={2} /></svg>
+          </button>
+        ) : <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>}
+      </div>
+
+      <div className="col" style={{ gap: 6 }}>
+        <span className="label" style={{ fontSize: 12 }}>هتلعبوا إيه؟</span>
+        <div className="game-row">
+          {GAMES.map((g) => {
+            const selected = g.id === room.selectedGame;
+            const Tag = isHost ? 'button' : 'div';
+            return (
+              <Tag
+                key={g.id}
+                className={`tile${g.ready ? '' : ' off'}`}
+                {...(isHost ? { type: 'button' as const, 'aria-pressed': selected, onClick: () => { sfx.tap(); if (g.ready) send('room:selectGame', { game: g.id }); else toast(`${g.name} جاية قريب`); } } : {})}
+                style={{ flex: '0 0 148px', height: 134, background: selected ? 'var(--yellow-soft)' : '#fff', outline: selected ? '3px solid var(--ink)' : 'none', outlineOffset: 3, cursor: isHost ? 'pointer' : 'default' }}
+              >
+                {!g.ready && <span className="chip badge">قريباً</span>}
+                {selected && <span className="chip dark badge">مختارة</span>}
+                <span className="icontile" style={{ background: g.color }}>{g.icon}</span>
+                <span className="display" style={{ fontSize: 19, marginTop: 4 }}>{g.name}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{g.tagline}</span>
+              </Tag>
+            );
+          })}
+        </div>
+      </div>
+
       <section className="card col" style={{ gap: 10, padding: '14px 16px' }}>
         <div className="row">
-          <span className="icontile" style={{ background: 'var(--pink)', width: 46, height: 46 }}><SpyIcon size={36} /></span>
+          <span className="icontile" style={{ background: game.color, width: 46, height: 46 }}>{game.icon}</span>
           <div className="col grow" style={{ gap: 0 }}>
-            <span className="label" style={{ fontSize: 12 }}>اللعبة</span>
-            <span className="display h2">مين الجاسوس؟</span>
+            <span className="label" style={{ fontSize: 12 }}>إعدادات اللعبة</span>
+            <span className="display h2">{game.name}</span>
           </div>
         </div>
-        {isHost ? (
+        {room.selectedGame !== 'spy' ? null : isHost ? (
           <div className="col" style={{ gap: 10 }}>
             <div className="col" style={{ gap: 4 }}>
               <span className="label" style={{ fontSize: 12 }}>وقت الجولة</span>
@@ -142,6 +185,7 @@ export function Room({ room }: { room: RoomView }) {
               <span style={{ fontSize: 11.5, fontWeight: 800, color: !p.connected ? '#555' : p.ready || p.id === room.hostId ? 'var(--ok)' : '#6b5a00' }}>
                 {!p.connected ? 'النت فصل' : p.id === room.hostId ? 'جاهز' : p.ready ? 'جاهز' : 'لسه'}
               </span>
+              {p.lounge > 0 && <span className="chip soft" style={{ fontSize: 11, padding: '0 8px' }}>{AR(p.lounge)} نقطة</span>}
             </Tag>
           );
         })}
@@ -185,6 +229,14 @@ export function Room({ room }: { room: RoomView }) {
           </>
         )}
       </div>
+      {isHost && renaming && (
+        <Sheet title="اسم القعدة" onClose={() => setRenaming(false)}>
+          <form className="col" style={{ gap: 10 }} onSubmit={(e) => { e.preventDefault(); saveName(); }}>
+            <input className="input" aria-label="اسم القعدة" autoFocus value={draft} maxLength={24} onChange={(e) => setDraft(e.target.value)} />
+            <button className="btn big full" type="submit">احفظ</button>
+          </form>
+        </Sheet>
+      )}
       {isHost && target && (
         <Sheet title={target.name} onClose={closeManage}>
           {confirmKick ? (

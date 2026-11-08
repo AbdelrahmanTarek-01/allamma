@@ -184,6 +184,10 @@ button:disabled { cursor: not-allowed; }
 }
 @keyframes pop { from { transform: translate(-50%, 20px) scale(.9); opacity: 0; } }
 
+/* lounge game picker: same tiles as Home, in a sideways-scrolling row */
+.game-row { display: flex; gap: 12px; overflow-x: auto; padding: 14px 6px 8px; margin: -8px -6px 0; scroll-snap-type: x proximity; }
+.game-row > * { scroll-snap-align: start; }
+
 /* in-game chat */
 .chat-fab {
   position: fixed; z-index: 20;

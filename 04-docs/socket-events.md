@@ -13,14 +13,19 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `room:makeHost` | `{ playerId }` | host | Transfers hosting to another connected player. Not yourself. |
 | `room:ready` | `{ ready }` | member | |
 | `room:chat` | `{ text }` | member | Up to 200 chars. The last 40 are kept. |
-| `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Only while no game is running. |
-| `game:start` | – | host | Needs 3+ connected players. Resets scores. |
+| `room:rename` | `{ name }` | host | Lounge name, trimmed, max 24 chars, not empty. |
+| `room:selectGame` | `{ game }` | host | Only in the lounge (no game running). Only `spy` is playable, anything else is rejected with "اللعبة دي جاية قريب". |
+| `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Settings of the selected game (shown here: spy). Only while no game is running. Kept per game. |
+| `game:start` | – | host | Starts the selected game from the lounge. Needs the game's minimum of connected players (spy: 3). |
+| `game:again` | – | host, final screen | Same game, same settings, fresh round scores. |
 | `spy:nextTurn` | – | current asker | Passes the question to the next pair. |
 | `spy:callVote` | – | round player | Ends discussion now. |
 | `spy:vote` | `{ targetId }` | round player | Can change the vote until the tally. |
 | `spy:guess` | `{ place }` | spy, guess phase | Must be one of the guess options. |
 | `game:next` | – | host, result phase | Next round, or `final` after the last round. |
-| `game:backToRoom` | – | host | Ends the game. |
+| `game:backToRoom` | – | host | Ends the game and returns to the lounge to pick a game. Lounge scores stay (a game left before its final screen adds nothing). |
+
+Game events (`spy:*`, `game:next`) are routed by `RoomsService.gameAction` to the room's active engine. Actions an engine lists in `hostActions` (spy: `next`) are host-only.
 
 ## Server → client
 `room:kicked` (no payload): sent to a player the host removed. The client goes home and shows "المضيف طلّعك من الأوضة".
@@ -28,10 +33,13 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 `room:state` (personalized, after every change):
 ```ts
 {
-  code, hostId, youId,
-  players: [{ id, name, avatar, ready, connected, score }],
+  code, name /* lounge name */, hostId, youId,
+  players: [{ id, name, avatar, ready, connected,
+              score /* this game's points, 0 in the lounge */,
+              lounge /* lounge total across games */ }],
   chat: [{ id, from, text, at }],
-  settings: { discussSeconds, rounds },
+  selectedGame,                       // 'spy'
+  settings: { discussSeconds, rounds }, // settings of the selected game
   serverNow,
   game: null | {
     type: 'spy', round, totalRounds,

@@ -2,7 +2,8 @@ import { useSyncExternalStore } from 'react';
 import { io } from 'socket.io-client';
 import { sfx } from './sound';
 
-export interface PlayerView { id: string; name: string; avatar: string; ready: boolean; connected: boolean; score: number }
+/** `score` is this game's points; `lounge` is the lounge total across games. */
+export interface PlayerView { id: string; name: string; avatar: string; ready: boolean; connected: boolean; score: number; lounge: number }
 export interface ChatView { id: string; from: string; text: string; at: number }
 export type Phase = 'discuss' | 'vote' | 'reveal' | 'guess' | 'result' | 'final';
 export interface GameView {
@@ -30,6 +31,8 @@ export interface GameView {
 }
 export interface RoomView {
   code: string;
+  name: string;
+  selectedGame: string;
   hostId: string;
   youId: string;
   players: PlayerView[];

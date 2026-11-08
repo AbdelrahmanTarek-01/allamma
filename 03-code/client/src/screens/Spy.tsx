@@ -402,8 +402,12 @@ function Final({ room, g }: P) {
       </div>
       <Leaderboard room={room} g={g} showRound={false} />
       <div className="col push">
-        {isHost ? <button className="btn big full" onClick={() => { sfx.tap(); send('game:backToRoom'); }}>رجوع للأوضة</button>
-          : <span className="label" style={{ textAlign: 'center' }}>مستنيين {name(room.hostId)}</span>}
+        {isHost ? (
+          <>
+            <button className="btn big full" onClick={() => { sfx.tap(); send('game:again'); }}>نلعبها تاني</button>
+            <button className="btn full" onClick={() => send('game:backToRoom')}>نغيّر اللعبة</button>
+          </>
+        ) : <span className="label" style={{ textAlign: 'center' }}>مستنيين المضيف</span>}
       </div>
     </main>
   );

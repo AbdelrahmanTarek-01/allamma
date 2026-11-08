@@ -106,34 +106,50 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.updateSettings(id, b ?? {}));
   }
 
+  @SubscribeMessage('room:rename')
+  rename(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.renameRoom(id, b?.name));
+  }
+
+  @SubscribeMessage('room:selectGame')
+  selectGame(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.selectGame(id, b?.game));
+  }
+
   @SubscribeMessage('game:start')
   start(@ConnectedSocket() c: Socket): Ack {
     return this.run(c, (id) => this.rooms.startGame(id));
   }
 
+  @SubscribeMessage('game:again')
+  again(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.again(id));
+  }
+
+  // Spy actions: the service delegates them to the room's active engine.
   @SubscribeMessage('spy:nextTurn')
   nextTurn(@ConnectedSocket() c: Socket): Ack {
-    return this.run(c, (id) => this.rooms.nextTurn(id));
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'nextTurn'));
   }
 
   @SubscribeMessage('spy:callVote')
   callVote(@ConnectedSocket() c: Socket): Ack {
-    return this.run(c, (id) => this.rooms.callVote(id));
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'callVote'));
   }
 
   @SubscribeMessage('spy:vote')
   vote(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
-    return this.run(c, (id) => this.rooms.vote(id, b?.targetId));
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'vote', { targetId: b?.targetId }));
   }
 
   @SubscribeMessage('spy:guess')
   guess(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
-    return this.run(c, (id) => this.rooms.guess(id, b?.place));
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'guess', { place: b?.place }));
   }
 
   @SubscribeMessage('game:next')
   next(@ConnectedSocket() c: Socket): Ack {
-    return this.run(c, (id) => this.rooms.nextRound(id));
+    return this.run(c, (id) => this.rooms.gameAction(id, null, 'next'));
   }
 
   @SubscribeMessage('game:backToRoom')

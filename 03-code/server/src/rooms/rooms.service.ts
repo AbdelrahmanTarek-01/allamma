@@ -1,26 +1,20 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { PLACE_FAMILIES } from '../spy/places';
-import { AVATARS, GameError, Player, Room, SpyGame, SpyOutcome } from './rooms.types';
+import type { EngineCtx } from '../games/game-engine';
+import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
+import { AVATARS, GameError, Player, Room } from './rooms.types';
 
-export const VOTE_SECONDS = 45;
-export const REVEAL_SECONDS = 6;
-export const GUESS_SECONDS = 20;
-const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 10;
+const MAX_ROOM_NAME = 24;
 const EMPTY_ROOM_TTL_MS = 15 * 60 * 1000;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-const shuffle = <T>(arr: T[]): T[] => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 
+/**
+ * Room concerns only: players, host, chat, settings, lounge scores and lifecycle.
+ * Everything game-specific is delegated to the room's active GameEngine.
+ */
 @Injectable()
 export class RoomsService implements OnModuleDestroy {
   private rooms = new Map<string, Room>();
@@ -78,7 +72,7 @@ export class RoomsService implements OnModuleDestroy {
     p.connected = false;
     if (room.hostId === playerId) this.passHost(room);
     if (![...room.players.values()].some((x) => x.connected)) room.emptySince = Date.now();
-    this.checkAllVoted(room);
+    room.engine?.onPresenceChange(this.ctx(room));
     this.emit(room);
   }
 
@@ -89,13 +83,17 @@ export class RoomsService implements OnModuleDestroy {
     let code = '';
     do code = Array.from({ length: 5 }, () => pick([...CODE_CHARS])).join('');
     while (this.rooms.has(code));
+    const def = GAME_DEFS[DEFAULT_GAME];
     const room: Room = {
       code,
+      name: this.cleanRoomName(`قعدة ${name}`),
       hostId: playerId,
       players: new Map(),
       chat: [],
-      settings: { discussSeconds: 480, rounds: 3 },
-      game: null,
+      selectedGame: def.id,
+      settings: { [def.id]: def.defaultSettings() },
+      engine: null,
+      settled: false,
       timer: null,
       emptySince: null
     };
@@ -119,7 +117,7 @@ export class RoomsService implements OnModuleDestroy {
 
   private addPlayer(room: Room, id: string, name: string, avatar: string, socketId: string) {
     const p: Player = {
-      id, name, avatar, ready: false, connected: true, score: 0, joinedAt: Date.now(),
+      id, name, avatar, ready: false, connected: true, lounge: 0, joinedAt: Date.now(),
       socketIds: new Set([socketId])
     };
     room.players.set(id, p);
@@ -138,17 +136,7 @@ export class RoomsService implements OnModuleDestroy {
       return;
     }
     if (room.hostId === playerId) this.passHost(room);
-    const g = room.game;
-    if (g && g.participants.includes(playerId)) {
-      g.participants = g.participants.filter((id) => id !== playerId);
-      delete g.votes[playerId];
-      if (g.spyId === playerId && ['discuss', 'vote', 'reveal', 'guess'].includes(g.phase)) {
-        this.finishRound(room, 'detectives');
-        return;
-      }
-      if (g.askerId === playerId || g.targetId === playerId) this.rotateTurn(g, true);
-      this.checkAllVoted(room);
-    }
+    room.engine?.onLeave(this.ctx(room), playerId);
     this.emit(room);
   }
 
@@ -184,252 +172,125 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
-  updateSettings(playerId: string, s: { discussSeconds?: unknown; rounds?: unknown }) {
+  renameRoom(playerId: string, name: unknown) {
     const room = this.mustHost(playerId);
-    if (room.game) throw new GameError('مينفعش تغيّر الإعدادات واللعبة شغالة');
-    const secs = Number(s.discussSeconds);
-    const rounds = Number(s.rounds);
-    if ([300, 480, 600].includes(secs)) room.settings.discussSeconds = secs;
-    if ([1, 3, 5].includes(rounds)) room.settings.rounds = rounds;
+    const n = this.cleanRoomName(name);
+    if (!n) throw new GameError('اكتب اسم للقعدة');
+    room.name = n;
     this.emit(room);
   }
 
-  // ---------- spy game ----------
+  selectGame(playerId: string, game: unknown) {
+    const room = this.mustHost(playerId);
+    if (room.engine) throw new GameError('مينفعش تغيّر اللعبة واللعبة شغالة');
+    const def = GAME_DEFS[String(game ?? '')];
+    if (!def) throw new GameError('اللعبة دي جاية قريب');
+    room.selectedGame = def.id;
+    room.settings[def.id] ??= def.defaultSettings();
+    this.emit(room);
+  }
 
+  /** Settings of the selected game. */
+  updateSettings(playerId: string, patch: unknown) {
+    const room = this.mustHost(playerId);
+    if (room.engine) throw new GameError('مينفعش تغيّر الإعدادات واللعبة شغالة');
+    const def = GAME_DEFS[room.selectedGame];
+    room.settings[def.id] = def.parseSettings(room.settings[def.id], patch);
+    this.emit(room);
+  }
+
+  // ---------- games ----------
+
+  /** Start the selected game from the lounge. */
   startGame(playerId: string) {
     const room = this.mustHost(playerId);
-    if (room.game && room.game.phase !== 'final') throw new GameError('اللعبة شغالة فعلاً');
-    const online = [...room.players.values()].filter((p) => p.connected);
-    if (online.length < MIN_PLAYERS) throw new GameError(`محتاجين ${MIN_PLAYERS} لاعيبة على الأقل`);
-    room.players.forEach((p) => (p.score = 0));
-    this.startRound(room, 1, online.map((p) => p.id));
+    if (room.engine && !room.engine.isOver()) throw new GameError('اللعبة شغالة فعلاً');
+    this.begin(room);
   }
 
-  private startRound(room: Room, round: number, participants: string[]) {
-    const family = pick(PLACE_FAMILIES);
-    const place = pick(family.places);
-    const familyNames = family.places.map((p) => p.name);
-    const others = shuffle(PLACE_FAMILIES.filter((f) => f !== family).flatMap((f) => f.places.map((p) => p.name)));
-    const board = shuffle([...familyNames, ...others.slice(0, Math.max(0, 12 - familyNames.length))]);
-    const guessOptions = shuffle([place.name, ...shuffle(familyNames.filter((n) => n !== place.name)).slice(0, 5)]);
-    const spyId = pick(participants);
-    const roles: Record<string, string> = {};
-    let pool: string[] = [];
-    participants.forEach((id) => {
-      if (id === spyId) return;
-      if (pool.length === 0) pool = shuffle(place.roles);
-      roles[id] = pool.pop()!;
-    });
-    const askerId = pick(participants);
-    const game: SpyGame = {
-      type: 'spy',
-      round,
-      totalRounds: room.settings.rounds,
-      phase: 'discuss',
-      endsAt: Date.now() + room.settings.discussSeconds * 1000,
-      place, board, guessOptions, spyId, roles, participants,
-      askerId,
-      targetId: pick(participants.filter((id) => id !== askerId)),
-      votes: {},
-      accusedId: null,
-      caught: false,
-      spyGuess: null,
-      outcome: null,
-      roundPoints: {}
-    };
-    room.game = game;
-    this.schedule(room, room.settings.discussSeconds, () => this.startVote(room));
-    this.emit(room);
-  }
-
-  nextTurn(playerId: string) {
-    const room = this.mustRoom(playerId);
-    const g = this.mustPhase(room, 'discuss');
-    if (g.askerId !== playerId) throw new GameError('مش دورك تسأل');
-    this.rotateTurn(g, false);
-    this.emit(room);
-  }
-
-  private rotateTurn(g: SpyGame, reset: boolean) {
-    const ids = g.participants;
-    if (ids.length < 2) return;
-    const prevAsker = g.askerId;
-    g.askerId = reset || !ids.includes(g.targetId) ? pick(ids) : g.targetId;
-    const choices = ids.filter((id) => id !== g.askerId && id !== prevAsker);
-    g.targetId = pick(choices.length ? choices : ids.filter((id) => id !== g.askerId));
-  }
-
-  callVote(playerId: string) {
-    const room = this.mustRoom(playerId);
-    const g = this.mustPhase(room, 'discuss');
-    if (!g.participants.includes(playerId)) throw new GameError('انت مش في الجولة دي');
-    this.startVote(room);
-  }
-
-  private startVote(room: Room) {
-    const g = room.game;
-    if (!g || g.phase !== 'discuss') return;
-    g.phase = 'vote';
-    g.votes = {};
-    g.endsAt = Date.now() + VOTE_SECONDS * 1000;
-    this.schedule(room, VOTE_SECONDS, () => this.tally(room));
-    this.emit(room);
-  }
-
-  vote(playerId: string, targetId: unknown) {
-    const room = this.mustRoom(playerId);
-    const g = this.mustPhase(room, 'vote');
-    const t = String(targetId ?? '');
-    if (!g.participants.includes(playerId)) throw new GameError('انت مش في الجولة دي');
-    if (t === playerId) throw new GameError('مينفعش تصوّت على نفسك');
-    if (!g.participants.includes(t)) throw new GameError('اللاعب ده مش موجود');
-    g.votes[playerId] = t;
-    this.emit(room);
-    this.checkAllVoted(room);
-  }
-
-  private checkAllVoted(room: Room) {
-    const g = room.game;
-    if (!g || g.phase !== 'vote') return;
-    const voters = g.participants.filter((id) => room.players.get(id)?.connected);
-    if (voters.length > 0 && voters.every((id) => g.votes[id])) this.tally(room);
-  }
-
-  private tally(room: Room) {
-    const g = room.game;
-    if (!g || g.phase !== 'vote') return;
-    const counts: Record<string, number> = {};
-    Object.values(g.votes).forEach((t) => (counts[t] = (counts[t] || 0) + 1));
-    const max = Math.max(0, ...Object.values(counts));
-    const top = Object.keys(counts).filter((id) => counts[id] === max);
-    g.accusedId = max > 0 && top.length === 1 ? top[0] : null;
-    g.caught = g.accusedId === g.spyId;
-    g.phase = 'reveal';
-    g.endsAt = Date.now() + REVEAL_SECONDS * 1000;
-    this.schedule(room, REVEAL_SECONDS, () => {
-      if (!room.game || room.game.phase !== 'reveal') return;
-      if (g.caught) {
-        g.phase = 'guess';
-        g.endsAt = Date.now() + GUESS_SECONDS * 1000;
-        this.schedule(room, GUESS_SECONDS, () => this.resolveGuess(room, null));
-        this.emit(room);
-      } else {
-        this.finishRound(room, 'spy-escaped');
-      }
-    });
-    this.emit(room);
-  }
-
-  guess(playerId: string, placeName: unknown) {
-    const room = this.mustRoom(playerId);
-    const g = this.mustPhase(room, 'guess');
-    if (g.spyId !== playerId) throw new GameError('الجاسوس بس اللي بيخمّن');
-    const name = String(placeName ?? '');
-    if (!g.guessOptions.includes(name)) throw new GameError('اختار من الاختيارات');
-    this.resolveGuess(room, name);
-  }
-
-  private resolveGuess(room: Room, name: string | null) {
-    const g = room.game;
-    if (!g || g.phase !== 'guess') return;
-    g.spyGuess = name;
-    this.finishRound(room, name === g.place.name ? 'spy-guessed' : 'detectives');
-  }
-
-  private finishRound(room: Room, outcome: SpyOutcome) {
-    const g = room.game;
-    if (!g) return;
-    this.clearTimer(room);
-    g.outcome = outcome;
-    g.phase = 'result';
-    g.endsAt = null;
-    const pts: Record<string, number> = {};
-    g.participants.forEach((id) => {
-      const votedSpy = g.votes[id] === g.spyId;
-      if (id === g.spyId) pts[id] = outcome === 'spy-escaped' ? 400 : outcome === 'spy-guessed' ? 300 : 0;
-      else if (outcome === 'detectives') pts[id] = votedSpy ? 200 : 100;
-      else pts[id] = votedSpy ? 100 : 0;
-    });
-    g.roundPoints = pts;
-    Object.entries(pts).forEach(([id, n]) => {
-      const p = room.players.get(id);
-      if (p) p.score += n;
-    });
-    this.emit(room);
-  }
-
-  nextRound(playerId: string) {
+  /** After the final screen: same game, same settings, fresh round scores. */
+  again(playerId: string) {
     const room = this.mustHost(playerId);
-    const g = this.mustPhase(room, 'result');
-    if (g.round >= g.totalRounds) {
-      g.phase = 'final';
-      this.emit(room);
-      return;
-    }
-    const online = [...room.players.values()].filter((p) => p.connected).map((p) => p.id);
-    if (online.length < MIN_PLAYERS) throw new GameError(`محتاجين ${MIN_PLAYERS} لاعيبة على الأقل`);
-    this.startRound(room, g.round + 1, online);
+    if (!room.engine || !room.engine.isOver()) throw new GameError('مش وقته دلوقتي');
+    this.begin(room);
   }
 
+  /** Back to the lounge to pick a game. Lounge scores stay. */
   backToRoom(playerId: string) {
     const room = this.mustHost(playerId);
     this.clearTimer(room);
-    room.game = null;
+    room.engine = null;
+    room.settled = false;
     room.players.forEach((p) => (p.ready = false));
     this.emit(room);
+  }
+
+  /** A game action (`spy:vote` -> game 'spy', action 'vote'). Host-only actions are declared by the engine. */
+  gameAction(playerId: string, gameId: string | null, action: string, payload?: unknown) {
+    const room = this.mustRoom(playerId);
+    const e = room.engine;
+    if (!e || (gameId && e.id !== gameId)) throw new GameError('مش وقته دلوقتي');
+    if (e.hostActions.includes(action)) this.mustHost(playerId);
+    e.handle(this.ctx(room), playerId, action, payload);
+  }
+
+  private begin(room: Room) {
+    const def = GAME_DEFS[room.selectedGame];
+    const online = [...room.players.values()].filter((p) => p.connected);
+    if (online.length < def.minPlayers) throw new GameError(`محتاجين ${def.minPlayers} لاعيبة على الأقل`);
+    this.clearTimer(room);
+    room.engine = def.create(room.settings[def.id]);
+    room.settled = false;
+    room.engine.start(this.ctx(room), online.map((p) => p.id));
+  }
+
+  /** Add the finished game's points to the lounge scores, once. */
+  private settle(room: Room) {
+    const e = room.engine;
+    if (!e || room.settled || !e.isOver()) return;
+    room.settled = true;
+    room.players.forEach((p) => (p.lounge += e.scoreOf(p.id)));
   }
 
   // ---------- view ----------
 
   viewFor(room: Room, playerId: string) {
-    const g = room.game;
+    const e = room.engine;
     const players = [...room.players.values()]
       .sort((a, b) => a.joinedAt - b.joinedAt)
-      .map(({ id, name, avatar, ready, connected, score }) => ({ id, name, avatar, ready, connected, score }));
-    let game: any = null;
-    if (g) {
-      const inRound = g.participants.includes(playerId);
-      const isSpy = g.spyId === playerId;
-      const ended = g.phase === 'result' || g.phase === 'final';
-      const counts: Record<string, number> = {};
-      Object.values(g.votes).forEach((t) => (counts[t] = (counts[t] || 0) + 1));
-      game = {
-        type: g.type,
-        round: g.round,
-        totalRounds: g.totalRounds,
-        phase: g.phase,
-        endsAt: g.endsAt,
-        board: g.board,
-        participants: g.participants,
-        askerId: g.askerId,
-        targetId: g.targetId,
-        you: inRound ? { isSpy, place: isSpy && !ended ? null : g.place.name, role: isSpy ? null : g.roles[playerId] } : null,
-        votedIds: Object.keys(g.votes),
-        voteCounts: counts,
-        myVote: g.votes[playerId] ?? null,
-        accusedId: ['reveal', 'guess', 'result', 'final'].includes(g.phase) ? g.accusedId : null,
-        caught: ['reveal', 'guess', 'result', 'final'].includes(g.phase) ? g.caught : null,
-        spyId: ended || (g.phase !== 'discuss' && g.phase !== 'vote' && g.caught) ? g.spyId : null,
-        guessOptions: g.phase === 'guess' && isSpy ? g.guessOptions : null,
-        place: ended || (!isSpy && inRound) ? g.place.name : null,
-        spyGuess: ended ? g.spyGuess : null,
-        outcome: g.outcome,
-        roundPoints: ended ? g.roundPoints : {}
-      };
-    }
+      .map((p) => ({
+        id: p.id, name: p.name, avatar: p.avatar, ready: p.ready, connected: p.connected,
+        score: e ? e.scoreOf(p.id) : 0, // this game's points
+        lounge: p.lounge // lounge total across games
+      }));
     return {
       code: room.code,
+      name: room.name,
       hostId: room.hostId,
       youId: playerId,
       players,
       chat: room.chat.slice(-30),
-      settings: room.settings,
-      game,
+      selectedGame: room.selectedGame,
+      settings: room.settings[room.selectedGame],
+      game: e ? e.viewFor(playerId) : null,
       serverNow: Date.now()
     };
   }
 
   // ---------- helpers ----------
+
+  private ctx(room: Room): EngineCtx {
+    return {
+      room,
+      emit: () => this.emit(room),
+      schedule: (seconds, fn) => this.schedule(room, seconds, fn),
+      clearTimer: () => this.clearTimer(room)
+    };
+  }
+
+  private cleanRoomName(name: unknown) {
+    return String(name ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_ROOM_NAME);
+  }
 
   private mustRoom(playerId: string) {
     const room = this.roomOf(playerId);
@@ -449,12 +310,6 @@ export class RoomsService implements OnModuleDestroy {
     const t = room.players.get(id);
     if (!t) throw new GameError('اللاعب ده مش في الأوضة');
     return t;
-  }
-
-  private mustPhase(room: Room, phase: SpyGame['phase']) {
-    const g = room.game;
-    if (!g || g.phase !== phase) throw new GameError('مش وقته دلوقتي');
-    return g;
   }
 
   private passHost(room: Room) {
@@ -489,7 +344,9 @@ export class RoomsService implements OnModuleDestroy {
   }
 
   private emit(room: Room) {
-    if (this.rooms.has(room.code)) this.onChange(room);
+    if (!this.rooms.has(room.code)) return;
+    this.settle(room);
+    this.onChange(room);
   }
 
   stats() {
