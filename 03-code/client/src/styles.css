@@ -629,3 +629,36 @@ button:disabled { cursor: not-allowed; }
 @keyframes popIn { 0% { opacity: 0; scale: .3; } 100% { opacity: 1; scale: 1; } }
 .soon-squares { display: flex; gap: 4px; }
 .soon-squares i { width: 22px; height: 22px; border-radius: 7px; border: 2px solid #fff; }
+
+/* UI polish from the HomeV2 / RoomV2 artboards */
+.tile.soon-card { position: relative; overflow: hidden; background-image: radial-gradient(rgba(255, 255, 255, .16) 1.4px, transparent 1.6px); background-size: 12px 12px; }
+.soon-badge { position: absolute; top: 10px; inset-inline-end: 10px; font: 800 13px/1 var(--font-display, 'Baloo Bhaijaan 2'), sans-serif; background: var(--yellow); color: var(--ink); border: 2px solid var(--ink); border-radius: 99px; padding: 3px 8px 2px; }
+.soon-squares { gap: 0; padding-inline-start: 4px; }
+.soon-squares i { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; margin-inline-end: -8px; box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); }
+.idea-row::before { display: none; }
+.idea-ic { flex: none; display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border: 2.5px solid var(--ink); border-radius: 14px; }
+.idea-min { font-size: 11px; font-weight: 900; background: var(--yellow-soft); border: 2px solid var(--ink); border-radius: 99px; padding: 0 7px; }
+.idea-top { font-size: 11px; font-weight: 900; background: var(--ink); color: var(--yellow); border-radius: 99px; padding: 0 8px; }
+.idea-bar { height: 7px; margin-top: 2px; background: var(--yellow-soft); border: 2px solid var(--ink); border-radius: 99px; overflow: hidden; }
+.idea-bar i { display: block; height: 100%; transition: width .4s cubic-bezier(.2, 1, .4, 1); }
+.vote-btn { gap: 0; }
+.vote-btn.on { background: #FFF3C4; }
+.vote-btn .flame { display: block; }
+.vote-btn .flick { display: flex; }
+.vote-btn .flick:has(.flame.on) { animation: flick .45s ease-out; }
+@keyframes flick { 0% { transform: scale(.6) rotate(-14deg); } 40% { transform: scale(1.35) rotate(10deg); } 70% { transform: scale(.95) rotate(-5deg); } 100% { transform: none; } }
+
+.hbar { display: flex; align-items: center; flex: none; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink); overflow: hidden; }
+.hbar-btn { width: 42px; height: 42px; padding: 0; border: 0; border-radius: 0; background: transparent; display: flex; align-items: center; justify-content: center; }
+.hbar-btn:active { background: var(--yellow-soft); }
+.hbar-sep { width: 2px; height: 24px; background: var(--ink); opacity: .15; }
+.ticket { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: var(--white); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink); padding: 8px 14px; text-align: right; }
+.ticket:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.ticket-notch { position: absolute; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: var(--yellow); }
+.ticket-notch.r { right: -9px; border-left: 2.5px solid var(--ink); }
+.ticket-notch.l { left: -9px; border-right: 2.5px solid var(--ink); }
+.ticket-cut { align-self: stretch; border-inline-start: 2.5px dashed rgba(17, 17, 17, .25); }
+.ticket-code { font-size: 30px; letter-spacing: 5px; line-height: 1.1; text-align: right; white-space: nowrap; }
+@media (max-width: 350px) { .ticket-code { font-size: 26px; letter-spacing: 3px; } }
+.invite-big { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 3px solid var(--ink); border-radius: 18px; background: var(--ink); color: var(--yellow); box-shadow: 0 5px 0 var(--green); font: 800 18px/1.2 'Baloo Bhaijaan 2', 'Cairo', sans-serif; }
+.invite-big:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--green); }

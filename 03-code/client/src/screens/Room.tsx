@@ -70,6 +70,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
 
   // "ادعي" opens a small sheet with one row per way to invite (instead of several big buttons on the page)
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const invite = () => setInviteOpen(true);
   const link = `${location.origin}/?room=${room.code}`;
   const inviteText = `تعالى العب معانا ${game.name} في اللمّة! الكود ${room.code}`;
@@ -102,32 +103,51 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         <button className="btn icon" aria-label="اخرج من الأوضة" onClick={leaveRoom}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
         </button>
-        <div className="col grow" style={{ gap: 0, minWidth: 0 }}>
-          <span className="label" style={{ fontSize: 12 }}>كود الأوضة</span>
-          <button onClick={copyCode} aria-label={`انسخ الكود ${room.code}`} className="display" style={{ fontSize: 30, letterSpacing: 3, lineHeight: 1.1, border: 0, background: 'none', padding: 0, textAlign: 'right' }}>{room.code}</button>
+        <div className="col grow" style={{ gap: 0, minWidth: 0, lineHeight: 1.2 }}>
+          <div className="row" style={{ gap: 6 }}>
+            <span className="label" style={{ fontSize: 12 }}>القعدة</span>
+            <span className="chip soft" style={{ minHeight: 0, height: 20, fontSize: 11, padding: '0 7px', gap: 3 }}>
+              {room.privacy !== 'public' && <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3" fill="#111" /><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="#111" strokeWidth={3} /></svg>}
+              {room.privacy === 'public' ? 'عامة' : 'خاصة'}
+            </span>
+            {room.locked && <span className="chip dark" style={{ minHeight: 0, height: 20, fontSize: 11, padding: '0 7px' }}>مقفولة</span>}
+          </div>
+          <span className="display" style={{ fontSize: 22, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</span>
         </div>
-        <button className="btn icon" aria-label="ترتيب القعدة" onClick={() => { sfx.tap(); onBoard(); }}><Trophy size={24} /></button>
-        <MuteButton />
-        <button className="btn black" onClick={invite}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7" /><path d="M12 3v12M8 7l4-4 4 4" /></svg>
-          ادعي
-        </button>
+        {/* one grouped bar: trophy, settings (host only), sound */}
+        <div className="hbar">
+          <button className="hbar-btn" aria-label="ترتيب القعدة" onClick={() => { sfx.tap(); onBoard(); }}><Trophy size={22} /></button>
+          {isHost && (
+            <>
+              <span className="hbar-sep" />
+              <button className="hbar-btn" aria-label="إعدادات اللعبة والقعدة" onClick={() => { setDraft(room.name); setSettingsOpen(true); }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
+              </button>
+            </>
+          )}
+          <span className="hbar-sep" />
+          <MuteButton bare />
+        </div>
       </header>
 
-      <div className="row" style={{ gap: 10 }}>
-        <div className="col grow" style={{ gap: 0, minWidth: 0 }}>
-          <div className="row" style={{ gap: 8 }}>
-            <span className="label" style={{ fontSize: 12 }}>القعدة</span>
-            <span className="chip soft">{room.privacy === 'public' ? 'عامة' : 'خاصة'}</span>
-            {room.locked && <span className="chip dark">مقفولة</span>}
-          </div>
-          <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>
-        </div>
-        {isHost && (
-          <button className="btn icon" aria-label="إعدادات اللعبة والقعدة" onClick={() => { setDraft(room.name); setSettingsOpen(true); }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
-          </button>
-        )}
+      {/* the room code as a ticket: never wraps or truncates; tap to copy */}
+      <div className="row" style={{ gap: 10, alignItems: 'stretch' }}>
+        <button className="ticket" onClick={() => { copyCode(); setCopied(true); setTimeout(() => setCopied(false), 1400); }} aria-label={`انسخ الكود ${room.code}`}>
+          <span className="ticket-notch r" aria-hidden="true" /><span className="ticket-notch l" aria-hidden="true" />
+          <span className="col grow" style={{ gap: 0, lineHeight: 1.1, paddingInlineStart: 6 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 900, opacity: 0.65 }}>كود الأوضة</span>
+            <span dir="ltr" className="display ticket-code">{room.code}</span>
+          </span>
+          <span className="ticket-cut" aria-hidden="true" />
+          <span className="col center" style={{ gap: 1, fontSize: 11, fontWeight: 900, paddingInlineEnd: 4, minWidth: 40 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.4} strokeLinejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" fill="#FFF3C4" /><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" /></svg>
+            {copied ? 'اتنسخ' : 'انسخ'}
+          </span>
+        </button>
+        <button className="invite-big" onClick={invite}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M3 20a6 6 0 0112 0M18 8v6M15 11h6" /></svg>
+          ادعي
+        </button>
       </div>
 
       <div className="col" style={{ gap: 6 }}>

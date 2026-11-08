@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Character, GAMES, Plus, Trophy } from '../components/art';
 import { GameTile } from '../components/GameTile';
-import { IdeasSheet } from '../components/IdeasSheet';
+import { IdeaIcon, IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
@@ -85,11 +85,14 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         ))}
         {/* the last card: what we are cooking next, with a vote per idea */}
         <button className="tile soon-card" style={{ animationDelay: `${GAMES.length * 60}ms` }} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
+          <span className="soon-badge">+٧</span>
           <span className="soon-squares" aria-hidden="true">
-            <i style={{ background: '#FF4F9A', transform: 'rotate(-8deg)' }} /><i style={{ background: '#3DDC97', transform: 'rotate(6deg)' }} /><i style={{ background: '#4D9DFF', transform: 'rotate(-4deg)' }} />
+            <i style={{ background: '#FF4F9A', transform: 'rotate(-12deg)' }}><IdeaIcon id="mafia" size={26} /></i>
+            <i style={{ background: '#3DDC97', transform: 'translateY(-4px)' }}><IdeaIcon id="categories" size={24} /></i>
+            <i style={{ background: '#4D9DFF', transform: 'rotate(12deg)' }}><IdeaIcon id="whoami" size={26} /></i>
           </span>
-          <span className="display" style={{ fontSize: 20, marginTop: 10 }}>بنحضّر ٧ كمان</span>
-          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>شوف الأفكار وصوّت للي عاوزها</span>
+          <span className="display" style={{ fontSize: 20, marginTop: 8 }}>بنحضّر ٧ كمان</span>
+          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>صوّت للي عاوزها</span>
         </button>
       </div>
 

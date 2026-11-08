@@ -100,17 +100,17 @@ export function SoundSheet({ onClose }: { onClose: () => void }) {
 }
 
 /** Speaker button that opens the sound settings. Kept the old name so every screen picks it up. */
-export function MuteButton() {
+export function MuteButton({ bare = false }: { bare?: boolean }) {
   const a = useAudioSettings();
   const [open, setOpen] = useState(false);
   const allOff = !a.musicOn && !a.sfxOn;
   return (
     <>
       <button
-        className="btn icon sm"
+        className={bare ? 'hbar-btn' : 'btn icon sm'}
         aria-label="إعدادات الصوت"
         onClick={() => setOpen(true)}
-        style={{ width: 40, height: 40, boxShadow: 'none', background: allOff ? 'var(--yellow-soft)' : '#fff' }}
+        style={bare ? { background: allOff ? 'var(--yellow-soft)' : 'transparent' } : { width: 40, height: 40, boxShadow: 'none', background: allOff ? 'var(--yellow-soft)' : '#fff' }}
       >
         <SpeakerIcon off={allOff} />
       </button>
