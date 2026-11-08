@@ -24,7 +24,8 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `game:start` | – | host | Starts the selected game from the lounge. Needs the game's minimum of connected players (spy: 3). |
 | `game:again` | – | host, final screen | Same game, same settings, fresh round scores. |
 | `spy:nextTurn` | – | current asker | Passes the question to the next pair. |
-| `spy:callVote` | – | round player | Ends discussion now. |
+| `spy:readyToVote` | `{ ready }` | round player, discussion | Toggles "I'm ready to vote". Only informs the host (`readyToVoteIds` / `readyTotal` in the state); nothing starts by itself when everyone is ready. Flags reset every round; disconnected players are not counted. |
+| `spy:startVote` | – | host, discussion | Starts the vote now, even if not everyone is ready. When the discussion timer ends the vote still starts automatically. (Replaces the old `spy:callVote`.) |
 | `spy:vote` | `{ targetId }` | round player | Can change the vote until the tally. |
 | `spy:guess` | `{ place }` | spy, guess phase | Must be one of the guess options. |
 | `game:next` | – | host, result phase | Next round, or `final` after the last round. |
@@ -67,6 +68,7 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
     endsAt, board, participants, askerId, targetId,
     you: null | { isSpy, place /* null for spy until the end */, role },
     votedIds, voteCounts, myVote,
+    readyToVoteIds, readyTotal,         // discussion: connected players who are ready to vote, and how many connected players there are
     spyCount, difficulty, multiplier,   // public: how many spies, this round's difficulty ('easy'|'medium'|'hard') and points multiplier
     accusedId, caught,      // from reveal on: the single top-voted player, and whether they are a spy
     caughtSpyId,            // the caught spy, from reveal on

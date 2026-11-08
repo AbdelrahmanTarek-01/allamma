@@ -183,9 +183,14 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'nextTurn'));
   }
 
-  @SubscribeMessage('spy:callVote')
-  callVote(@ConnectedSocket() c: Socket): Ack {
-    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'callVote'));
+  @SubscribeMessage('spy:readyToVote')
+  readyToVote(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'readyToVote', { ready: !!b?.ready }));
+  }
+
+  @SubscribeMessage('spy:startVote')
+  startVote(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'startVote'));
   }
 
   @SubscribeMessage('spy:vote')

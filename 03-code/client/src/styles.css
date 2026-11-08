@@ -38,11 +38,30 @@ button:disabled { cursor: not-allowed; }
   gap: 16px;
 }
 .screen.dark {
-  background: radial-gradient(circle at 50% 45%, rgba(255,210,63,.28), rgba(255,210,63,0) 60%), var(--ink);
+  /* "mystery night": the backdrop layer (components/MysteryBg) sits between this gradient and the content */
+  position: relative; isolation: isolate; overflow: hidden;
+  background: linear-gradient(180deg, #24133F 0%, #170C2C 55%, #0F0820 100%);
   color: var(--white);
   max-width: none;
 }
 .screen.dark > * { width: 100%; max-width: 444px; margin-inline: auto; }
+
+/* mystery backdrop: one pointer-events:none layer behind the content. Animations stop under prefers-reduced-motion (global rule). */
+.screen.dark > .mystery { position: absolute; inset: 0; width: auto; max-width: none; margin: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.m-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 55% at 50% 48%, rgba(180,140,255,.32), rgba(180,140,255,0) 70%); animation: m-breathe 6s ease-in-out infinite; }
+.m-beam { position: absolute; left: 50%; top: -60px; width: 220px; height: 110%; margin-left: -110px; transform-origin: 50% 0; clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%); }
+.m-beam.yellow { background: linear-gradient(180deg, rgba(255,210,63,.22), rgba(255,210,63,0) 80%); animation: m-beam-l 7s ease-in-out infinite; }
+.m-beam.pink { background: linear-gradient(180deg, rgba(255,79,154,.16), rgba(255,79,154,0) 80%); animation: m-beam-r 9s ease-in-out infinite; }
+.m-q { position: absolute; font-family: var(--font-display); font-weight: 800; line-height: 1; opacity: var(--o); animation: m-drift linear infinite; }
+.m-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 120% 90% at 50% 50%, rgba(10,6,24,0) 55%, rgba(10,6,24,.85) 100%); }
+@keyframes m-breathe { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
+@keyframes m-beam-l { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(-6deg); } }
+@keyframes m-beam-r { 0%, 100% { transform: rotate(22deg); } 50% { transform: rotate(4deg); } }
+@keyframes m-drift {
+  0% { transform: translateY(0) rotate(var(--r)); opacity: 0; }
+  15%, 85% { opacity: var(--o); }
+  100% { transform: translateY(-120px) rotate(var(--r)); opacity: 0; }
+}
 .grow { flex: 1; }
 .push { margin-top: auto; }
 .row { display: flex; align-items: center; gap: 10px; }
@@ -195,6 +214,31 @@ button:disabled { cursor: not-allowed; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .icontile.grey { filter: grayscale(1); } /* coming soon: grey icon, the tile itself stays white and full strength */
+
+/* discussion: "ready to vote" status bar and controls */
+.ready-bar { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; box-shadow: 3px 3px 0 var(--ink); }
+.ready-avatars { display: inline-flex; flex: none; min-width: 26px; }
+.ready-avatars > * { margin-inline-start: -8px; border-radius: 50%; background: var(--yellow-soft); }
+.ready-avatars > *:first-child { margin-inline-start: 0; }
+.ready-track { height: 8px; border-radius: 99px; border: 2px solid var(--ink); background: var(--white); overflow: hidden; display: flex; }
+.ready-track > span { background: var(--green); transition: width .3s; }
+.btn.ready-toggle { height: 56px; font-size: 18px; transition: transform .1s, box-shadow .1s, background .15s; }
+.btn.ready-toggle.on { background: var(--green); }
+.btn.ready-small { height: 44px; padding: 0 12px; font-size: 14px; border-radius: 14px; flex: none; }
+.btn.ready-small.on { background: var(--green); }
+.btn.start-vote { height: 56px; font-size: 21px; padding: 0 10px; }
+.pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
+@keyframes pulse-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+.btn.sq-btn { flex: none; width: 56px; height: 56px; padding: 0; border-radius: 16px; } /* .btn.icon is 46px wide: match its specificity */
+
+/* connection status: a thin bar at the very top. It is in the page flow (it pushes the screen down while offline),
+   so it can never cover content, and it is not a bottom toast any more (that one covered the footer text). */
+.conn-banner {
+  position: sticky; top: 0; z-index: 45;
+  background: var(--ink); color: var(--yellow); text-align: center;
+  padding: max(4px, env(safe-area-inset-top)) 12px 4px; font-size: 12.5px; font-weight: 800;
+}
+.chat-fab.discuss { bottom: calc(max(20px, env(safe-area-inset-bottom)) + 190px); } /* above the taller ready-to-vote controls */
 
 /* invite sheet: one compact row per option */
 .invite-row {

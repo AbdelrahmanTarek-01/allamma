@@ -40,13 +40,14 @@ export function App() {
 
   return (
     <>
+      {/* connection status: a thin in-flow bar at the very top, so it never covers content (a bottom toast covered the footer text) */}
+      {hasConnected && status === 'offline' && room && (
+        <div className="conn-banner" role="status">النت فصل، بنرجّعك لنفس مكانك…</div>
+      )}
       <div key={key} className="enter">{screen}</div>
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
-      {room && <GameChat room={room} lounge={!room.game} visible={!room.game || phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
-      {hasConnected && status === 'offline' && room && (
-        <div className="toast" role="status">النت فصل، بنرجّعك لنفس مكانك…</div>
-      )}
+      {room && <GameChat room={room} lounge={!room.game} discuss={phase === 'discuss'} visible={!room.game || phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
       {toast && <div key={toast} className="toast" role="status">{toast}</div>}
     </>
   );

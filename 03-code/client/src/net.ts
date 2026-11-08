@@ -24,6 +24,9 @@ export interface GameView {
   myVote: string | null;
   accusedId: string | null;
   caught: boolean | null;
+  /** "Ready to vote" during the discussion: connected players who toggled ready, and how many connected players there are. */
+  readyToVoteIds: string[];
+  readyTotal: number;
   /** How many spies there are (public). Who they are is only revealed at the end of the round. */
   spyCount: number;
   difficulty: 'easy' | 'medium' | 'hard';

@@ -30,6 +30,8 @@ export interface SpyGame {
   participants: string[];
   askerId: string;
   targetId: string;
+  /** Players who toggled "ready to vote". Reset every round. The host decides when the vote really starts. */
+  readyIds: string[];
   votes: Record<string, string>;
   /** The single top-voted player (null on a tie or no votes). */
   accusedId: string | null;

@@ -1,5 +1,5 @@
 import { arabicNum } from '../../common/ar';
-import { GameError } from '../../rooms/rooms.types';
+import { GameError, type Room } from '../../rooms/rooms.types';
 import type { EngineCtx, GameDef, GameEngine, SettingField } from '../game-engine';
 import { PLACE_FAMILIES, type Difficulty } from './places';
 import type { SpyGame, SpyOutcome, SpySettings } from './spy.types';
@@ -67,9 +67,11 @@ export const spyDef: GameDef<SpySettings> = {
 
 export class SpyEngine implements GameEngine {
   readonly id = 'spy';
-  readonly hostActions = ['next'] as const;
+  /** `next` (next round) and `startVote` (the host decides when the vote begins) are host-only. */
+  readonly hostActions = ['next', 'startVote'] as const;
 
   private g!: SpyGame;
+  private room?: Room; // to know who is connected when counting "ready"
   private scores: Record<string, number> = {};
   private readonly settings: SpySettings;
 
@@ -80,15 +82,17 @@ export class SpyEngine implements GameEngine {
   // ---------- GameEngine ----------
 
   start(ctx: EngineCtx, participants: string[]) {
+    this.room = ctx.room;
     this.scores = {};
     this.startRound(ctx, 1, participants);
   }
 
   handle(ctx: EngineCtx, playerId: string, action: string, payload: unknown) {
-    const p = (payload ?? {}) as { targetId?: unknown; place?: unknown };
+    const p = (payload ?? {}) as { targetId?: unknown; place?: unknown; ready?: unknown };
     switch (action) {
       case 'nextTurn': return this.nextTurn(ctx, playerId);
-      case 'callVote': return this.callVote(ctx, playerId);
+      case 'readyToVote': return this.readyToVote(ctx, playerId, p.ready);
+      case 'startVote': return this.startVoteNow(ctx);
       case 'vote': return this.vote(ctx, playerId, p.targetId);
       case 'guess': return this.guess(ctx, playerId, p.place);
       case 'next': return this.nextRound(ctx);
@@ -101,6 +105,7 @@ export class SpyEngine implements GameEngine {
     delete this.scores[playerId];
     if (!g.participants.includes(playerId)) return;
     g.participants = g.participants.filter((id) => id !== playerId);
+    g.readyIds = g.readyIds.filter((id) => id !== playerId);
     delete g.votes[playerId];
     // votes that pointed at the player who left no longer count: those voters can pick again
     Object.keys(g.votes).forEach((voter) => { if (g.votes[voter] === playerId) delete g.votes[voter]; });
@@ -139,6 +144,8 @@ export class SpyEngine implements GameEngine {
     const counts: Record<string, number> = {};
     Object.values(g.votes).forEach((t) => (counts[t] = (counts[t] || 0) + 1));
     const caughtSpyId = revealed && g.caught ? g.accusedId : null;
+    // "ready to vote": only connected players count, in the ready list and in the total
+    const online = g.participants.filter((id) => this.room?.players.get(id)?.connected);
     return {
       type: 'spy',
       round: g.round,
@@ -149,6 +156,8 @@ export class SpyEngine implements GameEngine {
       participants: g.participants,
       askerId: g.askerId,
       targetId: g.targetId,
+      readyToVoteIds: g.phase === 'discuss' ? online.filter((id) => g.readyIds.includes(id)) : [],
+      readyTotal: online.length,
       spyCount: g.spyIds.length, // how many spies there are is public, who they are is not
       difficulty: g.difficulty,
       multiplier: g.multiplier,
@@ -209,6 +218,7 @@ export class SpyEngine implements GameEngine {
       board, guessOptions, spyIds, roles, participants,
       askerId,
       targetId: pick(participants.filter((id) => id !== askerId)),
+      readyIds: [], // reset every round
       votes: {},
       accusedId: null,
       caught: false,
@@ -242,9 +252,19 @@ export class SpyEngine implements GameEngine {
     g.targetId = pick(choices.length ? choices : ids.filter((id) => id !== g.askerId));
   }
 
-  private callVote(ctx: EngineCtx, playerId: string) {
+  /** A player toggles "ready to vote". It only informs the host: nothing starts by itself when everyone is ready. */
+  private readyToVote(ctx: EngineCtx, playerId: string, ready: unknown) {
     const g = this.mustPhase('discuss');
     if (!g.participants.includes(playerId)) throw new GameError('انت مش في الجولة دي');
+    const has = g.readyIds.includes(playerId);
+    if (ready && !has) g.readyIds.push(playerId);
+    else if (!ready && has) g.readyIds = g.readyIds.filter((id) => id !== playerId);
+    ctx.emit();
+  }
+
+  /** Host only (declared in hostActions): start the vote now, even if not everyone is ready. The timer still starts it automatically. */
+  private startVoteNow(ctx: EngineCtx) {
+    this.mustPhase('discuss');
     this.startVote(ctx);
   }
 

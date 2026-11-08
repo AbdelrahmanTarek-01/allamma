@@ -42,13 +42,14 @@ On one free instance, memory is the fastest and simplest store. Rooms are short-
 
 ## Spy game state machine
 ```
-discuss ──(timer | someone calls vote)──▶ vote ──(all voted | 45s)──▶ reveal (6s)
+discuss ──(timer | host starts the vote)──▶ vote ──(all voted | 45s)──▶ reveal (6s)
 reveal ──caught──▶ guess (20s) ──▶ result
 reveal ──not caught / tie──▶ result
 result ──host next──▶ discuss (next round) | final (after last round)
 final ──host──▶ again (new game, same settings) | back to the lounge
 result ──host──▶ back to the lounge
 ```
+- **Ready to vote:** during the discussion players toggle "ready" (`spy:readyToVote`); the room state shows who is ready and how many connected players there are (disconnected players don't count). Only the host can start the vote (`spy:startVote`, a `hostActions` entry), at any time. Nothing starts when everyone is ready, the host's button just starts pulsing. The timer still starts the vote automatically. Flags reset every round.
 - **Spies:** 1-3 per round, limited by connected players (3-5 => 1, 6-8 => up to 2, 9-10 => up to 3). The room's saved setting is never changed; at round start the engine clamps it for that round and posts a system chat message. Spies don't know each other and none sees the place. Voting reveals only the single top-voted player; if that player is a spy only that spy gets the last guess, and every spy not caught gets the escape points. A spy leaving ends the round only when no spy is left or the caught spy left.
 - **Difficulty:** every place in `places.ts` is `easy | medium | hard`. The host picks easy / medium / hard / mix (default mix, a random one per round). Points are multiplied (easy x1, medium x1.5, hard x2) and rounded up to 10. Base points: caught spy guessed right 300 (voters then 100 instead of 200), uncaught spy 400, detectives 200 for voting the caught spy / 100 otherwise, nobody caught: detectives who voted for a spy 100.
 - **View secrets:** `spyCount`, `difficulty` and `multiplier` are public. `spyIds` is only sent once the round is over, `caughtSpyId` from the reveal on, `guessOptions` only to the caught spy.

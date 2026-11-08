@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, SpyIcon } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
+import { MysteryBg } from '../components/MysteryBg';
 import { Confetti, MuteButton, Sheet, Timer, useCountUp } from '../components/ui';
 import { AR, send, type GameView, type PlayerView, type RoomView } from '../net';
 import { buzz, music, sfx } from '../sound';
@@ -70,6 +71,19 @@ function Discuss({ room, g }: P) {
   const asker = byId(g.askerId);
   const isAsker = g.askerId === room.youId;
 
+  // "ready to vote": players toggle it, only the host actually starts the vote
+  const isHost = room.hostId === room.youId;
+  const readyCount = g.readyToVoteIds.length;
+  const meReady = g.readyToVoteIds.includes(room.youId);
+  const allReady = g.readyTotal > 0 && readyCount >= g.readyTotal;
+  const readyPeople = g.readyToVoteIds.map((id) => byId(id)).filter((p): p is PlayerView => !!p).slice(0, 3);
+  const notReady = Math.max(0, g.readyTotal - readyCount);
+  useOnChange(allReady, () => { if (allReady && isHost) sfx.notify(); }); // the start button starts pulsing: one soft ping
+  const startVote = () => {
+    if (allReady) send('spy:startVote');
+    else setConfirmVote(true);
+  };
+
   useEffect(() => { sfx.start(); }, []);
   useOnChange(g.askerId, () => {
     sfx.turn();
@@ -130,9 +144,33 @@ function Discuss({ room, g }: P) {
         </div>
       )}
 
-      <div className="row" style={{ gap: 10 }}>
-        <button className="btn grow" onClick={() => { sfx.tap(); setBoard(true); }}>الأماكن الممكنة</button>
-        {g.you && <button className="btn black grow" style={{ boxShadow: '3px 3px 0 var(--pink)' }} onClick={() => { sfx.tap(); setConfirmVote(true); }}>عندي شك؟ صوّت</button>}
+      <div className="col" style={{ gap: 8 }}>
+        <div className="card flat ready-bar" aria-live="polite">
+          <div className="row" style={{ gap: 8 }}>
+            {readyPeople.length > 0 && <span className="ready-avatars">{readyPeople.map((p) => <Character key={p.id} id={p.avatar} size={28} />)}</span>}
+            <span className="grow" style={{ fontSize: 13.5, fontWeight: 900 }}>{AR(readyCount)} من {AR(g.readyTotal)} جاهزين للتصويت</span>
+          </div>
+          <div className="ready-track" role="progressbar" aria-valuemin={0} aria-valuemax={g.readyTotal} aria-valuenow={readyCount}>
+            <span style={{ width: `${g.readyTotal ? (readyCount / g.readyTotal) * 100 : 0}%` }} />
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 10 }}>
+          {isHost ? (
+            <>
+              {g.you && <button className={`btn ready-small${meReady ? ' on' : ''}`} aria-pressed={meReady} onClick={() => send('spy:readyToVote', { ready: !meReady })}>{meReady ? 'جاهز ✓' : 'أنا جاهز'}</button>}
+              <button className={`btn big grow start-vote${allReady ? ' pulse-soft' : ''}`} onClick={startVote}>ابدأ التصويت</button>
+            </>
+          ) : g.you ? (
+            <button className={`btn grow ready-toggle${meReady ? ' on' : ''}`} aria-pressed={meReady} onClick={() => send('spy:readyToVote', { ready: !meReady })}>
+              {meReady ? 'جاهز ✓ مستني الباقي' : 'جاهز للتصويت'}
+            </button>
+          ) : <span className="grow" />}
+          <button className="btn icon sq-btn" aria-label="الأماكن الممكنة" onClick={() => { sfx.tap(); setBoard(true); }}>
+            <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z" fill="#FF4F9A" stroke="#111" strokeWidth={2} strokeLinejoin="round" /><circle cx="12" cy="10" r="2.6" fill="#fff" stroke="#111" strokeWidth={2} /></svg>
+          </button>
+        </div>
+        <span className="muted" style={{ textAlign: 'center', fontSize: 12.5 }}>{isHost ? 'تقدر تبدأ التصويت في أي وقت' : 'المضيف هو اللي بيبدأ التصويت'}</span>
       </div>
 
       {board && (
@@ -145,8 +183,9 @@ function Discuss({ room, g }: P) {
       )}
       {confirmVote && (
         <Sheet title="نبدأ التصويت؟" onClose={() => setConfirmVote(false)}>
-          <span style={{ fontWeight: 700 }}>الكلام هيقف عند الكل والتصويت هيبدأ على طول.</span>
-          <button className="btn big full" onClick={() => { setConfirmVote(false); send('spy:callVote'); }}>أيوه، يلا نصوّت</button>
+          <span style={{ fontWeight: 700 }}>لسه {AR(notReady)} مش جاهزين، تبدأ برضه؟</span>
+          <button className="btn big full" onClick={() => { setConfirmVote(false); send('spy:startVote'); }}>أيوه، ابدأ</button>
+          <button className="btn full" style={{ height: 52 }} onClick={() => setConfirmVote(false)}>لا، استنى</button>
         </Sheet>
       )}
     </main>
@@ -232,6 +271,7 @@ function Reveal({ room, g }: P) {
 
   return (
     <main className="screen dark">
+      <MysteryBg />
       <Confetti fire={boom} />
       <div className="col stagger" style={{ gap: 6 }}>
         <span className="label" style={{ color: 'var(--yellow)' }}>الأصوات قالت</span>
@@ -285,6 +325,7 @@ function Guess({ room, g }: P) {
   if (!g.guessOptions) {
     return (
       <main className="screen dark">
+        <MysteryBg />
         <div className="row between"><div className="row" style={{ gap: 6 }}><span className="chip pink">الفرصة الأخيرة</span><HelpButton gameId="spy" /></div>{g.endsAt && <Timer endsAt={g.endsAt} />}</div>
         <div className="col center grow" style={{ justifyContent: 'center', gap: 12 }}>
           {spy && <span className="float"><Character id={spy.avatar} size={140} spy /></span>}
@@ -299,7 +340,8 @@ function Guess({ room, g }: P) {
   }
 
   return (
-    <main className="screen dark" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255,79,154,.3), rgba(255,79,154,0) 55%), #111' }}>
+    <main className="screen dark">
+      <MysteryBg />
       <header className="row" style={{ gap: 12 }}>
         {spy && <Character id={spy.avatar} size={60} spy />}
         <div className="col grow" style={{ gap: 0 }}>
