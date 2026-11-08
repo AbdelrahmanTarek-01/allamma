@@ -22,6 +22,9 @@ export function destPoint(lat: number, lon: number, bearingDeg: number, km: numb
   return [(la2 * 180) / Math.PI, ((((lo2 * 180) / Math.PI) + 540) % 360) - 180];
 }
 
+/** Where the cover fit is centred, [lat, lon]. */
+const COVER_CENTER: [number, number] = [20, 25];
+
 interface View { s: number; tx: number; ty: number } // screen = map * s + t
 export interface MapCtx {
   /** lat/lon -> screen px inside the map box. */
@@ -64,16 +67,35 @@ export function MapView({ scope, onTap, focus, layer, overlay, controls = true, 
   const viewRef = useRef(view);
   const raf = useRef(0);
 
-  // the scale that frames the scope's focus box in the container (the "fit" view)
+  // The "fit" view. Most maps are framed to CONTAIN their focus box. A map much wider than the box (the world in a tall phone box) would be
+  // letterboxed and tiny, so it COVERS the box height instead: zoomed so the map fills top to bottom, centred on Africa / Europe / the Middle East,
+  // with the sides reached by panning (the cover scale is also the minimum zoom, so there is never empty sea above or below).
+  const cover = size.w > 0 && def.w * size.h > 1.8 * def.h * size.w;
   const fit = useMemo(() => {
     if (!size.w) return { s0: 1, view: { s: 1, tx: 0, ty: 0 } as View };
+    if (cover) {
+      const s0 = size.h / def.h;
+      const [cx, cy] = proj([COVER_CENTER[1], COVER_CENTER[0]]) ?? [def.w / 2, def.h / 2];
+      return { s0, view: { s: s0, tx: size.w / 2 - cx * s0, ty: size.h / 2 - cy * s0 } };
+    }
     const [x0, y0, x1, y1] = def.focus;
     const pad = 10;
     const s0 = Math.min((size.w - pad * 2) / (x1 - x0), (size.h - pad * 2) / (y1 - y0));
     return { s0, view: { s: s0, tx: size.w / 2 - ((x0 + x1) / 2) * s0, ty: size.h / 2 - ((y0 + y1) / 2) * s0 } };
-  }, [size, def]);
+  }, [size, def, cover, proj]);
   const limits = useRef({ min: 0.1, max: 40 });
-  limits.current = { min: fit.s0 * 0.9, max: fit.s0 * 18 };
+  limits.current = { min: cover ? fit.s0 : fit.s0 * 0.9, max: fit.s0 * 18 };
+  // first time a cover-fit map shows: a small "drag to see the whole world" hint, gone after 2.5 s or on the first drag
+  const [hint, setHint] = useState<'show' | 'hide' | null>(null);
+  useEffect(() => {
+    if (!cover || !controls) return;
+    let seen = true;
+    try { seen = !!localStorage.getItem('allamma.worldHint'); if (!seen) localStorage.setItem('allamma.worldHint', '1'); } catch { /* blocked storage: no hint */ }
+    if (seen) return;
+    setHint('show');
+    const t = setTimeout(() => setHint('hide'), 2500);
+    return () => clearTimeout(t);
+  }, [cover, controls]);
 
   const clamp = useCallback((v: View): View => {
     const s = Math.min(limits.current.max, Math.max(limits.current.min, v.s));
@@ -145,7 +167,10 @@ export function MapView({ scope, onTap, focus, layer, overlay, controls = true, 
     const padX = 54, padTop = 64, padBottom = 54;
     const s = Math.min((size.w - padX * 2) / (x1 - x0), (size.h - padTop - padBottom) / (y1 - y0));
     const sc = Math.min(limits.current.max, Math.max(limits.current.min, s));
-    animateTo({ s: sc, tx: size.w / 2 - ((x0 + x1) / 2) * sc, ty: padTop + (size.h - padTop - padBottom) / 2 - ((y0 + y1) / 2) * sc }, 1100);
+    // pins too far apart to fit at the minimum zoom: centre on the target (the last point) so as many pins as possible stay around it
+    const tooWide = (x1 - x0) * sc > size.w - padX * 2 + 1;
+    const cxm = tooWide ? pts[pts.length - 1][0] : (x0 + x1) / 2;
+    animateTo({ s: sc, tx: size.w / 2 - cxm * sc, ty: padTop + (size.h - padTop - padBottom) / 2 - ((y0 + y1) / 2) * sc }, 1100);
   }, [focus?.key, size.w, size.h]);
 
   // ---------- gestures: drag to pan, pinch to zoom, tap to place ----------
@@ -191,6 +216,7 @@ export function MapView({ scope, onTap, focus, layer, overlay, controls = true, 
     }
     if (!g.current.moved && Math.hypot(p.x - g.current.sx, p.y - g.current.sy) > 8) g.current.moved = true;
     if (g.current.moved) {
+      setHint((h) => (h === 'show' ? 'hide' : h));
       const v = viewRef.current;
       apply({ ...v, tx: v.tx + (p.x - prev.x), ty: v.ty + (p.y - prev.y) });
     }
@@ -259,6 +285,7 @@ export function MapView({ scope, onTap, focus, layer, overlay, controls = true, 
           </svg>
         )}
       </div>
+      {hint && <div className={`map-hint${hint === 'hide' ? ' off' : ''}`} aria-hidden="true">اسحب ↔ عشان تشوف العالم كله</div>}
       {controls && (
         <div className="map-controls" role="group" aria-label="التحكم في الخريطة">
           <button type="button" className="map-btn" aria-label="كبّر" onClick={() => zoomButton(1.7)}>+</button>
