@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Character, GAMES, Plus, Trophy } from '../components/art';
+import { GameSheet } from '../components/GameSheet';
 import { GameTile } from '../components/GameTile';
 import { IdeaIcon, IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
@@ -13,6 +14,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const [codeOpen, setCodeOpen] = useState(false);
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [ideasOpen, setIdeasOpen] = useState(false);
+  const [sheetGame, setSheetGame] = useState<string | null>(null); // the tapped game tile's sheet
   const [boardOpen, setBoardOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lobby, setLobby] = useState<LobbyRoom[] | null>(null); // null = still loading
@@ -44,9 +46,10 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     await send('room:join', { code: c.trim().toUpperCase() });
     setBusy(false);
   };
-  const create = async () => {
+  // the big button sends nothing (default game); a game tile sends its id so the lounge opens with that game selected
+  const create = async (game?: string) => {
     setBusy(true);
-    await send('room:create');
+    await send('room:create', game ? { game } : undefined);
     setBusy(false);
   };
 
@@ -69,7 +72,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
         {GAMES.map((g, i) => (
-          <GameTile key={g.id} g={g} help style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }} />
+          <GameTile key={g.id} g={g} style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.card(); setSheetGame(g.id); }} />
         ))}
         {/* the last card: what we are cooking next, with a vote per idea */}
         <button className="tile soon-card" style={{ animationDelay: `${GAMES.length * 60}ms` }} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
@@ -94,9 +97,10 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
                     : count > 0 ? <span className="chip" style={{ fontSize: 13, background: 'var(--green)' }}>{AR(count)}</span> : null}
                 </button>
               </div>
-        <button className="btn big full" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
+        <button className="btn big full" disabled={busy} onClick={() => create()}><Plus /> اعمل قعدة</button>
       </div>
 
+      {sheetGame && <GameSheet gameId={sheetGame} busy={busy} onCreate={async (id) => { await create(id); setSheetGame(null); }} onClose={() => setSheetGame(null)} />}
       {ideasOpen && <IdeasSheet onClose={() => setIdeasOpen(false)} />}
       {boardOpen && (
         <Sheet title="الترتيب" onClose={() => setBoardOpen(false)}>

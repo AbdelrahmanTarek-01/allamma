@@ -113,12 +113,13 @@ export class RoomsService implements OnModuleDestroy {
 
   // ---------- rooms ----------
 
-  createRoom(playerId: string, name: string, avatar: string, socketId: string) {
+  createRoom(playerId: string, name: string, avatar: string, socketId: string, game?: unknown) {
     this.leave(playerId);
     let code = '';
     do code = Array.from({ length: 5 }, () => pick([...CODE_CHARS])).join('');
     while (this.rooms.has(code));
-    const def = GAME_DEFS[DEFAULT_GAME];
+    // a tapped game tile picks its game; anything unknown falls back to the default
+    const def = (typeof game === 'string' && GAME_DEFS[game]) || GAME_DEFS[DEFAULT_GAME];
     const room: Room = {
       code,
       name: this.cleanRoomName(`قعدة ${name}`),

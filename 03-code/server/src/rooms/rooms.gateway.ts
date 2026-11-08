@@ -79,9 +79,9 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('room:create')
-  create(@ConnectedSocket() c: Socket): Ack {
+  create(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     return this.run(c, (id) => {
-      const room = this.rooms.createRoom(id, c.data.name, c.data.avatar, c.id);
+      const room = this.rooms.createRoom(id, c.data.name, c.data.avatar, c.id, b?.game);
       this.sendHistory(c, room);
       return { code: room.code };
     });
