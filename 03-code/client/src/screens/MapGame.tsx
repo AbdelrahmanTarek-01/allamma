@@ -5,7 +5,7 @@ import { MapView, PinMarker, TargetMarker, destPoint, type MapCtx } from '../com
 import { Confetti, MuteButton, Sheet, SkeletonHome, Timer, useCountUp } from '../components/ui';
 import { AR, send, serverNow, toast, type MapEntry, type MapGameView, type MapHint, type PlayerView, type RoomView } from '../net';
 import { isMapLoaded, loadMapDef, getMapDef } from '../games/map/maps';
-import { music, sfx } from '../sound';
+import { gameOver, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: MapGameView };
 
@@ -279,6 +279,7 @@ function Reveal({ room, g }: P) {
     once('target', T_TARGET, () => sfx.pop());
     dropOrder.forEach((_, i) => once(`d${i}`, T_DROP0 + i * T_DROP_STEP, () => sfx.pinDrop()));
     dropOrder.forEach((_, i) => once(`l${i}`, lines0 + i * T_LINE_STEP, () => sfx.lineDraw()));
+    once('near', winnerAt + 500, () => { const mine = entries.find((e) => e.id === room.youId); if (!meWon && mine && mine.points >= 600) sfx.near(); });
     once('win', winnerAt, () => { if (winner) { (meWon ? sfx.win : sfx.crown)(); setBoom(1); } else sfx.lose(); });
   }, [t]);
   useEffect(() => { music.dip(3); }, []);
@@ -507,10 +508,10 @@ function Final({ room, g }: P) {
 
   useEffect(() => {
     music.dip(3);
-    sfx.fanfare();
+    const stopSound = gameOver(null);
     setBoom(1);
     const t = setTimeout(() => setBoom(2), 1400);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); stopSound(); };
   }, []);
 
   return (

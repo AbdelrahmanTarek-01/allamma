@@ -5,7 +5,7 @@ import { TeamChatButton } from '../components/TeamChatSheet';
 import { Confetti, MuteButton, Timer } from '../components/ui';
 import { TEAM } from '../games/teams';
 import { AR, send, type RoomView, type WordsGameView } from '../net';
-import { music, sfx } from '../sound';
+import { gameOver, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: WordsGameView };
 
@@ -72,7 +72,11 @@ function Play({ room, g }: P) {
   const lastKey = g.last ? `${g.last.word}-${g.boardNo}` : '';
   useEffect(() => {
     if (!g.last) return;
-    if (g.last.kind === 'own') sfx.gotcha(); else if (g.last.kind === 'neutral') sfx.pop(); else sfx.boo();
+    // every device hears the same thing once a card is flipped (the colour is public by then): flip, then what it was
+    sfx.flip();
+    const k = g.last.kind;
+    const t = setTimeout(() => (k === 'own' ? sfx.confirm : k === 'neutral' ? sfx.soft : k === 'enemy' ? sfx.error : sfx.boom)(), 260);
+    return () => clearTimeout(t);
   }, [lastKey]);
 
   const sendClue = async () => {
@@ -205,7 +209,7 @@ function BoardEnd({ room, g }: P) {
     const t0 = performance.now();
     const tick = (now: number) => { const s = (now - t0) / 1000; setT(s); if (s < 6.5) raf.current = requestAnimationFrame(tick); };
     raf.current = requestAnimationFrame(tick);
-    const timer = setTimeout(() => (bomb ? sfx.stamp() : sfx.win()), bomb ? B * 1000 : 900);
+    const timer = setTimeout(() => (bomb ? sfx.boom() : sfx.win()), bomb ? B * 1000 : 900);
     return () => { cancelAnimationFrame(raf.current); clearTimeout(timer); };
   }, []);
   const pre = t < B;
@@ -279,12 +283,13 @@ function MatchEnd({ room, g }: P) {
   useEffect(() => {
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     music.dip(3);
-    if (reduced) { setT(20); setBoom(1); return; }
+    const stopSound = gameOver(g.team !== null && f.winner !== null ? (g.team === f.winner ? 'win' : 'lose') : null);
+    if (reduced) { setT(20); setBoom(1); return stopSound; }
     const t0 = performance.now();
     const tick = (now: number) => { const s = (now - t0) / 1000; setT(s); if (s < 8) raf.current = requestAnimationFrame(tick); };
     raf.current = requestAnimationFrame(tick);
-    const fan = setTimeout(() => { sfx.fanfare(); setBoom(1); }, T * 1000);
-    return () => { cancelAnimationFrame(raf.current); clearTimeout(fan); };
+    const fan = setTimeout(() => setBoom(1), T * 1000);
+    return () => { cancelAnimationFrame(raf.current); clearTimeout(fan); stopSound(); };
   }, []);
   const w = f.winner;
   const shown = [0, 0];

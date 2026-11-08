@@ -170,8 +170,40 @@ export const sfx = {
   pinDrop: play(() => { tone(520, 0.1, 'sine', 0.1, 0, 180); noise(0.05, 0.05, 0.07, 700, 'lowpass'); buzz(20); }),
   lineDraw: play(() => { noise(0.9, 0.035, 0, 1200, 'bandpass'); tone(300, 0.9, 'sine', 0.035, 0, 900); }),
   crown: play(() => { tone(880, 0.1, 'triangle', 0.1); tone(1320, 0.14, 'triangle', 0.1, 0.08); tone(1760, 0.2, 'triangle', 0.09, 0.17); buzz([30, 30, 60]); }),
+  // sounds.md: 'قريب!', a quiz 50:50 puff, a steal swipe, the words bomb, an auction coin (pitch rises with the price) and the gavel
+  near: play(() => { tone(1250, 0.07, 'sine', 0.07); tone(1560, 0.09, 'sine', 0.07, 0.08); buzz(15); }),
+  poof: play(() => { noise(0.12, 0.06, 0, 2500, 'bandpass'); noise(0.16, 0.045, 0.11, 1400, 'bandpass'); tone(500, 0.1, 'sine', 0.03, 0, 250); }),
+  swipe: play(() => { noise(0.2, 0.07, 0, 3500, 'bandpass'); tone(700, 0.2, 'triangle', 0.04, 0, 1500); buzz(20); }),
+  boom: play(() => { noise(0.8, 0.3, 0, 160, 'lowpass'); tone(70, 0.8, 'sine', 0.35, 0, 28); noise(0.25, 0.12, 0, 1800, 'highpass'); buzz([120, 40, 260]); }),
+  blip: play(() => tone(260, 0.09, 'sine', 0.06, 0, 190)), // rank down: a low soft blip
+  coin: (step = 0) => play(() => { const f = 1320 * Math.pow(1.06, step); tone(f, 0.09, 'triangle', 0.1); tone(f * 1.5, 0.16, 'triangle', 0.1, 0.08); })(),
+  gavel: play(() => { noise(0.07, 0.3, 0, 900, 'bandpass'); tone(190, 0.12, 'square', 0.12, 0, 110); tone(95, 0.2, 'sine', 0.2, 0, 60); buzz(70); }),
   fanfare: play(() => { [392, 523, 659, 784, 659, 784, 1047, 1047].forEach((f, i) => tone(f, i === 7 ? 0.6 : 0.18, 'triangle', 0.13, i * 0.12)); buzz([60, 80, 60, 80, 200]); })
 };
+
+/**
+ * The last 5 seconds of ANY timer: a soft tick every second, rising in pitch over the last 3, with a tiny buzz;
+ * at zero the "time up" close. Same for everyone, so it never says anything about a role or a card.
+ */
+export function timerTick(left: number) {
+  if (left < 0 || left > 5) return;
+  if (left === 0) { sfx.close(); buzz([60, 40, 120]); return; }
+  const f = left <= 3 ? 900 + (4 - left) * 240 : 900;
+  play(() => tone(f, 0.05, 'square', left <= 3 ? 0.05 : 0.035))();
+  buzz(left <= 3 ? 25 : 12);
+}
+
+/** The game-over moment shared by every game: drumroll, then the fanfare and the crown, a confetti pop sprinkle, and the team result. Returns a cancel function. */
+export function gameOver(outcome: 'win' | 'lose' | null = null): () => void {
+  const ts: number[] = [];
+  const at = (ms: number, fn: () => void) => ts.push(window.setTimeout(fn, ms));
+  sfx.drumroll(1.2);
+  at(1300, () => sfx.fanfare());
+  at(1900, () => sfx.crown());
+  [1500, 1650, 1800, 1950].forEach((ms) => at(ms, () => sfx.pop()));
+  at(2700, () => { if (outcome === 'win') sfx.win(); else if (outcome === 'lose') sfx.lose(); });
+  return () => ts.forEach((t) => clearTimeout(t));
+}
 
 /* Every button gets a sound by its kind, unless its own handler already played one. */
 function buttonSound(e: Event) {

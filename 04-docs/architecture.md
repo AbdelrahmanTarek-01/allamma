@@ -96,3 +96,7 @@ result ──host──▶ back to the lounge
 - Engine `server/src/games/words/words.engine.ts`, pack `words.ts` (314 words, tiers 1-4, 7 themes). Phases per board: clue (guide) → guess (team) → boardEnd (bomb / win, host can skip) → next board or final match (best of 1/3/5, setting `boards`).
 - Difficulty table `WORDS_LEVELS`: words per team 6/7/8/9, neutral 7/5/3/0, bombs 1/1/1/2, bomb loses the board (not on easy), guide time open/90/60/45 s, extra try, secret picks on ماكس, word tiers (hard and max draw from the same few themes).
 - Guides rotate every board; the clue is checked against hidden board words (normalised, prefix/suffix). The key is only in the guides' `viewFor`. Lounge points: winners +300, guides +100; room leaderboard 8 / 2.
+
+## Sound pass (01-brainstorm/sounds.md)
+- New sfx in `client/src/sound.ts`: near, poof, swipe, boom, blip, coin(step), gavel. `timerTick(left)` (soft tick each second in the last 5 s, rising in the last 3, tiny buzz, "close" at zero) runs on every countdown through `useTimerSounds` (ui.tsx: Timer and the quiz ring). `gameOver(outcome)` = drumroll, fanfare, crown, pop sprinkle, then win/lose for team games.
+- Secrecy rule: sounds fire on public events only (same sound for every role and every card until it is flipped). Auction and draw have no screens yet, so coin and gavel are ready but unused.

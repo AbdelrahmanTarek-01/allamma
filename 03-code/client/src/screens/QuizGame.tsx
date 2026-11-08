@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
 import { TeamChatButton } from '../components/TeamChatSheet';
-import { Confetti, MuteButton, Timer, useSecondsLeft } from '../components/ui';
+import { Confetti, MuteButton, Timer, useSecondsLeft, useTimerSounds } from '../components/ui';
 import { TEAM } from '../games/teams';
 import { AR, send, type QuizGameView, type RoomView } from '../net';
-import { music, sfx } from '../sound';
+import { buzz, gameOver, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: QuizGameView };
 
@@ -228,7 +228,7 @@ function Ring({ endsAt, color }: { endsAt: number | null; color: string }) {
   const total = useRef(0);
   if (left > total.current) total.current = left;
   const f = total.current ? left / total.current : 0;
-  useEffect(() => { if (left > 0 && left <= 5) sfx.tick(); }, [left]);
+  useTimerSounds(left, !!endsAt);
   return (
     <span className="qz-ring" role="timer" aria-label={`فاضل ${left} ثانية`}>
       <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true" style={{ transform: 'rotate(-90deg)' }}>
@@ -257,10 +257,13 @@ function Question({ room, g }: P) {
   useEffect(() => {
     if (!reveal || !oc) return;
     if (oc.kind === 'right' || oc.kind === 'steal') {
-      (g.team !== null && oc.team === g.team ? sfx.gotcha : sfx.pop)();
-    } else sfx.boo();
+      if (g.team !== null && oc.team === g.team) { sfx.gotcha(); buzz([30, 40, 30]); } else sfx.pop();
+    } else sfx.error();
   }, [reveal]);
-  useEffect(() => { if (steal) sfx.whoosh(); }, [steal]);
+  useEffect(() => { if (steal) sfx.swipe(); }, [steal]); // the steal swipe
+  useEffect(() => { if (g.phase === 'question' && !q.early) sfx.whoosh(); }, [q.text]); // the question appears
+  const gone = q.options.filter((o) => o.gone).length;
+  useEffect(() => { if (gone > 0) sfx.poof(); }, [gone]); // 50:50
 
   const votes = (i: number) => q.votes.filter((v) => v.option === i);
   const lead = (() => {
@@ -278,6 +281,7 @@ function Question({ room, g }: P) {
     sfx.card();
     await act('vote', { option: i });
   };
+  useEffect(() => { if (mine && !reveal) sfx.turn(); }, [mine, g.phase, q.early]); // your team answers: chime + buzz
   const myCards = g.cardsOn && g.team !== null ? g.cards[g.team] : null;
   const canFifty = mine && !reveal && !!myCards && myCards.fifty > 0 && !q.options.some((o) => o.gone);
   const canSteal = !mine && g.team !== null && g.phase === 'question' && !q.early && g.team !== onTurnTeam && !!myCards && myCards.steal > 0;
@@ -313,7 +317,7 @@ function Question({ room, g }: P) {
       {mine && !reveal && (g.cardsOn) && (
         <div className="row" style={{ gap: 10 }}>
           <span style={{ fontSize: 12, fontWeight: 900, flex: 'none' }}>كروتكم:</span>
-          <button className="qz-fifty" disabled={!canFifty} style={{ opacity: canFifty ? 1 : 0.6, background: canFifty ? '#fff' : '#f3ecd0' }} onClick={async () => { sfx.card(); await act('card', { card: 'fifty' }); }}>
+          <button className="qz-fifty" disabled={!canFifty} style={{ opacity: canFifty ? 1 : 0.6, background: canFifty ? '#fff' : '#f3ecd0' }} data-sfx="none" onClick={async () => { await act('card', { card: 'fifty' }); }}>
             <span className="qz-minicard">٥٠</span>
             <span className="col" style={{ lineHeight: 1.2, textAlign: 'right' }}>
               <b style={{ fontSize: 13.5 }}>{myCards && myCards.fifty > 0 && !q.options.some((o) => o.gone) ? 'استخدم كارت ٥٠:٥٠' : q.options.some((o) => o.gone) ? 'استخدمتوا ٥٠:٥٠' : 'مفيش ٥٠:٥٠ متاحة'}</b>
@@ -323,7 +327,7 @@ function Question({ room, g }: P) {
         </div>
       )}
       {canSteal && (
-        <button className="qz-fifty" style={{ background: '#fff' }} onClick={async () => { sfx.stamp(); await act('card', { card: 'steal' }); }}>
+        <button className="qz-fifty" style={{ background: '#fff' }} data-sfx="none" onClick={async () => { sfx.swipe(); await act('card', { card: 'steal' }); }}>
           <span className="qz-minicard" style={{ background: '#FF4F9A' }}>✓</span>
           <span className="col" style={{ lineHeight: 1.2, textAlign: 'right' }}><b style={{ fontSize: 13.5 }}>كارت السرقة</b><span style={{ fontSize: 11, fontWeight: 700, opacity: 0.8 }}>جاوبوا قبل الفريق التاني</span></span>
         </button>
@@ -395,12 +399,13 @@ function Final({ room, g }: P) {
   useEffect(() => {
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     music.dip(3);
-    if (reduced) { setT(9); setBoom(1); return; }
+    const stopSound = gameOver(g.team !== null && win !== null ? (g.team === win ? 'win' : 'lose') : null);
+    if (reduced) { setT(9); setBoom(1); return stopSound; }
     const t0 = performance.now();
     const tick = (now: number) => { const s = (now - t0) / 1000; setT(s); if (s < 7.2) raf.current = requestAnimationFrame(tick); };
     raf.current = requestAnimationFrame(tick);
-    const fan = setTimeout(() => { sfx.fanfare(); setBoom(1); }, 1900);
-    return () => { cancelAnimationFrame(raf.current); clearTimeout(fan); };
+    const fan = setTimeout(() => setBoom(1), 1900);
+    return () => { cancelAnimationFrame(raf.current); clearTimeout(fan); stopSound(); };
   }, []);
   const race = ease((t - 0.2) / 1.6);
   const shown = (v: number) => Math.round((Math.max(0, v) * race) / 10) * 10 * (v < 0 ? -1 : 1);

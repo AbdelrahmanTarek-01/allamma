@@ -68,7 +68,7 @@ export function IdeasSheet({ onClose }: { onClose: () => void }) {
     const on = !state.mine.includes(id);
     // instant feedback, then the server's numbers
     setState({ counts: { ...state.counts, [id]: Math.max(0, (state.counts[id] ?? 0) + (on ? 1 : -1)) }, mine: on ? [...state.mine, id] : state.mine.filter((x) => x !== id) });
-    on ? sfx.select() : sfx.toggleOff();
+    on ? sfx.pop() : sfx.toggleOff();
     const r = await send('ideas:vote', { idea: id, on });
     if (r.ok) setState({ counts: r.counts, mine: r.mine });
   };

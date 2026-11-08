@@ -5,7 +5,7 @@ import { HelpButton } from '../components/HelpSheet';
 import { MysteryBg } from '../components/MysteryBg';
 import { Confetti, MuteButton, Timer } from '../components/ui';
 import { AR, send, type RoomView, type WaveGameView } from '../net';
-import { music, sfx } from '../sound';
+import { gameOver, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: WaveGameView };
 
@@ -186,7 +186,11 @@ function Play({ room, g }: P) {
   const lastDrag = useRef(0);
   const lastSend = useRef(0);
   const [, tick] = useState(0);
+  const notch = useRef(-1);
   const onAngle = (a: number, end: boolean) => {
+    const n = Math.floor(a / 6); // a soft tick for every notch the needle crosses
+    if (notch.current !== -1 && n !== notch.current) sfx.soft();
+    notch.current = n;
     setLocal(a);
     lastDrag.current = performance.now();
     const now = performance.now();
@@ -297,11 +301,12 @@ function Reveal({ room, g }: P) {
     music.dip(2);
     if (reducedMotion()) return;
     const ts: ReturnType<typeof setTimeout>[] = [];
+    ts.push(setTimeout(() => sfx.whoosh(), 250)); // the cover sweeps away
     ts.push(setTimeout(() => { setOpen(true); sfx.flip(); }, 600));
     list.forEach((_, i) => ts.push(setTimeout(() => { setShown(i + 1); sfx.pop(); }, 1700 + i * 500)));
     ts.push(setTimeout(() => {
       setDone(true);
-      if (myPoints >= 3) { sfx.win(); setBoom(1); } else if (myPoints > 0) sfx.gotcha(); else sfx.lose();
+      if (myPoints >= 3) { sfx.win(); setBoom(1); if (myPoints >= 4) setTimeout(() => sfx.crown(), 500); } else if (myPoints > 0) sfx.near(); else sfx.lose();
     }, 1700 + list.length * 500 + 400));
     return () => ts.forEach(clearTimeout);
   }, []);
@@ -391,10 +396,10 @@ function Final({ room, g }: P) {
 
   useEffect(() => {
     music.dip(3);
-    sfx.fanfare();
+    const stopSound = gameOver(teams && topTeam !== null && g.you?.team != null ? (g.you.team === topTeam ? 'win' : 'lose') : null);
     setBoom(1);
     const t = setTimeout(() => setBoom(2), 1400);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); stopSound(); };
   }, []);
 
   return (

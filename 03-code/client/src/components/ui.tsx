@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AR, serverNow } from '../net';
-import { setAudio, sfx, useAudioSettings } from '../sound';
+import { setAudio, sfx, timerTick, useAudioSettings } from '../sound';
 
 export function useSecondsLeft(endsAt: number | null) {
   const calc = () => (endsAt ? Math.max(0, Math.ceil((endsAt - serverNow()) / 1000)) : 0);
@@ -14,9 +14,20 @@ export function useSecondsLeft(endsAt: number | null) {
   return left;
 }
 
+/** The shared timer sounds (last 5 seconds, then time up) for any countdown. */
+export function useTimerSounds(left: number, on = true) {
+  const prev = useRef(left);
+  useEffect(() => {
+    const p = prev.current;
+    prev.current = left;
+    if (!on) return;
+    if (left === 0) { if (p > 0) timerTick(0); } else timerTick(left);
+  }, [left, on]);
+}
+
 export function Timer({ endsAt, tick = true }: { endsAt: number | null; tick?: boolean }) {
   const left = useSecondsLeft(endsAt);
-  useEffect(() => { if (tick && left > 0 && left <= 10) sfx.tick(); }, [left, tick]);
+  useTimerSounds(left, tick && !!endsAt);
   const m = Math.floor(left / 60);
   const s = String(left % 60).padStart(2, '0');
   return (

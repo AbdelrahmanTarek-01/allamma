@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { HELP } from '../games';
 import type { HelpIcon } from '../games/help-types';
 import { SpyIcon, GAMES } from './art';
+import { sfx } from '../sound';
 import { Sheet } from './ui';
 
 const S = { stroke: '#111', strokeWidth: 2, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
@@ -79,7 +80,7 @@ export function HelpButton({ gameId, className = '' }: { gameId: string; classNa
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className={`help-btn ${className}`} aria-label="إزاي تلعب" onClick={(e) => { e.stopPropagation(); setOpen(true); }}>?</button>
+      <button type="button" className={`help-btn ${className}`} aria-label="إزاي تلعب" onClick={(e) => { e.stopPropagation(); sfx.card(); setOpen(true); }}>?</button>
       {open && createPortal(<HelpSheet gameId={gameId} onClose={() => setOpen(false)} />, document.body)}
     </>
   );

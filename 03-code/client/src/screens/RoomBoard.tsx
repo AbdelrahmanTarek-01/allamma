@@ -23,11 +23,23 @@ export function RoomBoard({ room, auto, onClose }: { room: RoomView; auto: boole
   const [t, setT] = useState(auto && !reduced ? 0 : 99); // seconds into the animation
   const raf = useRef(0);
 
+  const snd = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const boardSounds = () => {
+    snd.current.forEach(clearTimeout);
+    const at = (ms: number, fn: () => void) => snd.current.push(setTimeout(fn, ms));
+    const moved = rows.filter((r, i) => r.prevRank !== null && r.prevRank !== i).length;
+    for (let i = 0; i < Math.min(moved, 4); i++) at(300 + i * 90, () => sfx.whoosh()); // one whoosh per row that moves
+    for (let i = 0; i < 9; i++) at(350 + i * 110, () => sfx.soft()); // the points count up
+    const me = rows.findIndex((r) => r.id === room.youId);
+    const prev = me >= 0 ? rows[me].prevRank : null;
+    if (prev !== null && prev !== me) at(1350, () => (me < prev ? sfx.pop() : sfx.blip()));
+  };
+  useEffect(() => () => snd.current.forEach(clearTimeout), []);
   const play = () => {
     cancelAnimationFrame(raf.current);
     setTab(0);
     if (reduced) return setT(99);
-    sfx.whoosh();
+    boardSounds();
     const t0 = performance.now();
     const tick = (now: number) => { const s = (now - t0) / 1000; setT(s); if (s < 2.5) raf.current = requestAnimationFrame(tick); else setT(99); };
     raf.current = requestAnimationFrame(tick);

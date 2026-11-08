@@ -4,7 +4,7 @@ import { HelpButton } from '../components/HelpSheet';
 import { MysteryBg } from '../components/MysteryBg';
 import { Confetti, MuteButton, Sheet, Timer, useCountUp } from '../components/ui';
 import { AR, send, type GameView, type PlayerView, type RoomView } from '../net';
-import { buzz, music, sfx } from '../sound';
+import { buzz, gameOver, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: GameView };
 
@@ -460,10 +460,10 @@ function Final({ room, g }: P) {
 
   useEffect(() => {
     music.dip(3);
-    sfx.fanfare();
+    const stopSound = gameOver(null);
     setBoom(1);
     const t = setTimeout(() => setBoom(2), 1400);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); stopSound(); };
   }, []);
 
   return (
