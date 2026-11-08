@@ -74,7 +74,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         <button className="btn grow" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
           قعدات مفتوحة
           {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} />
-            : count > 0 ? <span className="chip pink" style={{ fontSize: 13 }}>{AR(count)}</span> : null}
+            : count > 0 ? <span className="chip" style={{ fontSize: 13, background: 'var(--green)' }}>{AR(count)}</span> : null}
         </button>
       </div>
 
@@ -85,9 +85,11 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         ))}
         {/* the last card: what we are cooking next, with a vote per idea */}
         <button className="tile soon-card" style={{ animationDelay: `${GAMES.length * 60}ms` }} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
-          <span className="display" style={{ fontSize: 44, lineHeight: 1 }}>٧</span>
-          <span className="display" style={{ fontSize: 18 }}>بنحضّر ٧ كمان</span>
-          <span style={{ fontSize: 12.5, fontWeight: 700 }}>صوّت للي عاجبك</span>
+          <span className="soon-squares" aria-hidden="true">
+            <i style={{ background: '#FF4F9A', transform: 'rotate(-8deg)' }} /><i style={{ background: '#3DDC97', transform: 'rotate(6deg)' }} /><i style={{ background: '#4D9DFF', transform: 'rotate(-4deg)' }} />
+          </span>
+          <span className="display" style={{ fontSize: 20, marginTop: 10 }}>بنحضّر ٧ كمان</span>
+          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>شوف الأفكار وصوّت للي عاوزها</span>
         </button>
       </div>
 

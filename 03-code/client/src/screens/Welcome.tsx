@@ -15,36 +15,35 @@ export function hasInviteLink() {
   return !!new URLSearchParams(location.search).get('room');
 }
 
+// where each character floats (canvas artboard Welcome): character, left %, top %, size
+const CAST = [['c2', 8, 14, 74], ['c5', 70, 10, 58], ['c1', 78, 40, 64], ['c4', 4, 44, 52], ['c3', 40, 4, 60]] as const;
 const POINTS = [
-  { color: 'var(--green)', text: 'كل الألعاب من موبايلك، ومعاك صحابك' },
-  { color: 'var(--blue)', text: 'ادخل بكود أو لينك، من غير تسجيل' },
-  { color: 'var(--pink)', text: 'بنزوّد ألعاب جديدة على طول' }
+  { color: 'var(--green)', text: 'ببلاش ومن غير تسجيل' },
+  { color: 'var(--blue)', text: 'ابعت لينك لصحابك وكل واحد من بيته' },
+  { color: 'var(--pink)', text: '٧ ألعاب، وكل شوية لعبة جديدة' }
 ];
 
 /** First visit only: what اللمّة is, then the character picker. */
 export function Welcome({ onStart }: { onStart: () => void }) {
   return (
     <main className="screen">
-      <div className="col center" style={{ gap: 6, paddingTop: 18 }}>
-        <span className="logo pop-in" style={{ fontSize: 72 }}>اللمّة<i>.</i></span>
-        <h1 className="display" style={{ fontSize: 24, textAlign: 'center', lineHeight: 1.35 }}>نادي ألعاب الصحاب<br />من الموبايل، وببلاش</h1>
-      </div>
-
-      <div className="welcome-cast" aria-hidden="true">
-        {['c4', 'c1', 'c3', 'c8', 'c2'].map((id, i) => (
-          <span key={id} className="float" style={{ animationDelay: `${i * 220}ms`, marginTop: i % 2 ? 22 : 0 }}><Character id={id} size={i === 2 ? 96 : 74} /></span>
+      <div className="welcome-hero" aria-hidden="true">
+        {CAST.map(([id, left, top, size], i) => (
+          <span key={id} style={{ left: `${left}%`, top: `${top}%`, animationDelay: `${i * 0.3}s` }}><Character id={id} size={size} /></span>
         ))}
       </div>
-
-      <div className="col stagger" style={{ gap: 10 }}>
+      <div className="col center" style={{ gap: 6 }}>
+        <span className="logo pop-in" style={{ fontSize: 84 }}>اللمّة<i>.</i></span>
+        <h1 className="display" style={{ fontSize: 22, textAlign: 'center' }}>ألعاب القعدة، على موبايلك</h1>
+      </div>
+      <div className="col stagger" style={{ gap: 8 }}>
         {POINTS.map((p) => (
-          <div key={p.text} className="card row" style={{ gap: 12, padding: '10px 14px', boxShadow: '4px 4px 0 var(--ink)' }}>
-            <span style={{ width: 14, height: 14, borderRadius: '50%', background: p.color, border: '2.5px solid var(--ink)', flex: 'none' }} />
-            <span style={{ fontWeight: 800, fontSize: 16 }}>{p.text}</span>
+          <div key={p.text} className="card flat row" style={{ gap: 10, padding: '8px 12px', borderWidth: 2.5, borderRadius: 16 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 4, border: '2px solid var(--ink)', background: p.color, flex: 'none' }} />
+            <span style={{ fontWeight: 800, fontSize: 14 }}>{p.text}</span>
           </div>
         ))}
       </div>
-
       <button className="btn big full push" onClick={() => { sfx.confirm(); onStart(); }}>يلا نبدأ</button>
     </main>
   );

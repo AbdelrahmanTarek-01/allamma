@@ -5,13 +5,13 @@ import { Sheet } from './ui';
 
 /** The games we are cooking next (01-brainstorm/home-v2.md). Ids match the server's IDEA_IDS. */
 const IDEAS = [
-  { id: 'categories', name: 'اسم حيوان جماد بلاد', text: 'حرف عشوائي وكل واحد يكتب إجابة لكل خانة. الإجابة اللي محدش كتبها بتجيب نقط أكتر.', color: '#3DDC97' },
-  { id: 'mafia', name: 'المافيا', text: 'قتلة مخفيين: بالليل بيختاروا ضحية، وبالنهار بنتناقش ونصوّت.', color: '#FF4F9A' },
-  { id: 'taboo', name: 'ماتقولش الكلمة', text: 'وصّف الكلمة لفريقك من غير ٣ كلمات ممنوعة.', color: '#FF8A3D' },
-  { id: 'bluff', name: 'الكدبة الحلوة', text: 'سؤال غريب، وكل واحد يألّف إجابة مقنعة، والباقي يدوّروا على الصح.', color: '#B48CFF' },
-  { id: 'whoami', name: 'مين فينا؟', text: '«مين أكتر واحد فينا ممكن…» وكلنا نصوّت.', color: '#4D9DFF' },
-  { id: 'twotruths', name: 'صدق ولا كدب', text: '٣ جمل عن نفسك، واحدة منهم كدبة.', color: '#FFD23F' },
-  { id: 'telephone', name: 'تليفون مكسور', text: 'جملة، بعدين رسمة، بعدين جملة، وبتتغيّر على طول السلسلة.', color: '#3DDC97' }
+  { id: 'categories', name: 'اسم حيوان جماد بلاد', text: 'حرف عشوائي وكل واحد يكتب في كل خانة · الإجابة اللي محدش كتبها بتاخد نقط أكتر', color: '#3DDC97' },
+  { id: 'mafia', name: 'المافيا', text: 'فيه قتلة مستخبيين وسطكم · بالليل بيختاروا، وبالنهار الكل يتناقش ويصوّت', color: '#B48CFF' },
+  { id: 'taboo', name: 'ماتقولش الكلمة', text: 'وصّف الكلمة لفريقك من غير ما تقول ٣ كلمات ممنوعة', color: '#FF8A3D' },
+  { id: 'bluff', name: 'الكدبة الحلوة', text: 'سؤال غريب · كل واحد يألّف إجابة كدب تقنع، والباقي يدوّروا على الحقيقية', color: '#FF4F9A' },
+  { id: 'whoami', name: 'مين فينا؟', text: '«مين فينا هيتأخر على فرحه؟» · الكل يصوّت وتطلع النتيجة', color: '#4D9DFF' },
+  { id: 'twotruths', name: 'صدق ولا كدب', text: 'كل واحد يقول ٣ حاجات عن نفسه، واحدة فيهم كدب', color: '#FFD23F' },
+  { id: 'telephone', name: 'تليفون مكسور', text: 'جملة تتحوّل رسمة وترجع جملة · وتشوفوا وصلت لفين', color: '#9ADFFF' }
 ];
 
 type VoteState = { counts: Record<string, number>; mine: string[] };
@@ -35,8 +35,8 @@ export function IdeasSheet({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Sheet title="بنحضّر ٧ كمان" onClose={onClose}>
-      <span className="muted">صوّت للألعاب اللي نفسك نشوفها الأول.</span>
+    <Sheet title="ألعاب جاية" onClose={onClose}>
+      <span style={{ fontSize: 12.5, fontWeight: 800 }}>صوّت للعبة اللي عاوزها، والأكتر أصوات بنبدأ بيها</span>
       <div className="col" style={{ gap: 8 }}>
         {IDEAS.map((idea, i) => {
           const voted = !!state?.mine.includes(idea.id);
@@ -47,8 +47,8 @@ export function IdeasSheet({ onClose }: { onClose: () => void }) {
                 <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.45 }}>{idea.text}</span>
               </div>
               <button className={`vote-btn${voted ? ' on' : ''}`} disabled={!state} aria-pressed={voted} aria-label={`${voted ? 'شيل صوتك من' : 'صوّت لـ'} ${idea.name}`} onClick={() => vote(idea.id)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.600 4.600 0 018-3 4.600 4.600 0 018 3c0 5.800-8 11-8 11z" fill={voted ? '#FF4F9A' : '#fff'} stroke="#111" strokeWidth="2.200" strokeLinejoin="round" /></svg>
-                <b className="num">{state ? AR(state.counts[idea.id] ?? 0) : '–'}</b>
+                <span style={{ fontSize: 11, fontWeight: 900 }}>{voted ? 'صوّت' : 'عاوزها'}</span>
+                <b key={String(voted)} className="display num vote-n">{state ? AR(state.counts[idea.id] ?? 0) : '–'}</b>
               </button>
             </div>
           );

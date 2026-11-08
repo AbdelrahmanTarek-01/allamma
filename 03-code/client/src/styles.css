@@ -588,27 +588,44 @@ button:disabled { cursor: not-allowed; }
 /* home v2: the "بنحضّر ٧ كمان" card and the ideas sheet */
 .tile.soon-card { background: var(--ink); color: var(--yellow); align-items: flex-start; justify-content: center; gap: 2px; min-height: 134px; box-shadow: 4px 4px 0 var(--pink); }
 .tile.soon-card:active { box-shadow: 0 0 0 var(--pink); }
-.idea-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--white); border: 3px solid var(--ink); border-inline-start-width: 9px; border-inline-start-color: var(--ic); border-radius: 16px; }
-.vote-btn { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 52px; height: 52px; padding: 0; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 2px 2px 0 var(--ink); font-size: 13px; transition: transform .1s, box-shadow .1s, background .15s; }
-.vote-btn.on { background: var(--yellow-soft); }
+.idea-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; position: relative; }
+.idea-row::before { content: ''; align-self: stretch; width: 10px; flex: none; border-radius: 99px; border: 2px solid var(--ink); background: var(--ic); }
+.vote-btn { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 58px; height: 52px; padding: 0; background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; box-shadow: 2px 2px 0 var(--ink); transition: transform .1s, box-shadow .1s, background .15s; }
+.vote-btn.on { background: var(--green); box-shadow: none; }
+.vote-btn .vote-n { font-size: 18px; line-height: 1; animation: bump .3s; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
 .vote-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
 
-/* room leaderboard (ترتيب القعدة) */
-.board-screen { gap: 12px; }
-.board-tabs { display: flex; gap: 6px; overflow-x: auto; padding-block: 4px; scrollbar-width: none; }
-.board-tabs::-webkit-scrollbar { display: none; }
-.board-tabs .chip { flex: none; font-size: 13.5px; padding: 3px 14px; }
-.podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; padding-top: 22px; }
-.pod-col { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; animation: rise .45s cubic-bezier(.2, .9, .3, 1.15) backwards; }
-.pod-col.away { opacity: .55; filter: grayscale(.6); }
-.pod-name { max-width: 100%; font-weight: 900; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pod-step { width: 100%; margin-top: 4px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--ink); border-radius: 14px 14px 0 0; border-bottom: 0; font-family: var(--font-display); font-weight: 800; font-size: 28px; }
-.pod-crown { position: absolute; top: -26px; }
-.pod-col.first .pod-crown { animation-delay: .9s; }
-.board-row { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 14px; }
-.board-row.away { opacity: .5; filter: grayscale(.6); }
-.mini-bars { display: flex; height: 8px; border: 2px solid var(--ink); border-radius: 99px; background: #F1EFE6; overflow: hidden; }
-.mini-bars i { display: block; height: 100%; }
-.played-strip { display: flex; gap: 8px; overflow-x: auto; padding-block: 2px 6px; scrollbar-width: none; }
-.played-strip::-webkit-scrollbar { display: none; }
-.played-card { flex: 0 0 150px; display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; background: var(--white); border: 3px solid var(--ink); border-top: 8px solid var(--gc); border-radius: 14px; }
+/* room leaderboard (ترتيب القعدة), canvas artboard RoomBoard */
+.board-screen { gap: 10px; }
+.board-row { display: flex; align-items: center; }
+.board-row.away, .pod-col.away { opacity: .5; filter: grayscale(.6); }
+.pod-name { max-width: 100%; font-weight: 900; font-size: 14px; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-step { display: flex; border: 3px solid var(--ink); border-bottom: 0; }
+
+.board-tabs { display: flex; gap: 6px; overflow-x: auto; margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter) 4px; scrollbar-width: none; }
+.tab-pill { flex: none; height: 34px; padding: 0 12px; border: 2.5px solid var(--ink); border-radius: 99px; background: var(--white); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); font-weight: 900; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.tab-pill i { width: 9px; height: 9px; border-radius: 3px; border: 1.8px solid var(--ink); }
+.tab-pill.on { background: var(--ink); color: var(--yellow); box-shadow: none; }
+.tab-pill.on i { border-color: var(--yellow); }
+.podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; height: 186px; padding-top: 0; }
+.pod-col { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; animation: none; }
+.pod-name { line-height: 1; }
+.pod-step { align-self: stretch; margin-top: 0; padding-top: 4px; flex-direction: column; justify-content: flex-start; align-items: center; border-radius: 14px 14px 0 0; }
+.pod-bob { animation: pod-bob 1.4s ease-in-out infinite; }
+@keyframes pod-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.board-list { position: relative; margin-top: -10px; background: var(--white); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 5px 5px 0 var(--ink); padding: 6px 10px; }
+.board-list .board-row { position: absolute; inset-inline: 10px; height: 44px; padding: 0; gap: 8px; }
+.board-list .mini-bars { margin-inline-start: auto; display: flex; align-items: flex-end; gap: 3px; height: auto; border: 0; background: none; border-radius: 0; overflow: visible; }
+.board-list .mini-bars i { width: 8px; border-radius: 3px; border: 1.5px solid var(--ink); }
+.played-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.played-pill { font-size: 11.5px; font-weight: 900; background: var(--white); border: 2px solid var(--ink); border-radius: 99px; padding: 0 8px; display: flex; align-items: center; gap: 4px; }
+.played-pill i { width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--ink); }
+
+/* artboard-accurate welcome and home v2 touches */
+.welcome-hero { position: relative; height: 300px; flex: none; }
+.welcome-hero > span { position: absolute; animation: floaty 3.2s ease-in-out infinite, popIn .5s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-12px) rotate(4deg); } }
+@keyframes popIn { 0% { opacity: 0; scale: .3; } 100% { opacity: 1; scale: 1; } }
+.soon-squares { display: flex; gap: 4px; }
+.soon-squares i { width: 22px; height: 22px; border-radius: 7px; border: 2px solid #fff; }
