@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SkeletonHome } from './components/ui';
 import { start, useStore } from './net';
+import { music, type MusicName } from './sound';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Room } from './screens/Room';
@@ -23,6 +24,11 @@ export function App() {
   }
   else if (!room.game) { key = 'room'; screen = <Room room={room} />; }
   else { key = `spy-${room.game.round}-${room.game.phase}`; screen = <SpyGame room={room} g={room.game} />; }
+
+  // background music follows the moment: lively in menus, tense while playing, silent for the drama
+  const phase = room?.game?.phase;
+  const track: MusicName = phase === 'discuss' || phase === 'vote' ? 'tension' : phase === 'reveal' || phase === 'guess' ? null : 'lobby';
+  useEffect(() => { music.play(track); }, [track]);
 
   return (
     <>

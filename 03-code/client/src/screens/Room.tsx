@@ -21,6 +21,7 @@ export function Room({ room }: { room: RoomView }) {
   const seen = useRef({ players: room.players.length, chat: room.chat[room.chat.length - 1]?.id });
   useEffect(() => {
     if (room.players.length > seen.current.players) sfx.join();
+    else if (room.players.length < seen.current.players) sfx.leave();
     const last = room.chat[room.chat.length - 1];
     if (last && last.id !== seen.current.chat && last.from !== room.youId) sfx.chat();
     seen.current = { players: room.players.length, chat: last?.id };

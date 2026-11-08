@@ -11,7 +11,8 @@
 
 ## Next
 1. **Deploy and play with friends**, and write down what feels slow or confusing.
-2. Sounds and vibration for the card flip, the reveal, and the last 10 seconds.
+2. ~~Sounds, vibration and animations~~ (done in v0.2).
+   ~~Background music (maqsoum rhythm, hijaz), separate music/effects volume, a sound on every button, calmer yellow skeletons~~ (done in v0.3).
 3. Emoji reactions during the reveal.
 4. PWA (installable, own icon).
 5. Second game: **الموجة**.

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Character, SpyIcon } from '../components/art';
 import { Confetti, MuteButton, Sheet, Timer, useCountUp } from '../components/ui';
 import { AR, send, type GameView, type PlayerView, type RoomView } from '../net';
-import { buzz, sfx } from '../sound';
+import { buzz, music, sfx } from '../sound';
 
 type P = { room: RoomView; g: GameView };
 
@@ -206,6 +206,7 @@ function Reveal({ room, g }: P) {
 
   useEffect(() => {
     if (!accused) { sfx.boo(); return; }
+    music.dip(4);
     sfx.drumroll(1.6);
     const t = setTimeout(() => {
       setOpen(true);
@@ -279,7 +280,7 @@ function Guess({ room, g }: P) {
           <span className="display h1">{spy?.name} بيخمّن المكان…</span>
           <span style={{ fontWeight: 700 }}>لو خمّن صح، ياخد الجولة رغم إنكم مسكتوه</span>
           <div className="grid3" style={{ width: '100%' }}>
-            {Array.from({ length: 6 }, (_, i) => <div key={i} className="sk" style={{ height: 54, animationDelay: `${i * 90}ms`, background: 'linear-gradient(90deg, rgba(255,255,255,.08) 25%, rgba(255,255,255,.25) 50%, rgba(255,255,255,.08) 75%)', backgroundSize: '200% 100%' }} />)}
+            {Array.from({ length: 6 }, (_, i) => <div key={i} className="sk" style={{ height: 54, animationDelay: `${i * 160}ms` }} />)}
           </div>
         </div>
       </main>
@@ -354,6 +355,7 @@ function Result({ room, g }: P) {
     : g.outcome === 'spy-guessed' ? `${name(g.spyId)} اتمسك بس عرف إنه ${g.place}` : `${name(g.spyId)} كان الجاسوس ومحدش مسكه`;
 
   useEffect(() => {
+    music.dip(2.5);
     if (won) { sfx.win(); setBoom(1); } else sfx.lose();
   }, []);
 
@@ -390,6 +392,7 @@ function Final({ room, g }: P) {
   const isHost = room.hostId === room.youId;
 
   useEffect(() => {
+    music.dip(3);
     sfx.fanfare();
     setBoom(1);
     const t = setTimeout(() => setBoom(2), 1400);

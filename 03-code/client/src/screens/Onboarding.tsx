@@ -26,7 +26,7 @@ export function Onboarding() {
 
       <form className="col" onSubmit={(e) => { e.preventDefault(); if (ok) saveProfile(name, avatar); }}>
         <label htmlFor="pname" className="label" style={{ fontSize: 15 }}>اسمك اللي صحابك هيشوفوه</label>
-        <input id="pname" className="input" value={name} maxLength={14} placeholder="اكتب اسمك" autoComplete="nickname" onChange={(e) => setName(e.target.value)} />
+        <input id="pname" className="input" value={name} maxLength={14} placeholder="اكتب اسمك" autoComplete="nickname" onChange={(e) => { setName(e.target.value); sfx.type(); }} />
       </form>
 
       <span className="label" style={{ fontSize: 15 }}>دوس على الشخصية اللي شبهك</span>

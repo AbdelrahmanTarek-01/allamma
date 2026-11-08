@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { io } from 'socket.io-client';
+import { sfx } from './sound';
 
 export interface PlayerView { id: string; name: string; avatar: string; ready: boolean; connected: boolean; score: number }
 export interface ChatView { id: string; from: string; text: string; at: number }
@@ -66,8 +67,8 @@ export function send(event: string, payload?: unknown): Promise<Ack> {
   return new Promise((resolve) => {
     if (!socket.connected) { toast('النت فاصل، بنحاول نوصل تاني…'); return resolve({ ok: false }); }
     socket.timeout(8000).emit(event, payload ?? {}, (err: unknown, res: Ack) => {
-      if (err) { toast('السيرفر مردش، جرّب تاني'); return resolve({ ok: false }); }
-      if (!res.ok && res.error) toast(res.error);
+      if (err) { sfx.error(); toast('السيرفر مردش، جرّب تاني'); return resolve({ ok: false }); }
+      if (!res.ok && res.error) { sfx.error(); toast(res.error); }
       resolve(res);
     });
   });
