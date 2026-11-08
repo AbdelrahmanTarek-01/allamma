@@ -252,6 +252,11 @@ export interface LobbyRoom {
   host: { name: string; avatar: string };
   game: string;
   players: number;
+  /** First four members (avatar ids) for the card. */
+  avatars: string[];
+  /** The lounge asks the host before a new player comes in. */
+  ask: boolean;
+  difficulty: string;
   max: number;
   /** No free seat left. */
   full: boolean;
@@ -262,6 +267,10 @@ export interface RoomView {
   name: string;
   privacy: 'private' | 'public';
   locked: boolean;
+  /** Who may come in: anyone with the code, new players ask the host, or nobody new. */
+  joinMode: 'open' | 'ask' | 'locked';
+  /** Host only: players asking to come in (empty for everyone else). */
+  requests: { id: string; name: string; avatar: string; returning: boolean; at: number }[];
   selectedGame: string;
   /** Players the selected game needs to start. */
   minPlayers: number;
@@ -289,14 +298,14 @@ type Status = 'waking' | 'online' | 'offline';
 
 // chat is not part of the room snapshot: the server sends the history once (chat:history), then each message (chat:new)
 // chatBase = id of the last message in the history we received: everything up to it counts as already seen (no unread badge)
-interface State { status: Status; room: RoomView | null; chat: ChatView[]; chatBase: string | undefined; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean }
+interface State { status: Status; room: RoomView | null; chat: ChatView[]; chatBase: string | undefined; offset: number; toast: string | null; profile: Profile | null; hasConnected: boolean; pending: { code: string; roomName: string; hostName: string; until: number } | null; backToRooms: boolean }
 
 const KEY = 'allamma.profile';
 const loadProfile = (): Profile | null => {
   try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
 };
 
-let state: State = { status: 'waking', room: null, chat: [], chatBase: undefined, offset: 0, toast: null, profile: loadProfile(), hasConnected: false };
+let state: State = { status: 'waking', room: null, chat: [], chatBase: undefined, offset: 0, toast: null, profile: loadProfile(), hasConnected: false, pending: null, backToRooms: false };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()); };
 export const useStore = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => state);
@@ -337,7 +346,7 @@ async function hello() {
     const invite = inviteCodeFromUrl();
     if (invite) {
       history.replaceState(null, '', location.pathname);
-      await send('room:join', { code: invite });
+      await joinRoom(invite);
     }
   }
 }
@@ -351,6 +360,35 @@ socket.on('chat:history', (list: ChatView[]) => set({ chat: list.slice(-MAX_CHAT
 socket.on('chat:new', (m: ChatView) => {
   if (state.chat.some((x) => x.id === m.id)) return;
   set({ chat: [...state.chat, m].slice(-MAX_CHAT) });
+});
+
+/** Join by code (list, code box or invite link). A lounge in ask mode answers with a pending request: the waiting screen shows until the host decides. */
+export async function joinRoom(code: string) {
+  const res = await send('room:join', { code });
+  if (res.ok && res.pending) set({ pending: { code: res.code, roomName: res.pending.roomName, hostName: res.pending.hostName, until: res.pending.until } });
+  return res;
+}
+
+/** The requester pressed "إلغاء الطلب". */
+export function cancelJoinRequest() {
+  send('room:requestCancel');
+  set({ pending: null, backToRooms: true });
+}
+
+/** Home asks once on mount: did a failed or cancelled join send us back to the open-rooms list? */
+export function takeBackToRooms() {
+  const b = state.backToRooms;
+  if (b) state = { ...state, backToRooms: false };
+  return b;
+}
+
+// the host's answer (or the clock) reaches a waiting requester
+const RESULT_TOAST: Record<string, string> = { rejected: 'الهوست رفض', expired: 'الهوست مردّش', full: 'القعدة مليانة', closed: 'الهوست غيّر الدخول للقعدة' };
+socket.on('join:result', (d: { code: string; status: string }) => {
+  if (!state.pending || state.pending.code !== d.code) return;
+  set({ pending: null, backToRooms: d.status !== 'accepted' });
+  if (RESULT_TOAST[d.status]) { sfx.error(); toast(RESULT_TOAST[d.status]); }
+  else sfx.join();
 });
 
 export function saveProfile(name: string, avatar: string) {

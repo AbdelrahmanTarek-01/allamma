@@ -26,6 +26,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     this.rooms.setPushListener((room, ids, event, data) => {
       room.players.forEach((p) => { if (ids.includes(p.id)) p.socketIds.forEach((sid) => this.server.to(sid).emit(event, data)); });
     });
+    this.rooms.setNotifyListener((socketId, event, data) => { this.server.to(socketId).emit(event, data); });
     // chat is not part of room:state: each new message is pushed on its own
     this.rooms.setChatListener((room, msg) => {
       room.players.forEach((p) => p.socketIds.forEach((sid) => this.server.to(sid).emit('chat:new', msg)));
@@ -58,7 +59,10 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket) {
-    if (client.data.playerId) this.rooms.detachSocket(client.data.playerId, client.id);
+    if (client.data.playerId) {
+      this.rooms.cancelRequest(client.data.playerId, client.id); // a requester who left is no longer waiting
+      this.rooms.detachSocket(client.data.playerId, client.id);
+    }
   }
 
   @SubscribeMessage('hello')
@@ -90,7 +94,8 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('room:join')
   join(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     return this.run(c, (id) => {
-      const room = this.rooms.joinRoom(b?.code, id, c.data.name, c.data.avatar, c.id);
+      const { room, pending } = this.rooms.joinOrRequest(b?.code, id, c.data.name, c.data.avatar, c.id);
+      if (pending) return { code: room.code, pending }; // ask mode: the host has to answer first
       this.sendHistory(c, room);
       return { code: room.code };
     });
@@ -134,9 +139,19 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.setPrivacy(id, b?.privacy));
   }
 
-  @SubscribeMessage('room:lock')
-  lock(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
-    return this.run(c, (id) => this.rooms.setLocked(id, b?.locked));
+  @SubscribeMessage('room:joinMode')
+  joinMode(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.setJoinMode(id, b?.mode));
+  }
+
+  @SubscribeMessage('room:request')
+  answer(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.answerRequest(id, b?.id, b?.accept));
+  }
+
+  @SubscribeMessage('room:requestCancel')
+  cancelRequest(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.cancelRequest(id));
   }
 
   @SubscribeMessage('room:leave')

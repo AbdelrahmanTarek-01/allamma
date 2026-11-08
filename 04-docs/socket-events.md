@@ -93,6 +93,10 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
 }
 ```
 
+## Join approval
+- `room:joinMode { mode: 'open'|'ask'|'locked' }` (host only; replaces `room:lock`). In ask mode `room:join` from a new player (list, code or link) answers `{ ok, code, pending: { until, roomName, hostName } }` and the request waits up to 60 s; players already in the room rejoin directly. At most 10 requests per room, one per player; a mode change or a full room drops them.
+- Host answers with `room:request { id, accept }`; the room snapshot carries `requests[]` (host only: `{ id, name, avatar, returning }`). The requester gets `join:result { code, status }` (`accepted | rejected | expired | full | closed`) and can send `room:requestCancel`. A rejected player can't ask the same room again for 2 minutes (`REJECTED`). Quick play never picks ask rooms. `lobby:list` rows add `avatars[4]`, `ask`, `difficulty`.
+
 ## Room capacity
 - `room:maxPlayers { max: 4|6|8|12 }` (host only; default 8). Rejected below the current player count or the selected game's minimum. Joining by code, link or quick play fails with `{ ok:false, code:'ROOM_FULL', error:'القعدة مليانة' }` at the cap; a player already in the room can always rejoin. `lobby:list` rows carry `players`, `max` and `full`; `lobby:quick` skips full rooms and never creates one (`NO_ROOMS`).
 

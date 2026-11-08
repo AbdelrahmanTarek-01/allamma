@@ -6,10 +6,13 @@ import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
 import { applySettings } from '../games/settings';
 import { normalizeTeams } from '../games/wave/wave.engine';
 import { maskBad } from '../common/profanity';
-import { AVATARS, Board, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
+import { AVATARS, Board, ChatMsg, GameError, JoinRequest, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
 export const ROOM_SIZES = [4, 6, 8, 12] as const;
 const DEFAULT_MAX_PLAYERS = 8;
+const REQUEST_TTL_MS = 60 * 1000;
+const REQUEST_MAX = 10;
+const REJECT_COOLDOWN_MS = 2 * 60 * 1000;
 const CHAT_GAP_MS = 1000;
 const MAX_CHAT = 50; // chat lives in memory only, last 50 messages per room, gone with the room
 const LOBBY_THROTTLE_MS = 1000;
@@ -35,6 +38,8 @@ export class RoomsService implements OnModuleDestroy {
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room, only?: string[]) => void = () => {};
   private onPush: (room: Room, ids: string[], event: string, data: unknown) => void = () => {};
+  private onNotify: (socketId: string, event: string, data: unknown) => void = () => {};
+  private pendingOf = new Map<string, string>(); // requester id -> room code
   private onChat: (room: Room, msg: ChatMsg) => void = () => {};
   private sweeper = setInterval(() => this.sweep(), 60 * 1000);
   private lastChatAt = new Map<string, number>();
@@ -56,6 +61,11 @@ export class RoomsService implements OnModuleDestroy {
   /** Custom engine events (live strokes): the gateway sends them to the listed players only. */
   setPushListener(fn: (room: Room, ids: string[], event: string, data: unknown) => void) {
     this.onPush = fn;
+  }
+
+  /** A message for one socket that is not in a room (a join request result). */
+  setNotifyListener(fn: (socketId: string, event: string, data: unknown) => void) {
+    this.onNotify = fn;
   }
 
   setLobbyListener(fn: (list: LobbyRoom[]) => void) {
@@ -127,6 +137,9 @@ export class RoomsService implements OnModuleDestroy {
       hostId: playerId,
       privacy: 'private',
       locked: false,
+      ask: false,
+      requests: new Map(),
+      rejected: new Map(),
       banned: new Set(),
       players: new Map(),
       chat: [],
@@ -154,10 +167,83 @@ export class RoomsService implements OnModuleDestroy {
     }
     if (room.banned.has(playerId)) throw new GameError('المضيف طلّعك من القعدة دي');
     if (room.locked) throw new GameError('القعدة مقفولة');
+    if (room.ask) throw new GameError('القعدة دي بإذن، ابعت طلب', 'ASK');
     if (room.players.size >= room.maxPlayers) throw new GameError('القعدة مليانة', 'ROOM_FULL');
     this.leave(playerId);
     this.addPlayer(room, playerId, name, avatar, socketId);
     return room;
+  }
+
+  /**
+   * Ask mode: a player already in the room walks in; a new one (list, code or link) sends a request instead.
+   * Returns { pending } when a request is waiting for the host (60 s), otherwise the room joined.
+   */
+  joinOrRequest(code: string, playerId: string, name: string, avatar: string, socketId: string) {
+    const room = this.rooms.get(String(code ?? '').trim().toUpperCase());
+    if (!room || !room.ask || room.players.has(playerId)) return { room: this.joinRoom(code, playerId, name, avatar, socketId), pending: null };
+    if (room.banned.has(playerId)) throw new GameError('المضيف طلّعك من القعدة دي');
+    if (room.locked) throw new GameError('القعدة مقفولة');
+    if (room.players.size >= room.maxPlayers) throw new GameError('القعدة مليانة', 'ROOM_FULL');
+    const cool = room.rejected.get(playerId) ?? 0;
+    if (cool > Date.now()) throw new GameError('الهوست رفض طلبك، جرّب بعد دقيقتين', 'REJECTED');
+    const old = room.requests.get(playerId);
+    if (old) old.socketId = socketId; // one request per player: asking again just re-attaches
+    else {
+      if (room.requests.size >= REQUEST_MAX) throw new GameError('طلبات كتير على القعدة دي، جرّب بعد شوية');
+      this.cancelRequest(playerId); // a pending request somewhere else is dropped
+      const req: JoinRequest = { id: playerId, name, avatar, socketId, at: Date.now(), timer: setTimeout(() => this.dropRequest(room, playerId, 'expired'), REQUEST_TTL_MS) };
+      room.requests.set(playerId, req);
+      this.pendingOf.set(playerId, room.code);
+      this.emit(room);
+    }
+    const host = room.players.get(room.hostId) ?? [...room.players.values()][0];
+    return { room, pending: { until: (room.requests.get(playerId) as JoinRequest).at + REQUEST_TTL_MS, roomName: this.shownName(room), hostName: host.name } };
+  }
+
+  /** Remove a request and tell the requester how it ended (expired / rejected / full / closed). */
+  private dropRequest(room: Room, id: string, status: 'expired' | 'rejected' | 'full' | 'closed' | 'cancelled', notify = true) {
+    const r = room.requests.get(id);
+    if (!r) return;
+    clearTimeout(r.timer);
+    room.requests.delete(id);
+    this.pendingOf.delete(id);
+    if (status === 'rejected') room.rejected.set(id, Date.now() + REJECT_COOLDOWN_MS);
+    if (notify) this.onNotify(r.socketId, 'join:result', { code: room.code, status });
+    if (this.rooms.has(room.code)) this.emit(room);
+  }
+
+  private dropAllRequests(room: Room, status: 'full' | 'closed') {
+    [...room.requests.keys()].forEach((id) => this.dropRequest(room, id, status));
+  }
+
+  /** The requester pressed "إلغاء الطلب" (or their connection went away). */
+  cancelRequest(playerId: string, onlySocketId?: string) {
+    const code = this.pendingOf.get(playerId);
+    const room = code ? this.rooms.get(code) : undefined;
+    const r = room?.requests.get(playerId);
+    if (!room || !r || (onlySocketId && r.socketId !== onlySocketId)) return;
+    this.dropRequest(room, playerId, 'cancelled', false);
+  }
+
+  /** Host: accept or reject one request. */
+  answerRequest(hostId: string, id: unknown, accept: unknown) {
+    const room = this.mustHost(hostId);
+    const rid = String(id ?? '');
+    const r = room.requests.get(rid);
+    if (!r) throw new GameError('الطلب خلص');
+    if (!accept) return this.dropRequest(room, rid, 'rejected');
+    if (room.players.size >= room.maxPlayers) {
+      this.dropRequest(room, rid, 'full');
+      throw new GameError('القعدة مليانة', 'ROOM_FULL');
+    }
+    clearTimeout(r.timer);
+    room.requests.delete(rid);
+    this.pendingOf.delete(rid);
+    this.leave(rid); // out of any other room
+    this.addPlayer(room, rid, r.name, r.avatar, r.socketId);
+    this.onPush(room, [rid], 'chat:history', room.chat);
+    this.onNotify(r.socketId, 'join:result', { code: room.code, status: 'accepted' });
+    if (room.players.size >= room.maxPlayers) this.dropAllRequests(room, 'full'); // no seat left for the others
   }
 
   private addPlayer(room: Room, id: string, name: string, avatar: string, socketId: string) {
@@ -247,9 +333,13 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
-  setLocked(playerId: string, locked: unknown) {
+  /** Host: who may come in. open = anyone with the code, ask = new players send a request, locked = nobody new. */
+  setJoinMode(playerId: string, mode: unknown) {
     const room = this.mustHost(playerId);
-    room.locked = !!locked;
+    if (mode !== 'open' && mode !== 'ask' && mode !== 'locked') throw new GameError('اختيار مش صح');
+    room.locked = mode === 'locked';
+    room.ask = mode === 'ask';
+    if (mode !== 'ask') this.dropAllRequests(room, 'closed'); // the mode changed: pending requests are dropped
     this.emit(room);
   }
 
@@ -267,6 +357,9 @@ export class RoomsService implements OnModuleDestroy {
           host: { name: host.name, avatar: host.avatar },
           game: r.selectedGame,
           players: r.players.size,
+          avatars: [...r.players.values()].sort((x, y) => x.joinedAt - y.joinedAt).slice(0, 4).map((p) => p.avatar),
+          ask: r.ask,
+          difficulty: r.difficulty,
           max: r.maxPlayers,
           full: r.players.size >= r.maxPlayers,
           status: (r.engine && !r.engine.isOver() ? 'playing' : 'waiting') as LobbyRoom['status']
@@ -281,7 +374,7 @@ export class RoomsService implements OnModuleDestroy {
    */
   quickPlay(playerId: string, name: string, avatar: string, socketId: string) {
     const mine = this.roomOf(playerId);
-    const best = this.lobbyList().find((l) => l.status === 'waiting' && !l.full && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
+    const best = this.lobbyList().find((l) => l.status === 'waiting' && !l.full && !l.ask && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
     if (!best) throw new GameError('مفيش قعدات مستنية دلوقتي', 'NO_ROOMS');
     return { room: this.joinRoom(best.code, playerId, name, avatar, socketId), created: false };
   }
@@ -507,6 +600,9 @@ export class RoomsService implements OnModuleDestroy {
       name: this.shownName(room),
       privacy: room.privacy,
       locked: room.locked,
+      joinMode: room.locked ? 'locked' : room.ask ? 'ask' : 'open',
+      // only the host sees who is asking to come in (and whether they played here before)
+      requests: playerId === room.hostId ? [...room.requests.values()].map((q) => ({ id: q.id, name: q.name, avatar: q.avatar, returning: !!room.board.members[q.id], at: q.at })) : [],
       hostId: room.hostId,
       youId: playerId,
       players,
@@ -593,6 +689,7 @@ export class RoomsService implements OnModuleDestroy {
 
   private destroy(room: Room) {
     this.clearTimer(room);
+    [...room.requests.keys()].forEach((id) => this.dropRequest(room, id, 'closed'));
     room.players.forEach((p) => this.playerRoom.delete(p.id));
     this.rooms.delete(room.code);
     this.touchLobby();

@@ -3,7 +3,7 @@ import { Character, GAMES, Plus, Trophy } from '../components/art';
 import { GameSheet, MIN } from '../components/GameSheet';
 import { IdeaIcon, IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
-import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
+import { AR, joinRoom, send, socket, takeBackToRooms, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 import { OpenRooms } from './OpenRooms';
 
@@ -26,7 +26,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
   const [code, setCode] = useState('');
   const [codeOpen, setCodeOpen] = useState(false);
-  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [roomsOpen, setRoomsOpen] = useState(() => takeBackToRooms()); // a rejected / expired / cancelled join request comes back to the list
   const [ideasOpen, setIdeasOpen] = useState(false);
   const [sheetGame, setSheetGame] = useState<string | null>(null); // the tapped game tile's sheet
   const [boardOpen, setBoardOpen] = useState(false);
@@ -57,7 +57,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const join = async (c: string) => {
     if (c.trim().length < 4) return toast('اكتب كود القعدة كامل');
     setBusy(true);
-    await send('room:join', { code: c.trim().toUpperCase() });
+    await joinRoom(c.trim().toUpperCase());
     setBusy(false);
   };
   // the big button sends nothing (default game); a game tile sends its id so the lounge opens with that game selected

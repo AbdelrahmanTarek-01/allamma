@@ -53,10 +53,24 @@ export interface LobbyRoom {
   host: { name: string; avatar: string };
   game: string;
   players: number;
+  /** First four members, for the avatars row on the card. */
+  avatars: string[];
+  /** The lounge asks the host before letting a new player in. */
+  ask: boolean;
+  difficulty: string;
   max: number;
   /** No free seat left (the card shows it dimmed; quick play skips it). */
   full: boolean;
   status: 'waiting' | 'playing';
+}
+
+export interface JoinRequest {
+  id: string;
+  name: string;
+  avatar: string;
+  socketId: string;
+  at: number;
+  timer: NodeJS.Timeout;
 }
 
 /** A lounge (قعدة): a persistent room that can play game after game. */
@@ -68,6 +82,12 @@ export interface Room {
   privacy: Privacy;
   /** Locked: nobody new can join (members reconnecting still can). */
   locked: boolean;
+  /** Ask mode ("بإذن"): a new player sends a request the host answers; members come back directly. */
+  ask: boolean;
+  /** Pending join requests (one per player, at most 10, each expires after 60 s). */
+  requests: Map<string, JoinRequest>;
+  /** Players the host rejected: they can't ask this lounge again until this time (ms). */
+  rejected: Map<string, number>;
   /** Players the host kicked: they can't rejoin this lounge. */
   banned: Set<string>;
   players: Map<string, Player>;

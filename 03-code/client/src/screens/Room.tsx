@@ -336,10 +336,11 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
             <div className="col" style={{ gap: 4 }}>
               <span className="label" style={{ fontSize: 12.5 }}>الدخول</span>
               <div className="seg" role="group" aria-label="الدخول للقعدة">
-                <button aria-pressed={!room.locked} onClick={() => send('room:lock', { locked: false })}>مفتوح</button>
-                <button aria-pressed={room.locked} onClick={() => send('room:lock', { locked: true })}>مقفول</button>
+                {([['open', 'مفتوح'], ['ask', 'بإذن'], ['locked', 'مقفول']] as const).map(([m, label]) => (
+                  <button key={m} aria-pressed={room.joinMode === m} onClick={() => send('room:joinMode', { mode: m })}>{label}</button>
+                ))}
               </div>
-              <span className="muted setting-hint">{room.locked ? 'محدش جديد يقدر يدخل' : 'أي حد معاه الكود يقدر يدخل'}</span>
+              <span className="muted setting-hint">{room.joinMode === 'locked' ? 'محدش جديد يقدر يدخل' : room.joinMode === 'ask' ? 'أي حد جديد يبعتلك طلب وإنت توافق (اللي كانوا فيها بيرجعوا لوحدهم)' : 'أي حد معاه الكود يقدر يدخل'}</span>
             </div>
             <div className="col" style={{ gap: 4 }}>
               <span className="label" style={{ fontSize: 12.5 }}>أقصى عدد</span>

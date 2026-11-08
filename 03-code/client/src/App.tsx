@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { GameChat } from './components/GameChat';
 import { HelpSheet } from './components/HelpSheet';
 import { takeFirstTimeHelp } from './games';
+import { JoinWaiting, RequestsSheet } from './components/JoinRequests';
 import { SkeletonHome, ToastPortal } from './components/ui';
 import { start, useStore } from './net';
 import { music, type MusicName } from './sound';
@@ -21,7 +22,7 @@ const DrawGame = lazy(() => import('./screens/DrawGame').then((m) => ({ default:
 const MapGame = lazy(() => import('./screens/MapGame').then((m) => ({ default: m.MapGame })));
 
 export function App() {
-  const { profile, status, room, toast, hasConnected } = useStore();
+  const { profile, status, room, toast, hasConnected, pending } = useStore();
   const [editing, setEditing] = useState(false);
   const [autoHelp, setAutoHelp] = useState<string | null>(null);
   // the welcome screen is for a first visit only: not for returning users (they have a profile) and not for invite links
@@ -40,6 +41,7 @@ export function App() {
   if (!profile && !welcomed) { key = 'welcome'; screen = <Welcome onStart={() => { markWelcomed(); setWelcomed(true); }} />; }
   else if (!profile || editing) { key = 'onboarding'; screen = <Onboarding onCancel={() => setEditing(false)} />; }
   else if (!hasConnected) { key = 'waking'; screen = <SkeletonHome note="بنصحّي السيرفر… ثواني" />; }
+  else if (pending && !room) { key = 'join-wait'; screen = <JoinWaiting />; }
   else if (!room) {
     key = status === 'online' ? 'home' : 'reconnect';
     screen = status === 'online' ? <Home onEditProfile={() => setEditing(true)} /> : <SkeletonHome note="بنرجّع الاتصال…" />;
@@ -119,6 +121,8 @@ export function App() {
         <div className="conn-banner" role="status">النت فصل، بنرجّعك لنفس مكانك…</div>
       )}
       <div key={key} className="enter">{screen}</div>
+      {/* the host answers join requests from a live bottom sheet (in the lounge) */}
+      {room && room.hostId === room.youId && !room.game && !board && <RequestsSheet room={room} />}
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
       {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && !isQuiz && !isWords && !isAuction && !isDraw && phase === 'discuss'} visible={!board && (!room.game || (isWave || isQuiz || isWords || isAuction || isDraw ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
