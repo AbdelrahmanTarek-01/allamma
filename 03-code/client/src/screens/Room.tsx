@@ -73,15 +73,17 @@ export function Room({ room }: { room: RoomView }) {
     catch { toast(`الكود: ${room.code}`); }
   };
   const copyCodeAndClose = () => { setInviteOpen(false); copyCode(); };
-  const openWhatsapp = (text: string) => { setInviteOpen(false); window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); };
-  // WhatsApp can't start a call from a link, so the call option opens a message to a group/contact: they start the voice call there.
+  // a single WhatsApp option: a wa.me link only opens a message to send
+  const sendOnWhatsapp = () => {
+    setInviteOpen(false);
+    const text = `تعالى العب معانا في اللمّة 🎲 الكود: ${room.code}\n${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  };
   const inviteRows = [
     { key: 'share', label: 'شارك اللينك', color: 'var(--blue)', onClick: shareLink, icon: <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 3v12M8 7l4-4 4 4" fill="none" stroke="#111" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" /> },
     { key: 'code', label: 'انسخ الكود', color: 'var(--yellow)', onClick: copyCodeAndClose, icon: <><rect x="8" y="8" width="12" height="12" rx="2.5" fill="#fff" stroke="#111" strokeWidth={2} /><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" fill="none" stroke="#111" strokeWidth={2} strokeLinecap="round" /></> },
-    { key: 'wa', label: 'ابعت على واتساب', color: 'var(--green)', onClick: () => openWhatsapp(`${inviteText}\n${link}`), icon: <path d="M5 4h14a2 2 0 012 2v9a2 2 0 01-2 2h-7l-5 4v-4H5a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#fff" stroke="#111" strokeWidth={2} strokeLinejoin="round" /> },
-    ...(room.privacy === 'private'
-      ? [{ key: 'call', label: 'افتحوا مكالمة واتساب', color: 'var(--orange)', onClick: () => openWhatsapp(`تعالوا نلعب ${game.name} في اللمّة ونفتح مكالمة صوت! الكود ${room.code}\n${link}`), icon: <path d="M6.6 3.5l2.2 4.4-1.7 1.7a12 12 0 006.3 6.3l1.7-1.7 4.4 2.2c.4.2.6.6.5 1l-.5 2.1c-.1.5-.6.9-1.1.9C10.4 20.4 3.6 13.6 3.1 5.1c0-.5.4-1 .9-1.1l2.1-.5c.5-.1.9.1 1 .5z" fill="#fff" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /> }]
-      : [])
+    // WhatsApp-style glyph: a white speech bubble with a small green handset, on the green tile
+    { key: 'wa', label: 'ابعت على واتساب', color: 'var(--green)', onClick: sendOnWhatsapp, icon: <><path d="M12 3a9 9 0 00-7.7 13.6L3 21l4.5-1.2A9 9 0 1012 3z" fill="#fff" stroke="#111" strokeWidth={2} strokeLinejoin="round" /><path d="M9.3 8.4l1.1 2.2-.9.9a6 6 0 003.3 3.3l.9-.9 2.2 1.1c.2.1.3.3.3.5l-.2 1c0 .3-.3.5-.6.5A7.5 7.5 0 018.3 9.1c0-.3.2-.5.5-.6l1-.2c.2 0 .4.1.5.1z" fill="#3DDC97" stroke="#111" strokeWidth={1.2} strokeLinejoin="round" /></> }
   ];
 
   return (
