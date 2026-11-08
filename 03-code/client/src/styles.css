@@ -946,3 +946,9 @@ button:disabled { cursor: not-allowed; }
 .jr-ring { position: relative; width: 150px; height: 150px; border-radius: 50%; background: var(--white); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); display: flex; align-items: center; justify-content: center; animation: jrRing 1.6s ease-out infinite; }
 @keyframes jrBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 @keyframes jrRing { 0% { box-shadow: 6px 6px 0 var(--ink), 0 0 0 0 rgba(17, 17, 17, .35); } 100% { box-shadow: 6px 6px 0 var(--ink), 0 0 0 18px rgba(17, 17, 17, 0); } }
+
+/* open rooms bottom button: fixed height, the action on top, the room name small underneath (one line, ellipsis) */
+.or-act { height: 70px; width: 100%; border: 3px solid var(--ink); border-radius: 22px; background: var(--ink); color: #FFD23F; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 18px; transition: transform .1s, box-shadow .1s; }
+.or-act:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink) !important; }
+.or-act:disabled { opacity: .55; }
+.or-act-room { max-width: 100%; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -107,8 +107,9 @@ export function OpenRooms({ lobby, onClose }: { lobby: LobbyRoom[] | null; onRef
       </div>
 
       <div className="col push" style={{ gap: 6 }}>
-        <button className="btn big full" disabled={busy || lobby === null || noQuick} style={{ boxShadow: `0 6px 0 ${shadow}` }} onClick={act}>
-          {chosen ? (chosen.ask ? `اطلب تدخل «${chosen.name}»` : `ادخل «${chosen.name}»`) : noQuick ? 'مفيش قعدات مستنية دلوقتي' : 'العب مع ناس'}
+        <button className="or-act" disabled={busy || lobby === null || noQuick} style={{ boxShadow: `0 6px 0 ${shadow}` }} onClick={act}>
+          <span className="display" style={{ fontSize: 23, lineHeight: 1.15 }}>{chosen ? (chosen.ask ? 'اطلب تدخل' : 'ادخل القعدة') : noQuick ? 'مفيش قعدات مستنية دلوقتي' : 'العب مع ناس'}</span>
+          {chosen && <span className="or-act-room">{chosen.name}</span>}
         </button>
         <span style={{ fontSize: 12.5, fontWeight: 800, textAlign: 'center' }}>
           {chosen ? (chosen.ask ? 'الهوست لازم يوافق الأول' : 'دوس تاني على القعدة عشان تلغي الاختيار') : noQuick ? 'اعمل قعدة وخلّيها عامة، والناس هتدخلك' : 'بندخّلك أول قعدة مفتوحة فيها مكان'}
