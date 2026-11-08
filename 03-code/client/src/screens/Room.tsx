@@ -260,7 +260,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
           {isHost && (
             <>
               <span className="hbar-sep" />
-              <button className="hbar-btn" aria-label="إعدادات اللعبة والقعدة" onClick={openGear}>
+              <button className="hbar-btn" aria-label="إعدادات القعدة" onClick={openGear}>
                 <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
               </button>
             </>
@@ -396,13 +396,9 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         </Sheet>
       )}
       {isHost && settingsOpen && (
-        <Sheet title="الإعدادات" onClose={() => setSettingsOpen(false)}>
-          {/* a) the selected game's settings, rendered generically from its schema */}
-          {gameFields()}
-
-          {/* b) the lounge itself, shared by every game */}
+        <Sheet title="إعدادات القعدة" onClose={() => setSettingsOpen(false)}>
+          {/* room settings only; the game settings (and the shared difficulty) live in the game card's gear sheet */}
           <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
-            <span className="display" style={{ fontSize: 18 }}>إعدادات القعدة</span>
             <form className="col" style={{ gap: 4 }} onSubmit={(e) => { e.preventDefault(); saveName(); }}>
               <label htmlFor="roomname" className="label" style={{ fontSize: 12.5 }}>اسم القعدة</label>
               <div className="row" style={{ gap: 6 }}>
