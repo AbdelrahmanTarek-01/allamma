@@ -1,16 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Character, GAMES, Plus } from '../components/art';
 import { GameTile } from '../components/GameTile';
+import { IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 import { OpenRooms } from './OpenRooms';
+
+/** Filled trophy with black outlines, like every icon in the app. */
+export function Trophy({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 4h10v6a5 5 0 01-10 0z" fill="#FFD23F" stroke="#111" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15v3M8.500 20.500h7" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
   const [code, setCode] = useState('');
   const [codeOpen, setCodeOpen] = useState(false);
   const [roomsOpen, setRoomsOpen] = useState(false);
+  const [ideasOpen, setIdeasOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lobby, setLobby] = useState<LobbyRoom[] | null>(null); // null = still loading
 
@@ -46,11 +60,6 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     await send('room:create');
     setBusy(false);
   };
-  const quick = async () => {
-    setBusy(true);
-    await send('lobby:quick');
-    setBusy(false);
-  };
 
   if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
 
@@ -60,6 +69,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       <header className="row between">
         <span className="logo">اللمّة<i>.</i></span>
         <div className="row" style={{ gap: 8 }}>
+          <button className="btn sm" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy /> الترتيب</button>
           <MuteButton />
           <button className="float" onClick={onEditProfile} aria-label="غيّر اسمك أو شخصيتك" style={{ border: 0, background: 'none', padding: 0 }}>
             <Character id={profile!.avatar} size={54} />
@@ -67,30 +77,41 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         </div>
       </header>
 
-      <button className="btn big full" disabled={busy} onClick={quick}>العب مع ناس</button>
+      {/* the one thing to do: open a lounge. Joining by code and the open lounges are one row below it */}
+      <button className="btn big full" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
 
       <div className="row" style={{ gap: 10 }}>
-        <button className="btn yellow grow" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
         <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
+        <button className="btn grow" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
+          قعدات مفتوحة
+          {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} />
+            : count > 0 ? <span className="chip pink" style={{ fontSize: 13 }}>{AR(count)}</span> : null}
+        </button>
       </div>
-
-      {/* one compact row instead of the whole list: the list lives on its own screen */}
-      <button className="tile" onClick={() => { sfx.tap(); setRoomsOpen(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
-        <span className="display" style={{ fontSize: 19 }}>قعدات مفتوحة</span>
-        {count === null ? <span className="sk" style={{ width: 34, height: 22, borderRadius: 99 }} />
-          : count > 0 ? <span className="chip pink">{AR(count)}</span>
-          : <span className="muted">مفيش دلوقتي</span>}
-        <span className="grow" />
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-      </button>
 
       <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
         {GAMES.map((g, i) => (
           <GameTile key={g.id} g={g} help style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.tap(); if (g.ready) create(); else toast(`${g.name} جاية قريب`); }} />
         ))}
+        {/* the last card: what we are cooking next, with a vote per idea */}
+        <button className="tile soon-card" style={{ animationDelay: `${GAMES.length * 60}ms` }} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
+          <span className="display" style={{ fontSize: 44, lineHeight: 1 }}>٧</span>
+          <span className="display" style={{ fontSize: 18 }}>بنحضّر ٧ كمان</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700 }}>صوّت للي عاجبك</span>
+        </button>
       </div>
 
+      {ideasOpen && <IdeasSheet onClose={() => setIdeasOpen(false)} />}
+      {boardOpen && (
+        <Sheet title="الترتيب" onClose={() => setBoardOpen(false)}>
+          <div className="col center" style={{ gap: 10, padding: '10px 0 6px' }}>
+            <Trophy size={64} />
+            <span className="display" style={{ fontSize: 26 }}>قريباً</span>
+            <span style={{ fontWeight: 700, textAlign: 'center', lineHeight: 1.6 }}>الترتيب العام بين كل اللاعيبة جاي قريب.<br />لحد وقتها كل قعدة ليها ترتيبها الخاص (الكاس اللي فوق في القعدة).</span>
+          </div>
+        </Sheet>
+      )}
       {codeOpen && (
         <Sheet title="ادخل بكود" onClose={() => setCodeOpen(false)}>
           <form className="row" style={{ gap: 8 }} onSubmit={(e) => { e.preventDefault(); join(code); }}>

@@ -8,6 +8,7 @@ import {
   WebSocketServer
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { IdeasService } from './ideas.service';
 import { RoomsService } from './rooms.service';
 import { GameError, Room } from './rooms.types';
 
@@ -17,7 +18,7 @@ type Ack = { ok: true; [k: string]: unknown } | { ok: false; error: string };
 export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly rooms: RoomsService) {}
+  constructor(private readonly rooms: RoomsService, private readonly ideas: IdeasService) {}
 
   afterInit() {
     this.rooms.setListener((room, only) => this.broadcast(room, only));
@@ -112,6 +113,17 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
       this.sendHistory(c, room);
       return { code: room.code, created };
     });
+  }
+
+  // Home: votes for the upcoming game ideas (one per player per idea, kept in server memory)
+  @SubscribeMessage('ideas:list')
+  ideasList(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.ideas.state(id));
+  }
+
+  @SubscribeMessage('ideas:vote')
+  ideasVote(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.ideas.vote(id, b?.idea, b?.on));
   }
 
   @SubscribeMessage('room:privacy')

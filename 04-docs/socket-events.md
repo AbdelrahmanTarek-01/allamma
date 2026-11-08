@@ -15,7 +15,9 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `room:lock` | `{ locked }` | host | A locked room rejects new joins with "القعدة مقفولة". Members reconnecting still get in. |
 | `lobby:list` | – | anyone | Ack `{ rooms: LobbyRoom[] }` and subscribes the socket to `lobby:update`. Only public, unlocked, not full rooms that someone is in. |
 | `lobby:leave` | – | anyone | Unsubscribes from `lobby:update` (home screen closed). |
-| `lobby:quick` | – | anyone | Joins the fullest public waiting room with a free seat (never one that banned you), otherwise creates a new public room. Ack `{ code, created }`. |
+| `ideas:list` | – | anyone | Home: vote counts for the 7 upcoming game ideas and the ideas this player voted for (`{ counts, mine }`). |
+| `ideas:vote` | `{ idea, on }` | anyone | One vote per playerId per idea (`on: false` takes it back). Kept in server memory only. Returns the new `{ counts, mine }`. |
+| `lobby:quick` | – | anyone | Joins the fullest public waiting room (now only used by the quick-play button inside the open-rooms screen, no longer on Home) with a free seat (never one that banned you), otherwise creates a new public room. Ack `{ code, created }`. |
 | `room:ready` | `{ ready }` | member | |
 | `room:chat` | `{ text }` | member | Up to 200 chars. The last 50 messages per room are kept in memory only. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. Delivered to everyone as `chat:new`. |
 | `room:difficulty` | `{ level }` | host, lounge only | Shared lounge difficulty: `easy` / `medium` (default) / `hard` / `max`. Only games with a level table (`GameDef.levels`, today Spy) use it; the room view carries `difficulty` and `hasLevels`. |

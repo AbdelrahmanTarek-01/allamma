@@ -584,3 +584,11 @@ button:disabled { cursor: not-allowed; }
 
 /* welcome screen */
 .welcome-cast { display: flex; justify-content: center; align-items: flex-start; gap: 2px; padding-block: 6px; }
+
+/* home v2: the "بنحضّر ٧ كمان" card and the ideas sheet */
+.tile.soon-card { background: var(--ink); color: var(--yellow); align-items: flex-start; justify-content: center; gap: 2px; min-height: 134px; box-shadow: 4px 4px 0 var(--pink); }
+.tile.soon-card:active { box-shadow: 0 0 0 var(--pink); }
+.idea-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--white); border: 3px solid var(--ink); border-inline-start-width: 9px; border-inline-start-color: var(--ic); border-radius: 16px; }
+.vote-btn { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 52px; height: 52px; padding: 0; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 2px 2px 0 var(--ink); font-size: 13px; transition: transform .1s, box-shadow .1s, background .15s; }
+.vote-btn.on { background: var(--yellow-soft); }
+.vote-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }

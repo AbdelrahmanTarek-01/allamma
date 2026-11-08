@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { IdeasService } from './rooms/ideas.service';
 import { RoomsGateway } from './rooms/rooms.gateway';
 import { RoomsService } from './rooms/rooms.service';
 
@@ -17,7 +18,7 @@ class HealthController {
   }
 }
 
-@Module({ controllers: [HealthController], providers: [RoomsService, RoomsGateway] })
+@Module({ controllers: [HealthController], providers: [RoomsService, IdeasService, RoomsGateway] })
 class AppModule {}
 
 async function bootstrap() {
