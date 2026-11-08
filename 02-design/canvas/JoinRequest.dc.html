@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>طلب انضمام · الهوست والطالب</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+@keyframes up{0%{transform:translateY(14px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(17,17,17,.35)}100%{box-shadow:0 0 0 18px rgba(17,17,17,0)}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <sc-if value="{{isGuest}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center">
+      <div style="position: relative; width: 150px; height: 150px; border-radius: 50%; background: #fff; border: 3px solid #111; box-shadow: 6px 6px 0 #111; display: flex; align-items: center; justify-content: center; animation: ring 1.6s ease-out infinite">
+        <span style="animation: bob 2s ease-in-out infinite"><svg width="96" height="96" viewBox="0 0 56 56" aria-hidden="true" style="display: block; flex: none; overflow: visible"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#FF8A3D" stroke="#111" stroke-width="3"/><path d="M7 31a21 21 0 0142 0" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/><rect x="3" y="25" width="9" height="14" rx="3.5" fill="#111"/><rect x="44" y="25" width="9" height="14" rx="3.5" fill="#111"/><path d="M17 31q4-4 8 0M31 31q4-4 8 0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/><path d="M23 39q5 5 10 0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+        <svg width="160" height="160" viewBox="0 0 160 160" aria-hidden="true" style="position: absolute; inset: -8px; animation: spin 3s linear infinite"><circle cx="80" cy="80" r="76" fill="none" stroke="#111" stroke-width="4" stroke-dasharray="40 440" stroke-linecap="round"/></svg>
+      </div>
+      <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.2">بعتنا طلبك لـ عبدالرحمن</span>
+      <span style="font-size: 14px; font-weight: 800">«شلة الكلية» قعدة بإذن · أول ما يوافق هتدخل على طول</span>
+      <span style="font-size: 13px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 2px 12px">مستنيين ({{secs}} ثانية)</span>
+    </div>
+    <button style="height: 56px; border: 2.5px solid #111; border-radius: 18px; background: #fff; box-shadow: 4px 4px 0 #111; font: 900 17px 'Cairo', sans-serif; color: #111">إلغاء الطلب</button>
+  </sc-if>
+
+  <sc-if value="{{isHost}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; opacity: .35; display: flex; flex-direction: column; gap: 12px; pointer-events: none">
+      <div style="height: 54px; border-radius: 18px; background: #fff; border: 3px solid #111"></div>
+      <div style="height: 120px; border-radius: 22px; background: #fff; border: 3px solid #111"></div>
+      <div style="flex: 1; border-radius: 22px; background: #fff; border: 3px solid #111"></div>
+    </div>
+    <div style="position: absolute; inset: 0; background: rgba(17,17,17,.45)"></div>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFD23F; border: 3px solid #111; border-bottom: 0; border-radius: 28px 28px 0 0; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 12px; animation: sheetUp .35s cubic-bezier(.2,1,.4,1)">
+      <span style="font-size: 12.5px; font-weight: 900">طلبات دخول ({{nReq}})</span>
+      <sc-for list="{{reqs}}" as="r" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 10px; background: #fff; border: 2.5px solid #111; border-radius: 18px; padding: 10px 12px; animation: up .3s both">
+          <span style="display: flex; border-radius: 50%"><svg width="44" height="44" viewBox="0 0 56 56" aria-hidden="true" style="display: block; flex: none; overflow: visible"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#fff" stroke="#111" stroke-width="3"/><path d="M10 22c0-9 8-14 18-14s18 5 18 14z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M44 21h9" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="21" cy="31" r="5" fill="#fff" stroke="#111" stroke-width="2.5"/><circle cx="35" cy="31" r="5" fill="#fff" stroke="#111" stroke-width="2.5"/><circle cx="22" cy="32" r="2.3" fill="#111"/><circle cx="36" cy="32" r="2.3" fill="#111"/><path d="M21 40q7 7 14 0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+          <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.25"><span style="font-weight: 900; font-size: 16px">{{r.n}}</span><span style="font-size: 12px; font-weight: 800; opacity: .75">{{r.sub}}</span></div>
+          <button onClick="{{r.no}}" aria-label="رفض" style="width: 46px; height: 46px; border: 2.5px solid #111; border-radius: 14px; background: #fff; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E2433B" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <button onClick="{{r.yes}}" style="height: 46px; padding: 0 14px; border: 2.5px solid #111; border-radius: 14px; background: #111; color: #FFD23F; box-shadow: 0 4px 0 #3DDC97; font: 900 15px 'Cairo', sans-serif">قبول</button>
+        </div>
+      </sc-for>
+      <sc-if value="{{none}}" hint-placeholder-val="{{ false }}"><span style="text-align: center; font-weight: 900; padding: 10px">خلاص · مفيش طلبات تانية</span></sc-if>
+      <span style="font-size: 12px; font-weight: 800; text-align: center">الطلب بيتلغي لوحده بعد دقيقة لو مردّتش</span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["guest","host"],"default":"guest"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { gone: {} }; }
+renderVals() {
+const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const host = (this.props.role ?? 'guest') === 'host', s = this.state;
+const R = [['سارة', 'عاوزة تدخل · لعبت معاكم قبل كده'], ['يوسف', 'عاوز يدخل · أول مرة']].filter(r => !s.gone[r[0]]);
+return { isHost: host, isGuest: !host, secs: AR(48), nReq: AR(R.length), none: R.length === 0,
+reqs: R.map(([n, sub]) => ({ n, sub, yes: () => this.setState({ gone: Object.assign({}, s.gone, { [n]: 1 }) }), no: () => this.setState({ gone: Object.assign({}, s.gone, { [n]: 1 }) }) })) };
+}
+}
+</script>
+</body>
+</html>

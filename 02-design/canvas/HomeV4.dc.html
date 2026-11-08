@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الرئيسية · لعبة الليلة</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Cairo:wght@500;700;800;900&display=swap">
+<style>
+html,body{margin:0;overflow:hidden}
+a{color:#111}a:hover{color:#333}
+.rail::-webkit-scrollbar{display:none}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes slideIn{0%{transform:translateX(-30px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</helmet>
+<div dir="rtl" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 16px 18px 26px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; font-family: 'Cairo', system-ui, sans-serif; color: #111; background: #FFD23F">
+  <header style="display: flex; align-items: center; gap: 8px">
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 38px; line-height: 1">اللمّة<span style="color: #FF4F9A">.</span></span>
+    <button aria-label="الترتيب" style="margin-inline-start: auto; width: 46px; height: 46px; border: 2.5px solid #111; border-radius: 15px; background: #fff; box-shadow: 3px 3px 0 #111; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 8h28v14a14 14 0 01-28 0z" fill="#FFD23F" stroke="#111" stroke-width="5" stroke-linejoin="round"/><path d="M18 12H9a8 8 0 008 10M46 12h9a8 8 0 01-8 10" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><path d="M27 36h10v8H27zM20 44h24v10H20z" fill="#111"/></svg></button>
+    <button aria-label="الصوت" style="width: 46px; height: 46px; border: 2.5px solid #111; border-radius: 15px; background: #fff; box-shadow: 3px 3px 0 #111; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5.5-4.5v15L7.5 15h-4z" fill="#111" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M16 9a4.2 4.2 0 010 6M18.6 6.5a7.8 7.8 0 010 11" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    <span style="display: flex; border-radius: 50%; box-shadow: 0 0 0 2.5px #111; background: #fff"><svg width="42" height="42" viewBox="0 0 56 56" aria-hidden="true" style="display: block; overflow: visible;"><path d="M8 32C8 18 17 10 28 10s20 8 20 22-9 20-20 20S8 46 8 32z" fill="#3DDC97" stroke="#111" stroke-width="3"/><rect x="13" y="25" width="13" height="9" rx="3" fill="#111"/><rect x="30" y="25" width="13" height="9" rx="3" fill="#111"/><path d="M26 28h4" stroke="#111" stroke-width="2.5"/><path d="M21 39q7 8 14 0z" fill="#111" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg></span>
+  </header>
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: -6px">
+    <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px">{{greet}}</span>
+  </div>
+  <section onClick="{{openGame}}" style="position: relative; flex: 1; min-height: 0; border: 3px solid #111; border-radius: 28px; box-shadow: 6px 6px 0 #111; overflow: hidden; background: {{bg}}; transition: background .5s; cursor: pointer">
+    <span aria-hidden="true" style="position: absolute; inset: 0; background-image: radial-gradient(rgba(17,17,17,.12) 1.6px, transparent 1.8px); background-size: 14px 14px"></span>
+    <span aria-hidden="true" style="position: absolute; left: -40px; bottom: -40px; width: 230px; height: 230px; border-radius: 50%; background: rgba(255,255,255,.35)"></span>
+    <div style="position: absolute; top: 14px; right: 14px; left: 14px; display: flex; align-items: center; justify-content: space-between">
+      <span style="font-size: 12.5px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 2px 12px">لعبة الليلة</span>
+      <span style="display: flex; gap: 5px">
+        <sc-for list="{{dots}}" as="d" hint-placeholder-count="7"><button onClick="{{d.go}}" aria-label="لعبة" style="width: {{d.w}}px; height: 9px; border-radius: 99px; border: 2px solid #111; background: {{d.bg}}; padding: 0; transition: width .3s"></button></sc-for>
+      </span>
+    </div>
+    <sc-if value="{{on0}}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #FF4F9A; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 20l3-11c5 2.5 11 2.5 16 0l3 11z" fill="#111" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M14.4 15h19.2" stroke="#FFD23F" stroke-width="3"/><path d="M6 21h36" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="16" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><circle cx="32" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><path d="M22.5 30h3" stroke="#111" stroke-width="2.5"/><path d="M13 29a3 3 0 013-3M29 29a3 3 0 013-3" fill="none" stroke="#4D9DFF" stroke-width="2" stroke-linecap="round"/><path d="M24 41c-2.5-3-7.5-3.5-10 0 3.5 2 7 1.5 10 0zm0 0c2.5-3 7.5-3.5 10 0-3.5 2-7 1.5-10 0z" fill="#111" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">مين الجاسوس؟</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">واحد فيكم مش عارف إنتوا فين · اكشفوه قبل ما يكشفكم</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٣+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٠ دقايق</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on1}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #3DDC97; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 11l12-5 14 5 12-5v31l-12 5-14-5-12 5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 6v31M31 11v31" stroke="#111" stroke-width="2.5"/><path d="M24 30s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="19" r="2.6" fill="#fff" stroke="#111" stroke-width="1.8"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">فين دي؟</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">حط الدبوس على الخريطة · الأقرب ياخد النقط</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٢+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٨ دقايق</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on2}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #B48CFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6h30a5 5 0 015 5v17a5 5 0 01-5 5H24l-9 8v-8H9a5 5 0 01-5-5V11a5 5 0 015-5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M28.5 15.5c0-2.8-2.2-4.5-4.6-4.5s-4.4 1.8-4.4 4.2c0 3.3 4.5 3.6 4.5 7.3" fill="none" stroke="#111" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="27.5" r="2" fill="#111"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">حزّورة</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">لوحة أسئلة بين فريقين · واسرق سؤال التاني</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٤+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٥ دقيقة</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on3}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #3DDC97; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="17" height="17" rx="4" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="26" y="5" width="17" height="17" rx="4" fill="#FF4F9A" stroke="#111" stroke-width="2.5"/><rect x="5" y="26" width="17" height="17" rx="4" fill="#4D9DFF" stroke="#111" stroke-width="2.5"/><rect x="26" y="26" width="17" height="17" rx="4" fill="#fff" stroke="#111" stroke-width="2.5"/><path d="M10 12h7M10 16h5M31 33h7M31 37h5" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">شبكة الكلمات</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">تلميح واحد يلم كلمات كتير · وبعّد عن القنبلة</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٤+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٥ دقيقة</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on4}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #FF8A3D; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-40 22 18)"><rect x="19.5" y="23" width="5" height="20" rx="2.5" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="9" y="11" width="26" height="12" rx="4" fill="#FFD23F" stroke="#111" stroke-width="2.5"/><path d="M15 11v12M29 11v12" stroke="#111" stroke-width="2.5"/></g><circle cx="10" cy="39" r="6" fill="#FFD23F" stroke="#111" stroke-width="2.5"/><circle cx="10" cy="39" r="2.5" fill="none" stroke="#111" stroke-width="2"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">مزاد المعلومات</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">زايد على السؤال قبل ما تشوفه · على قد ثقتك</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٢+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٢ دقيقة</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on5}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #FFD23F; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 42q6-6 12-1t12-2" fill="none" stroke="#FF4F9A" stroke-width="3.5" stroke-linecap="round"/><g transform="rotate(-45 26 22)"><rect x="12" y="17" width="24" height="10" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="36" y="17" width="7" height="10" rx="2" fill="#FF4F9A" stroke="#111" stroke-width="2.5"/><path d="M12 17L4 22l8 5z" fill="#F3D9B1" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M4 22l3-1.9v3.8z" fill="#111"/></g></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">ارسم وخمّن</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">ارسم وصحابك يخمّنوا · وفي الآخر معرض الليلة</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٣+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٥ دقيقة</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if><sc-if value="{{on6}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 52px 18px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; animation: slideIn .5s cubic-bezier(.2,.8,.2,1) both">
+        <span style="position: absolute; top: 2px; left: 6px; transform: rotate(-8deg) scale(1.9); transform-origin: top left; filter: drop-shadow(3px 3px 0 #111)"><span style="width: 50px; height: 50px; border-radius: 15px; background: #4D9DFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 36a19 19 0 0138 0z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L14.5 19.5A19 19 0 0133.5 19.5z" fill="#FFD23F" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L19.2 27.8A9.5 9.5 0 0128.8 27.8z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36l8-13" stroke="#111" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="36" r="3.5" fill="#111"/><path d="M3 36h42" stroke="#111" stroke-width="3" stroke-linecap="round"/></svg></span></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.15">الموجة</span>
+        <span style="font-size: 14px; font-weight: 800; line-height: 1.5; max-width: 250px">اقروا أفكار بعض على المقياس</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px">
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">٣+ لاعيبة</span>
+          <span style="font-size: 12px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 9px">١٠ دقايق</span>
+          <span style="margin-inline-start: auto; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; background: #111; color: #FFD23F; border-radius: 99px; padding: 3px 12px">العبها</span>
+        </div>
+      </div>
+    </sc-if>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px; flex: none">
+    <button style="height: 84px; border: 3px solid #111; border-radius: 24px; background: #111; color: #FFD23F; box-shadow: 0 7px 0 #FF4F9A; display: flex; align-items: center; gap: 14px; padding: 0 18px; font-family: 'Cairo', sans-serif; text-align: right">
+      <span style="width: 50px; height: 50px; flex: none; border-radius: 16px; background: #FFD23F; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+      <span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 26px">اعمل قعدة</span><span style="font-size: 12.5px; font-weight: 800; color: #fff">وابعت اللينك لصحابك</span></span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-inline-start: auto"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+      <button style="height: 64px; border: 3px solid #111; border-radius: 20px; background: #fff; box-shadow: 4px 4px 0 #111; display: flex; align-items: center; justify-content: center; gap: 8px; font: 900 16px 'Cairo', sans-serif; color: #111"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="3" fill="#FFF3C4"/><path d="M7 12h.01M11 12h.01M15 12h.01" stroke-width="3.4" stroke-linecap="round"/></svg>ادخل بكود</button>
+      <button style="height: 64px; border: 3px solid #111; border-radius: 20px; background: #fff; box-shadow: 4px 4px 0 #111; display: flex; align-items: center; justify-content: center; gap: 8px; font: 900 16px 'Cairo', sans-serif; color: #111">قعدات مفتوحة<span style="font-size: 12px; background: #3DDC97; border: 2px solid #111; border-radius: 99px; padding: 0 7px">٣</span></button>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px; flex: none">
+    <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 22px">الألعاب</span><span style="font-size: 12.5px; font-weight: 900; text-decoration: underline">شوف الكل</span></div>
+    <div class="rail" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; margin: 0 -18px; padding: 2px 18px 8px">
+      <button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="width: 50px; height: 50px; border-radius: 15px; background: #FF4F9A; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 20l3-11c5 2.5 11 2.5 16 0l3 11z" fill="#111" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M14.4 15h19.2" stroke="#FFD23F" stroke-width="3"/><path d="M6 21h36" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="16" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><circle cx="32" cy="30" r="6.5" fill="#fff" stroke="#111" stroke-width="2.5"/><path d="M22.5 30h3" stroke="#111" stroke-width="2.5"/><path d="M13 29a3 3 0 013-3M29 29a3 3 0 013-3" fill="none" stroke="#4D9DFF" stroke-width="2" stroke-linecap="round"/><path d="M24 41c-2.5-3-7.5-3.5-10 0 3.5 2 7 1.5 10 0zm0 0c2.5-3 7.5-3.5 10 0-3.5 2-7 1.5-10 0z" fill="#111" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">مين الجاسوس؟</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid #111; border-radius: 99px; padding: 0 6px">٣+</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="width: 50px; height: 50px; border-radius: 15px; background: #3DDC97; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 11l12-5 14 5 12-5v31l-12 5-14-5-12 5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 6v31M31 11v31" stroke="#111" stroke-width="2.5"/><path d="M24 30s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="19" r="2.6" fill="#fff" stroke="#111" stroke-width="1.8"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">فين دي؟</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid #111; border-radius: 99px; padding: 0 6px">٢+</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="width: 50px; height: 50px; border-radius: 15px; background: #4D9DFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 36a19 19 0 0138 0z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L14.5 19.5A19 19 0 0133.5 19.5z" fill="#FFD23F" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36L19.2 27.8A9.5 9.5 0 0128.8 27.8z" fill="#FF4F9A" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 36l8-13" stroke="#111" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="36" r="3.5" fill="#111"/><path d="M3 36h42" stroke="#111" stroke-width="3" stroke-linecap="round"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">الموجة</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid #111; border-radius: 99px; padding: 0 6px">٣+</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="width: 50px; height: 50px; border-radius: 15px; background: #B48CFF; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6h30a5 5 0 015 5v17a5 5 0 01-5 5H24l-9 8v-8H9a5 5 0 01-5-5V11a5 5 0 015-5z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M28.5 15.5c0-2.8-2.2-4.5-4.6-4.5s-4.4 1.8-4.4 4.2c0 3.3 4.5 3.6 4.5 7.3" fill="none" stroke="#111" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="27.5" r="2" fill="#111"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">حزّورة</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid #111; border-radius: 99px; padding: 0 6px">٤+</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="width: 50px; height: 50px; border-radius: 15px; background: #3DDC97; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="17" height="17" rx="4" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="26" y="5" width="17" height="17" rx="4" fill="#FF4F9A" stroke="#111" stroke-width="2.5"/><rect x="5" y="26" width="17" height="17" rx="4" fill="#4D9DFF" stroke="#111" stroke-width="2.5"/><rect x="26" y="26" width="17" height="17" rx="4" fill="#fff" stroke="#111" stroke-width="2.5"/><path d="M10 12h7M10 16h5M31 33h7M31 37h5" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">شبكة الكلمات</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid #111; border-radius: 99px; padding: 0 6px">٤+</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="filter: grayscale(1); opacity: .7; width: 50px; height: 50px; border-radius: 15px; background: #FF8A3D; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-40 22 18)"><rect x="19.5" y="23" width="5" height="20" rx="2.5" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="9" y="11" width="26" height="12" rx="4" fill="#FFD23F" stroke="#111" stroke-width="2.5"/><path d="M15 11v12M29 11v12" stroke="#111" stroke-width="2.5"/></g><circle cx="10" cy="39" r="6" fill="#FFD23F" stroke="#111" stroke-width="2.5"/><circle cx="10" cy="39" r="2.5" fill="none" stroke="#111" stroke-width="2"/></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">مزاد المعلومات</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 6px">قريباً</span>
+      </button><button style="flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: #fff; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #111; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Cairo', sans-serif; color: #111; scroll-snap-align: start">
+        <span style="filter: grayscale(1); opacity: .7; width: 50px; height: 50px; border-radius: 15px; background: #FFD23F; border: 2.5px solid #111; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 42q6-6 12-1t12-2" fill="none" stroke="#FF4F9A" stroke-width="3.5" stroke-linecap="round"/><g transform="rotate(-45 26 22)"><rect x="12" y="17" width="24" height="10" fill="#fff" stroke="#111" stroke-width="2.5"/><rect x="36" y="17" width="7" height="10" rx="2" fill="#FF4F9A" stroke="#111" stroke-width="2.5"/><path d="M12 17L4 22l8 5z" fill="#F3D9B1" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M4 22l3-1.9v3.8z" fill="#111"/></g></svg></span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">ارسم وخمّن</span>
+        <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #fff; border: 2px solid #111; border-radius: 99px; padding: 0 6px">قريباً</span>
+      </button><button style="flex: none; width: 112px; height: 132px; background: #111; color: #FFD23F; border: 3px solid #111; border-radius: 20px; box-shadow: 4px 4px 0 #FF4F9A; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; text-align: right; font-family: 'Cairo', sans-serif; scroll-snap-align: start">
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; line-height: 1">+٧</span>
+        <span style="font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.2">ألعاب جاية</span>
+        <span style="font-size: 11px; font-weight: 800; color: #fff">صوّت للي عاوزها</span>
+      </button>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+if (!this.iv) this.iv = setInterval(() => { if (Date.now() - (this.touched || 0) > 6000) this.setState({ i: ((this.state.i || 0) + 1) % 7 }); }, 4200);
+const i = this.state.i || 0, BG = ["#FF4F9A", "#3DDC97", "#B48CFF", "#9ADFFF", "#FF8A3D", "#FFF3C4", "#4D9DFF"];
+const h = new Date().getHours();
+const o = { greet: (h < 12 ? 'صباح الفل' : 'مساء الفل') + ' يا نجم', bg: BG[i], openGame: () => {},
+dots: BG.map((_, k) => ({ w: k === i ? 22 : 9, bg: k === i ? '#111' : '#fff', go: (e) => { e.stopPropagation(); this.touched = Date.now(); this.setState({ i: k }); } })) };
+for (let k = 0; k < 7; k++) o['on' + k] = k === i;
+return o;
+}
+componentWillUnmount() { clearInterval(this.iv); }
+}
+</script>
+</body>
+</html>
