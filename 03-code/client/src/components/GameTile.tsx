@@ -17,11 +17,11 @@ const Lock = () => (
  * inside the tile in the corner opposite the icon; coming-soon tiles stay white with a greyscale icon.
  * `help` adds the "?" button (a sibling of the tile button, since buttons can't nest).
  */
-export function GameTile({ g, selected, onClick, style, help }: { g: Game; selected?: boolean; onClick?: () => void; style?: CSSProperties; help?: boolean }) {
+export function GameTile({ g, selected, onClick, style, help, lit }: { g: Game; selected?: boolean; lit?: boolean; onClick?: () => void; style?: CSSProperties; help?: boolean }) {
   const Tag = onClick ? 'button' : 'div';
   const tile = (
     <Tag
-      className={`tile game-tile${selected ? ' selected' : ''}`}
+      className={`tile game-tile${selected ? ' selected' : ''}${lit ? ' lit' : ''}`}
       {...(onClick ? { type: 'button' as const, onClick, ...(selected !== undefined ? { 'aria-pressed': selected } : {}) } : {})}
       style={help ? undefined : style}
     >

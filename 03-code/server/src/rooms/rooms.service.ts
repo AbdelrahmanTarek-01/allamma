@@ -10,6 +10,8 @@ import { AVATARS, Board, ChatMsg, GameError, JoinRequest, LobbyRoom, Player, Pri
 
 export const ROOM_SIZES = [4, 6, 8, 12] as const;
 const DEFAULT_MAX_PLAYERS = 8;
+/** How long the clients' slot-machine roll lasts. */
+const ROLL_MS = 1500;
 const REQUEST_TTL_MS = 60 * 1000;
 const REQUEST_MAX = 10;
 const REJECT_COOLDOWN_MS = 2 * 60 * 1000;
@@ -38,6 +40,7 @@ export class RoomsService implements OnModuleDestroy {
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room, only?: string[]) => void = () => {};
   private onPush: (room: Room, ids: string[], event: string, data: unknown) => void = () => {};
+  private rolls = new Map<string, { game: string; timer: NodeJS.Timeout }>(); // room code -> the random game roll in progress
   private onNotify: (socketId: string, event: string, data: unknown) => void = () => {};
   private pendingOf = new Map<string, string>(); // requester id -> room code
   private onChat: (room: Room, msg: ChatMsg) => void = () => {};
@@ -397,12 +400,44 @@ export class RoomsService implements OnModuleDestroy {
   selectGame(playerId: string, game: unknown) {
     const room = this.mustHost(playerId);
     if (room.engine) throw new GameError('مينفعش تغيّر اللعبة واللعبة شغالة');
+    this.cancelRoll(room.code); // a manual pick wins over a roll in progress
     const def = GAME_DEFS[String(game ?? '')];
     if (!def) throw new GameError('اللعبة دي جاية قريب');
     if (def.minPlayers > room.maxPlayers) throw new GameError(`اللعبة دي محتاجة ${def.minPlayers} لاعيبة، زوّد أقصى عدد الأول`);
     room.selectedGame = def.id;
     room.settings[def.id] ??= def.defaultSettings();
     this.emit(room);
+  }
+
+  /**
+   * "عشوائي" on the games rail: pick a random playable game that fits the players (never the current one when there is another option).
+   * Everyone gets `room:roll` now (the clients play the slot-machine roll); the selection itself is applied when the roll ends, so it lands with the animation.
+   */
+  randomGame(playerId: string) {
+    const room = this.mustHost(playerId);
+    if (room.engine) throw new GameError('مينفعش تغيّر اللعبة واللعبة شغالة');
+    const online = [...room.players.values()].filter((p) => p.connected).length;
+    const fit = Object.values(GAME_DEFS).filter((d) => d.minPlayers <= online && d.minPlayers <= room.maxPlayers);
+    if (!fit.length) throw new GameError('مفيش لعبة على عددكم دلوقتي');
+    const avoid = this.rolls.get(room.code)?.game ?? room.selectedGame;
+    const others = fit.filter((d) => d.id !== avoid);
+    const list = others.length ? others : fit;
+    const def = list[Math.floor(Math.random() * list.length)];
+    this.cancelRoll(room.code);
+    const timer = setTimeout(() => {
+      this.rolls.delete(room.code);
+      if (!this.rooms.has(room.code) || room.engine) return;
+      room.selectedGame = def.id;
+      room.settings[def.id] ??= def.defaultSettings();
+      this.emit(room);
+    }, ROLL_MS + 200);
+    this.rolls.set(room.code, { game: def.id, timer });
+    this.onPush(room, [...room.players.keys()], 'room:roll', { game: def.id, ms: ROLL_MS });
+  }
+
+  private cancelRoll(code: string) {
+    const r = this.rolls.get(code);
+    if (r) { clearTimeout(r.timer); this.rolls.delete(code); }
   }
 
   /** Host only: seats in the lounge. Never below who is here now or below what the selected game needs. */
@@ -465,6 +500,7 @@ export class RoomsService implements OnModuleDestroy {
   startGame(playerId: string) {
     const room = this.mustHost(playerId);
     if (room.engine && !room.engine.isOver()) throw new GameError('اللعبة شغالة فعلاً');
+    if (this.rolls.has(room.code)) throw new GameError('استنى اللعبة تتختار');
     this.begin(room);
   }
 
@@ -689,6 +725,7 @@ export class RoomsService implements OnModuleDestroy {
 
   private destroy(room: Room) {
     this.clearTimer(room);
+    this.cancelRoll(room.code);
     [...room.requests.keys()].forEach((id) => this.dropRequest(room, id, 'closed'));
     room.players.forEach((p) => this.playerRoom.delete(p.id));
     this.rooms.delete(room.code);

@@ -207,6 +207,11 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.selectGame(id, b?.game));
   }
 
+  @SubscribeMessage('room:randomGame')
+  randomGame(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.randomGame(id));
+  }
+
   @SubscribeMessage('game:start')
   start(@ConnectedSocket() c: Socket): Ack {
     return this.run(c, (id) => this.rooms.startGame(id));

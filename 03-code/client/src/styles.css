@@ -959,3 +959,8 @@ button:disabled { cursor: not-allowed; }
 .ck { appearance: none; -webkit-appearance: none; flex: none; width: 26px; height: 26px; margin: 0; border: 3px solid var(--ink); border-radius: 8px; background: #fff; display: grid; place-items: center; cursor: pointer; }
 .ck:checked { background: var(--green); }
 .ck:checked::after { content: ""; width: 11px; height: 6px; border: solid #111; border-width: 0 0 3px 3px; transform: rotate(-45deg) translate(1px, -1px); }
+
+/* games rail: the dice card and the slot-machine highlight */
+.game-tile.lit { background: var(--yellow-soft); outline: 3px solid var(--ink); outline-offset: 3px; transform: scale(1.04); }
+.dice-tile { border-style: dashed; background: transparent; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .game-tile.lit { transform: none; } }

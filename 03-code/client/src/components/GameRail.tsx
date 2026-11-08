@@ -8,7 +8,15 @@ import { GameTile } from './GameTile';
  * shows at once, and ~400 ms later the card moves to the front with a FLIP animation (transform only) while the rail scrolls back to
  * its start. A reorder never happens while a pointer is down on the rail (it waits for the release); reduced motion just reorders.
  */
-export function GameRail({ selected, onPick }: { selected: string; onPick?: (id: string) => void }) {
+/** The dice on the "عشوائي" card (filled, black outline, like the other game icons). */
+const Dice = () => (
+  <svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true">
+    <rect x="6" y="6" width="36" height="36" rx="9" fill="#fff" stroke="#111" strokeWidth="3.2" strokeLinejoin="round" />
+    {[[16, 16], [32, 16], [24, 24], [16, 32], [32, 32]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3.4" fill={x === 24 ? '#FF4F9A' : '#111'} />)}
+  </svg>
+);
+
+export function GameRail({ selected, onPick, onRandom, lit }: { selected: string; onPick?: (id: string) => void; onRandom?: () => void; lit?: string | null }) {
   const [shown, setShown] = useState(selected); // the game the order is built from (follows `selected` after a short delay)
   const railRef = useRef<HTMLDivElement>(null);
   const els = useRef(new Map<string, HTMLElement>());
@@ -38,6 +46,9 @@ export function GameRail({ selected, onPick }: { selected: string; onPick?: (id:
     timer.current = setTimeout(apply, reduced ? 0 : 400);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [selected]);
+
+  // the slot-machine roll: keep the lit card on screen
+  useEffect(() => { if (lit) els.current.get(lit)?.scrollIntoView({ block: 'nearest', inline: 'center' }); }, [lit]);
 
   // LAST + INVERT + PLAY, right after the new order is in the DOM
   useLayoutEffect(() => {
@@ -72,9 +83,19 @@ export function GameRail({ selected, onPick }: { selected: string; onPick?: (id:
       onPointerDown={() => { pressing.current = true; }}
       onPointerUp={release} onPointerCancel={release} onPointerLeave={() => { if (pressing.current) release(); }}
     >
+      {/* host only: the dice card is always first */}
+      {onRandom && (
+        <div className="rail-slot">
+          <button type="button" className="tile game-tile dice-tile" onClick={onRandom}>
+            <span className="icontile" style={{ background: '#FFD23F' }}><Dice /></span>
+            <span className="display game-title">عشوائي</span>
+            <span className="game-tag">سيبها للحظ</span>
+          </button>
+        </div>
+      )}
       {ordered.map((g) => (
         <div key={g.id} className="rail-slot" ref={(el) => { if (el) els.current.set(g.id, el); else els.current.delete(g.id); }}>
-          <GameTile g={g} selected={g.id === selected} onClick={onPick ? () => onPick(g.id) : undefined} />
+          <GameTile g={g} selected={g.id === selected} lit={g.id === lit} onClick={onPick ? () => onPick(g.id) : undefined} />
         </div>
       ))}
     </div>

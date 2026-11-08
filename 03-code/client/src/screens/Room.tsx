@@ -3,7 +3,7 @@ import { Character, GAMES, SpyIcon, Trophy } from '../components/art';
 import { GameRail } from '../components/GameRail';
 import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
-import { AR, leaveRoom, send, toast, type RoomView } from '../net';
+import { AR, leaveRoom, send, socket, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
 import { loadMapDef } from '../games/map/maps';
 import { LEVELS, levelOf } from '../games/difficulty';
@@ -69,6 +69,34 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
     import('./MapGame').catch(() => {});
     (mapScope === 'random' ? ['egypt', 'arab', 'world'] as const : [mapScope as 'egypt' | 'arab' | 'world']).forEach((sc) => loadMapDef(sc).catch(() => {}));
   }, [room.selectedGame, mapScope]);
+
+  // the host's "عشوائي": every client rolls over the game cards (~1.5 s, slowing down) and lands on the server's pick; the selection itself arrives when the roll ends
+  const [lit, setLit] = useState<string | null>(null);
+  useEffect(() => {
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const stop = () => { timers.forEach(clearTimeout); timers = []; };
+    const onRoll = (d: { game: string; ms: number }) => {
+      stop();
+      const picked = GAMES.find((x) => x.id === d.game);
+      if (!picked) return;
+      const done = () => { setLit(null); sfx.land(); toast(`الحظ اختار: ${picked.name}!`); };
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { timers.push(setTimeout(done, d.ms)); return; } // no roll, just select
+      const list = GAMES.filter((x) => x.ready);
+      const target = Math.max(0, list.findIndex((x) => x.id === d.game));
+      const N = 14;
+      const gaps = Array.from({ length: N }, (_, i) => 50 + 170 * (i / (N - 1)) ** 2); // fast at first, easing to a stop
+      const k = (d.ms - 120) / gaps.reduce((a, b) => a + b, 0);
+      let at = 0;
+      gaps.forEach((gap, i) => {
+        const id = list[((target - (N - 1 - i)) % list.length + list.length) % list.length].id; // the last step is the picked game
+        timers.push(setTimeout(() => { setLit(id); sfx.spinTick(); }, at));
+        at += gap * k;
+      });
+      timers.push(setTimeout(done, d.ms));
+    };
+    socket.on('room:roll', onRoll);
+    return () => { socket.off('room:roll', onRoll); stop(); };
+  }, []);
 
   // sound for people joining and leaving (chat sounds and bubbles come from the floating chat)
   const seen = useRef(room.players.length);
@@ -251,7 +279,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
 
       <div className="col" style={{ gap: 6 }}>
         <span className="label" style={{ fontSize: 12 }}>هتلعبوا إيه؟</span>
-        <GameRail selected={room.selectedGame} onPick={isHost ? (id) => { sfx.tap(); const g = GAMES.find((x) => x.id === id)!; if (g.ready) send('room:selectGame', { game: id }); else toast(`${g.name} جاية قريب`); } : undefined} />
+        <GameRail selected={room.selectedGame} lit={lit} onRandom={isHost ? () => { sfx.tap(); send('room:randomGame'); } : undefined} onPick={isHost ? (id) => { sfx.tap(); const g = GAMES.find((x) => x.id === id)!; if (g.ready) send('room:selectGame', { game: id }); else toast(`${g.name} جاية قريب`); } : undefined} />
       </div>
 
       {/* the selected game stays a small card: icon, name, one summary line, "?" help. Settings live behind the host's gear. */}
