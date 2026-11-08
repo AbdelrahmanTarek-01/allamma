@@ -12,8 +12,14 @@ const LockMini = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#111" /><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="#111" strokeWidth={3} /></svg>
 );
 
-/** Lounges where the host ticked "ماتسألنيش تاني": the start button starts at once. Lives outside the component because the lounge unmounts while a game runs. */
-const skipSetup = new Set<string>();
+/** Per lounge: the games whose setup sheet the host switched off ("ماتسألنيش تاني"). Lives outside the component because the lounge unmounts while a game runs. */
+const skipSetup = new Map<string, Set<string>>();
+const isSkipped = (code: string, game: string) => !!skipSetup.get(code)?.has(game);
+const setSkipped = (code: string, game: string, on: boolean) => {
+  const set = skipSetup.get(code) ?? new Set<string>();
+  on ? set.add(game) : set.delete(game);
+  skipSetup.set(code, set);
+};
 
 export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void }) {
   const me = room.players.find((p) => p.id === room.youId)!;
@@ -24,10 +30,11 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
   const target = room.players.find((p) => p.id === manageId && p.id !== room.youId);
   const closeManage = () => { setManageId(null); setConfirmKick(false); };
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [startOpen, setStartOpen] = useState(false); // the "ظبّط اللعبة" sheet before a start
+  const [setup, setSetup] = useState<null | 'start' | 'edit'>(null); // the "ظبّط اللعبة" sheet: before a start, or opened from the card's gear (no start button)
   const [dontAsk, setDontAsk] = useState(false);
   const openGear = () => { setDraft(room.name); setSettingsOpen(true); };
-  const begin = () => { if (dontAsk) skipSetup.add(room.code); setStartOpen(false); send('game:start'); };
+  const openSetup = (mode: 'start' | 'edit') => { setDontAsk(isSkipped(room.code, room.selectedGame)); setSetup(mode); };
+  const begin = () => { setSkipped(room.code, room.selectedGame, dontAsk); setSetup(null); send('game:start'); };
   const [draft, setDraft] = useState('');
   const game = GAMES.find((g) => g.id === room.selectedGame) ?? GAMES[0];
   const schema = room.settingsSchema ?? [];
@@ -263,7 +270,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         </div>
       </section>
       {isHost && (
-        <button className="btn full gear-btn" onClick={() => { sfx.tap(); openGear(); }}>
+        <button className="btn full gear-btn" onClick={() => { sfx.tap(); openSetup('edit'); }}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
           إعدادات اللعبة
         </button>
@@ -310,7 +317,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         {isHost ? (
           <>
             <span className="label center" style={{ textAlign: 'center' }}>محتاجين {AR(room.minPlayers)} على الأقل · معاكم {AR(online)}</span>
-            <button className="btn big full" disabled={online < room.minPlayers} onClick={() => { if (skipSetup.has(room.code)) send('game:start'); else { sfx.tap(); setDontAsk(false); setStartOpen(true); } }}>ابدأ اللعبة</button>
+            <button className="btn big full" disabled={online < room.minPlayers} onClick={() => { if (isSkipped(room.code, room.selectedGame)) send('game:start'); else { sfx.tap(); openSetup('start'); } }}>ابدأ اللعبة</button>
           </>
         ) : (
           <>
@@ -333,17 +340,20 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
           </div>
         </Sheet>
       )}
-      {isHost && startOpen && (
-        <Sheet title="ظبّط اللعبة" onClose={() => setStartOpen(false)}>
+      {isHost && setup && (
+        <Sheet title="ظبّط اللعبة" onClose={() => setSetup(null)}>
           <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
             <span className="row" style={{ gap: 8 }}><span className="display" style={{ fontSize: 18 }}>{game.name}</span></span>
-            {gameFields(false)}
+            {gameFields(true)}
           </section>
-          <label className="row" style={{ gap: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-            <input type="checkbox" className="ck" checked={dontAsk} onChange={(e) => { e.target.checked ? sfx.toggleOn() : sfx.toggleOff(); setDontAsk(e.target.checked); }} />
-            ماتسألنيش تاني في القعدة دي
-          </label>
-          <button className="btn big full" disabled={online < room.minPlayers} onClick={begin}>يلا نبدأ</button>
+          <div className="col" style={{ gap: 4 }}>
+            <label className="row" style={{ gap: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+              <input type="checkbox" className="ck" checked={dontAsk} onChange={(e) => { e.target.checked ? sfx.toggleOn() : sfx.toggleOff(); setDontAsk(e.target.checked); if (setup === 'edit') setSkipped(room.code, room.selectedGame, e.target.checked); }} />
+              ماتسألنيش تاني عن «{game.name}» في القعدة دي
+            </label>
+            <span className="muted setting-hint">تقدر تغيّر الإعدادات دي في أي وقت من «إعدادات اللعبة» في كارت اللعبة</span>
+          </div>
+          {setup === 'start' && <button className="btn big full" disabled={online < room.minPlayers} onClick={begin}>يلا نبدأ</button>}
         </Sheet>
       )}
       {isHost && settingsOpen && (
