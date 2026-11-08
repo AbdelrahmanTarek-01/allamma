@@ -8,7 +8,8 @@ import { normalizeTeams } from '../games/wave/wave.engine';
 import { maskBad } from '../common/profanity';
 import { AVATARS, Board, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
-const MAX_PLAYERS = 10;
+export const ROOM_SIZES = [4, 6, 8, 12] as const;
+const DEFAULT_MAX_PLAYERS = 8;
 const CHAT_GAP_MS = 1000;
 const MAX_CHAT = 50; // chat lives in memory only, last 50 messages per room, gone with the room
 const LOBBY_THROTTLE_MS = 1000;
@@ -131,6 +132,7 @@ export class RoomsService implements OnModuleDestroy {
       chat: [],
       selectedGame: def.id,
       difficulty: DEFAULT_LEVEL,
+      maxPlayers: DEFAULT_MAX_PLAYERS,
       settings: { [def.id]: def.defaultSettings() },
       engine: null,
       board: { totals: {}, byGame: {}, gain: {}, prevRank: {}, members: {}, played: [] },
@@ -152,7 +154,7 @@ export class RoomsService implements OnModuleDestroy {
     }
     if (room.banned.has(playerId)) throw new GameError('المضيف طلّعك من القعدة دي');
     if (room.locked) throw new GameError('القعدة مقفولة');
-    if (room.players.size >= MAX_PLAYERS) throw new GameError('الأوضة مليانة');
+    if (room.players.size >= room.maxPlayers) throw new GameError('القعدة مليانة', 'ROOM_FULL');
     this.leave(playerId);
     this.addPlayer(room, playerId, name, avatar, socketId);
     return room;
@@ -256,7 +258,7 @@ export class RoomsService implements OnModuleDestroy {
   /** Public, unlocked, not full rooms that someone is still in. */
   lobbyList(): LobbyRoom[] {
     return [...this.rooms.values()]
-      .filter((r) => r.privacy === 'public' && !r.locked && r.players.size < MAX_PLAYERS && [...r.players.values()].some((p) => p.connected))
+      .filter((r) => r.privacy === 'public' && !r.locked && [...r.players.values()].some((p) => p.connected))
       .map((r) => {
         const host = r.players.get(r.hostId) ?? [...r.players.values()][0];
         return {
@@ -265,7 +267,8 @@ export class RoomsService implements OnModuleDestroy {
           host: { name: host.name, avatar: host.avatar },
           game: r.selectedGame,
           players: r.players.size,
-          max: MAX_PLAYERS,
+          max: r.maxPlayers,
+          full: r.players.size >= r.maxPlayers,
           status: (r.engine && !r.engine.isOver() ? 'playing' : 'waiting') as LobbyRoom['status']
         };
       })
@@ -278,7 +281,7 @@ export class RoomsService implements OnModuleDestroy {
    */
   quickPlay(playerId: string, name: string, avatar: string, socketId: string) {
     const mine = this.roomOf(playerId);
-    const best = this.lobbyList().find((l) => l.status === 'waiting' && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
+    const best = this.lobbyList().find((l) => l.status === 'waiting' && !l.full && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
     if (!best) throw new GameError('مفيش قعدات مستنية دلوقتي', 'NO_ROOMS');
     return { room: this.joinRoom(best.code, playerId, name, avatar, socketId), created: false };
   }
@@ -303,8 +306,20 @@ export class RoomsService implements OnModuleDestroy {
     if (room.engine) throw new GameError('مينفعش تغيّر اللعبة واللعبة شغالة');
     const def = GAME_DEFS[String(game ?? '')];
     if (!def) throw new GameError('اللعبة دي جاية قريب');
+    if (def.minPlayers > room.maxPlayers) throw new GameError(`اللعبة دي محتاجة ${def.minPlayers} لاعيبة، زوّد أقصى عدد الأول`);
     room.selectedGame = def.id;
     room.settings[def.id] ??= def.defaultSettings();
+    this.emit(room);
+  }
+
+  /** Host only: seats in the lounge. Never below who is here now or below what the selected game needs. */
+  setMaxPlayers(playerId: string, n: unknown) {
+    const room = this.mustHost(playerId);
+    const v = Number(n);
+    if (!(ROOM_SIZES as readonly number[]).includes(v)) throw new GameError('اختيار مش صح');
+    if (v < room.players.size) throw new GameError(`فيه ${room.players.size} لاعيبة في القعدة دلوقتي`);
+    if (v < GAME_DEFS[room.selectedGame].minPlayers) throw new GameError(`اللعبة دي محتاجة ${GAME_DEFS[room.selectedGame].minPlayers} لاعيبة على الأقل`);
+    room.maxPlayers = v;
     this.emit(room);
   }
 
@@ -498,6 +513,7 @@ export class RoomsService implements OnModuleDestroy {
       selectedGame: room.selectedGame,
       minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
       difficulty: room.difficulty,
+      maxPlayers: room.maxPlayers,
       board: this.boardView(room),
       // الموجة: the team of every player (saved choices + automatic balance), for the host's teams editor
       teams: this.usesTeams(room)

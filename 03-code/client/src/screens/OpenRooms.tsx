@@ -21,7 +21,7 @@ export function OpenRooms({ lobby, onRefresh, onClose }: { lobby: LobbyRoom[] | 
   };
   const join = (code: string) => go(() => send('room:join', { code }));
   // the server joins an existing waiting room and never creates one; NO_ROOMS (a race: the last room just filled) toasts the same message via send()
-  const waiting = (lobby ?? []).filter((r) => r.status === 'waiting').length;
+  const waiting = (lobby ?? []).filter((r) => r.status === 'waiting' && !r.full).length;
   const quick = async () => {
     setBusy(true);
     const r = await send('lobby:quick'); // on NO_ROOMS we stay here (the toast says why) and nothing was created
@@ -58,14 +58,15 @@ export function OpenRooms({ lobby, onRefresh, onClose }: { lobby: LobbyRoom[] | 
         {lobby?.map((r, i) => {
           const g = GAMES.find((x) => x.id === r.game) ?? GAMES[0];
           return (
-            <button key={r.code} className="tile pop-in" disabled={busy} onClick={() => join(r.code)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, animationDelay: `${i * 50}ms` }}>
+            <button key={r.code} className="tile pop-in" disabled={busy || r.full} onClick={() => join(r.code)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, animationDelay: `${i * 50}ms`, opacity: r.full ? 0.55 : 1 }}>
               <Character id={r.host.avatar} size={46} />
               <span className="col grow" style={{ gap: 0, minWidth: 0 }}>
                 <span className="display" style={{ fontSize: 19, overflowWrap: 'anywhere' }}>{r.name}</span>
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>{r.host.name} · {g.name}</span>
               </span>
               <span className="col" style={{ gap: 4, alignItems: 'flex-end' }}>
-                <span className="chip">{AR(r.players)}/{AR(r.max)}</span>
+                <span className="chip">{AR(r.players)} / {AR(r.max)}</span>
+                {r.full && <span className="chip dark">مليانة</span>}
                 {r.status === 'playing' && <span className="chip pink">بيلعبوا دلوقتي</span>}
               </span>
             </button>

@@ -54,6 +54,8 @@ export interface LobbyRoom {
   game: string;
   players: number;
   max: number;
+  /** No free seat left (the card shows it dimmed; quick play skips it). */
+  full: boolean;
   status: 'waiting' | 'playing';
 }
 
@@ -73,6 +75,8 @@ export interface Room {
   selectedGame: string;
   /** Shared difficulty of the lounge (host-only). Games that have a level table read it when a game starts. */
   difficulty: Level;
+  /** Seats in the lounge (4 / 6 / 8 / 12), set by the host. Joining (code, link, quick play) fails with ROOM_FULL at the cap; a player who is already in may always come back. */
+  maxPlayers: number;
   /** Settings per game id, so switching games keeps each game's choices. */
   settings: Record<string, any>;
   engine: GameEngine | null;

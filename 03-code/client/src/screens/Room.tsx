@@ -171,11 +171,11 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
 
       <div className="row" style={{ gap: 10 }}>
         <h2 className="display h2">اللاعيبة</h2>
-        <span className="chip">{AR(room.players.length)} من {AR(10)}</span>
+        <span className="chip">{AR(room.players.length)} من {AR(room.maxPlayers)}</span>
       </div>
 
       <div className="strip">
-        {room.players.length < 10 && (
+        {room.players.length < room.maxPlayers && (
           <button className="tile player" onClick={invite} style={{ alignItems: 'center', borderStyle: 'dashed', boxShadow: 'none', background: 'transparent' }}>
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             <span style={{ fontWeight: 900, fontSize: 14 }}>ادعي حد</span>
@@ -340,6 +340,36 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
                 <button aria-pressed={room.locked} onClick={() => send('room:lock', { locked: true })}>مقفول</button>
               </div>
               <span className="muted setting-hint">{room.locked ? 'محدش جديد يقدر يدخل' : 'أي حد معاه الكود يقدر يدخل'}</span>
+            </div>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12.5 }}>أقصى عدد</span>
+              <div className="seg" role="group" aria-label="أقصى عدد للاعيبة">
+                {[4, 6, 8, 12].map((n) => {
+                  // below who is here now or below what the selected game needs: locked, like the spy count
+                  const tooFew = n < room.players.length, tooSmall = n < room.minPlayers;
+                  const locked = tooFew || tooSmall;
+                  return (
+                    <button
+                      key={n}
+                      className={`${locked ? 'locked' : ''}${shaking === `cap${n}` ? ' shake' : ''}`}
+                      aria-pressed={room.maxPlayers === n}
+                      aria-disabled={locked}
+                      aria-label={locked ? `${AR(n)}، ${tooFew ? `فيه ${AR(room.players.length)} لاعيبة دلوقتي` : `اللعبة محتاجة ${AR(room.minPlayers)} لاعيبة`}` : AR(n)}
+                      onClick={() => {
+                        if (!locked) return void send('room:maxPlayers', { max: n });
+                        sfx.error();
+                        toast(tooFew ? `فيه ${AR(room.players.length)} لاعيبة في القعدة دلوقتي` : `اللعبة دي محتاجة ${AR(room.minPlayers)} لاعيبة على الأقل`);
+                        setShaking(`cap${n}`);
+                        setTimeout(() => setShaking((s) => (s === `cap${n}` ? null : s)), 500);
+                      }}
+                    >
+                      <span>{AR(n)}</span>
+                      {locked && <span className="lock-corner" aria-hidden="true"><LockMini /></span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="muted setting-hint">القعدة بتقفل لوحدها لما يبقوا {AR(room.maxPlayers)}</span>
             </div>
           </section>
         </Sheet>

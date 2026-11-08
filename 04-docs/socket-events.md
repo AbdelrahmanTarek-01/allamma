@@ -93,6 +93,9 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
 }
 ```
 
+## Room capacity
+- `room:maxPlayers { max: 4|6|8|12 }` (host only; default 8). Rejected below the current player count or the selected game's minimum. Joining by code, link or quick play fails with `{ ok:false, code:'ROOM_FULL', error:'القعدة مليانة' }` at the cap; a player already in the room can always rejoin. `lobby:list` rows carry `players`, `max` and `full`; `lobby:quick` skips full rooms and never creates one (`NO_ROOMS`).
+
 ## Team games (حزّورة and شبكة الكلمات)
 One generic event: `game:act` with `{ game: 'quiz' | 'words' | 'auction' | 'draw', action, payload }`, ack `{ ok, error? }`. The engine validates the actor, the phase and the payload.
 - quiz actions: `pickCategory {cat}`, `pickCell {r,c}`, `card {card: 'double'|'fifty'|'steal'}`, `vote {option}`, `lock`, `teamChat {text}`, `next` (host).

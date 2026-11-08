@@ -253,6 +253,8 @@ export interface LobbyRoom {
   game: string;
   players: number;
   max: number;
+  /** No free seat left. */
+  full: boolean;
   status: 'waiting' | 'playing';
 }
 export interface RoomView {
@@ -266,6 +268,8 @@ export interface RoomView {
   /** Shared lounge difficulty (host-only). Only games with a level table show it (`hasLevels`). */
   difficulty: Level;
   hasLevels: boolean;
+  /** Seats in the lounge (4 / 6 / 8 / 12). */
+  maxPlayers: number;
   /** Room leaderboard (placement points across the games played here). */
   board: BoardView;
   /** الموجة: the team (0 or 1) of every player, for the host's teams editor. */
