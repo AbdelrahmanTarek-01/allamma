@@ -753,3 +753,9 @@ button:disabled { cursor: not-allowed; }
 .wd-verdict { flex: 1; border: 3px solid var(--ink); border-radius: 18px; padding: 8px 10px; display: flex; flex-direction: column; line-height: 1.15; color: #fff; }
 .wd-verdict b { font-size: 12px; }
 .wd-left { align-self: stretch; background: var(--white); color: #111; border: 3px solid var(--ink); border-radius: 20px; box-shadow: 5px 5px 0 var(--ink); padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Home thumb zone (canvas HomeV2): header on top, games scroll in the middle, fixed dock at the bottom */
+.home-screen { padding-bottom: calc(176px + env(safe-area-inset-bottom)); }
+.home-head { position: sticky; top: 0; z-index: 15; background: var(--yellow); margin: calc(-1 * max(20px, env(safe-area-inset-top))) calc(-1 * var(--gutter)) 0; padding: max(20px, env(safe-area-inset-top)) var(--gutter) 8px; }
+.home-dock { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; z-index: 20; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 34px max(18px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(to top, var(--yellow) 64%, rgba(255, 210, 63, 0)); pointer-events: none; }
+.home-dock > * { pointer-events: auto; }

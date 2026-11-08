@@ -54,8 +54,8 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
 
   const count = lobby?.length ?? null;
   return (
-    <main className="screen">
-      <header className="row between">
+    <main className="screen home-screen">
+      <header className="row between home-head">
         <span className="logo">اللمّة<i>.</i></span>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn sm" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy /> الترتيب</button>
@@ -65,18 +65,6 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
           </button>
         </div>
       </header>
-
-      {/* the one thing to do: open a lounge. Joining by code and the open lounges are one row below it */}
-      <button className="btn big full" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
-
-      <div className="row" style={{ gap: 10 }}>
-        <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
-        <button className="btn grow" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
-          قعدات مفتوحة
-          {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} />
-            : count > 0 ? <span className="chip" style={{ fontSize: 13, background: 'var(--green)' }}>{AR(count)}</span> : null}
-        </button>
-      </div>
 
       <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
@@ -94,6 +82,19 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
           <span className="display" style={{ fontSize: 20, marginTop: 8 }}>بنحضّر ٧ كمان</span>
           <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>صوّت للي عاوزها</span>
         </button>
+      </div>
+
+      {/* thumb-zone dock: join / open lounges, and the one big action at the very bottom */}
+      <div className="home-dock">
+        <div className="row" style={{ gap: 10 }}>
+                <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
+                <button className="btn grow" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
+                  قعدات مفتوحة
+                  {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} />
+                    : count > 0 ? <span className="chip" style={{ fontSize: 13, background: 'var(--green)' }}>{AR(count)}</span> : null}
+                </button>
+              </div>
+        <button className="btn big full" disabled={busy} onClick={create}><Plus /> اعمل قعدة</button>
       </div>
 
       {ideasOpen && <IdeasSheet onClose={() => setIdeasOpen(false)} />}
