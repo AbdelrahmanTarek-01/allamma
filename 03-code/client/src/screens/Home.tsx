@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Character, GAMES, Plus, Trophy } from '../components/art';
 import { GameSheet, MIN } from '../components/GameSheet';
 import { IdeaIcon, IdeasSheet } from '../components/IdeasSheet';
@@ -17,6 +17,8 @@ const SPOT: { id: string; bg: string; hook: string }[] = [
   { id: 'draw', bg: '#FFF3C4', hook: 'ارسم وصحابك يخمّنوا · وفي الآخر معرض الليلة' },
   { id: 'wave', bg: '#4D9DFF', hook: 'اقروا أفكار بعض على المقياس' }
 ];
+/** Cards in one copy of the games rail: the games plus the coming-soon card. */
+const RAIL_N = GAMES.length + 1;
 const ROTATE_MS = 4200;
 const PAUSE_AFTER_TAP_MS = 6000;
 /** "يا" + the name only when it is written in Arabic letters, otherwise "يا نجم". */
@@ -88,15 +90,57 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     }, ROTATE_MS);
     return () => clearInterval(iv);
   }, []);
+  // infinite rail: three identical copies of the cards; we sit on the middle copy and jump silently by one copy width when an edge copy is reached
+  const copyW = useRef(0);
+  const sign = () => (railRef.current && getComputedStyle(railRef.current).direction === 'rtl' ? -1 : 1); // RTL scrolls toward the end with a negative scrollLeft
+  const railPos = (extra: number) => sign() * (copyW.current + extra); // scrollLeft for "the middle copy's first card, plus extra px toward the end"
+  const measure = () => {
+    const el = railRef.current;
+    if (!el || el.children.length < RAIL_N * 3) return false;
+    const w = Math.abs(el.children[RAIL_N].getBoundingClientRect().left - el.children[0].getBoundingClientRect().left);
+    if (!w) return false;
+    copyW.current = w;
+    return true;
+  };
+  useLayoutEffect(() => {
+    const el = railRef.current;
+    if (!el || !measure()) return;
+    el.scrollLeft = railPos(0); // start on the middle copy
+    let settle: ReturnType<typeof setTimeout>;
+    const recenter = (force: boolean) => {
+      if (!measure()) return;
+      const p = Math.abs(el.scrollLeft), w = copyW.current, edge = 40;
+      // near a hard end: jump now; otherwise wait until the swipe settles (a jump would cut a fling short)
+      const nearEnd = p < edge || p > el.scrollWidth - el.clientWidth - edge;
+      if (!force && !nearEnd) return;
+      if (p < w) el.scrollLeft = sign() * (p + w);
+      else if (p >= 2 * w) el.scrollLeft = sign() * (p - w);
+    };
+    const onScroll = () => { recenter(false); clearTimeout(settle); settle = setTimeout(() => recenter(true), 140); };
+    const onResize = () => { const k = copyW.current ? Math.abs(el.scrollLeft) / copyW.current : 1; if (measure()) el.scrollLeft = sign() * k * copyW.current; };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    return () => { clearTimeout(settle); el.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); };
+  }, [roomsOpen]);
   // first Home visit only: the rail nudges ~90px and back once, so people see there is more to swipe (skipped with reduced motion)
   useEffect(() => {
     let seen = true;
     try { seen = !!localStorage.getItem('allamma.railHint'); if (!seen) localStorage.setItem('allamma.railHint', '1'); } catch { /* blocked storage: no nudge */ }
     if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const t1 = setTimeout(() => railRef.current?.scrollTo({ left: -90, behavior: 'smooth' }), 900); // RTL: toward the end is negative
-    const t2 = setTimeout(() => railRef.current?.scrollTo({ left: 0, behavior: 'smooth' }), 1700);
+    const t1 = setTimeout(() => railRef.current?.scrollTo({ left: railPos(90), behavior: 'smooth' }), 900);
+    const t2 = setTimeout(() => railRef.current?.scrollTo({ left: railPos(0), behavior: 'smooth' }), 1700);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  const seeAll = () => {
+    sfx.soft();
+    const el = railRef.current;
+    if (!el) return;
+    const mid = el.getBoundingClientRect().left + el.clientWidth / 2;
+    // the coming-soon card closest to the middle of the rail
+    const soon = [1, 2, 3].map((c) => el.children[c * RAIL_N - 1] as HTMLElement).sort((a, b) => Math.abs(a.getBoundingClientRect().left - mid) - Math.abs(b.getBoundingClientRect().left - mid))[0];
+    soon.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', inline: 'end', block: 'nearest' });
+  };
 
   if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
 
@@ -169,17 +213,18 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       <section className="col" style={{ gap: 10, flex: 'none' }}>
         <div className="row between" style={{ alignItems: 'baseline' }}>
           <span className="row" style={{ gap: 8 }}><span className="display" style={{ fontSize: 22 }}>الألعاب</span><span className="h3-more">٧ ألعاب · اسحب ←</span></span>
-          <button className="h3-all" onClick={() => { sfx.soft(); railRef.current?.scrollTo({ left: railRef.current.scrollWidth, behavior: 'smooth' }); }}>شوف الكل</button>
+          <button className="h3-all" onClick={seeAll}>شوف الكل</button>
         </div>
         <div className="h3-rail" ref={railRef}>
-          {GAMES.map((g) => (
-            <button key={g.id} className="h3-card" onClick={() => { sfx.card(); setSheetGame(g.id); }}>
+          {[0, 1, 2].flatMap((c) => [
+            ...GAMES.map((g) => (
+            <button key={`${c}-${g.id}`} className="h3-card" aria-hidden={c !== 1 || undefined} tabIndex={c !== 1 ? -1 : undefined} onClick={() => { sfx.card(); setSheetGame(g.id); }}>
               <span className="icontile" style={{ background: g.color, width: 50, height: 50, borderRadius: 15, filter: g.ready ? 'none' : 'grayscale(1)' }}>{g.icon}</span>
               <span className="display" style={{ fontSize: 15, lineHeight: 1.2 }}>{g.name}</span>
               <span className="h3-min">{g.ready ? `${AR(MIN[g.id] ?? 2)}+` : 'قريباً'}</span>
             </button>
-          ))}
-          <button className="h3-card h3-soon" onClick={() => { sfx.card(); setIdeasOpen(true); }}>
+          )),
+          <button key={`${c}-soon`} className="h3-card h3-soon" aria-hidden={c !== 1 || undefined} tabIndex={c !== 1 ? -1 : undefined} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
             <span className="soon-squares" aria-hidden="true">
               <i style={{ background: '#FF4F9A', transform: 'rotate(-12deg)' }}><IdeaIcon id="mafia" size={22} /></i>
               <i style={{ background: '#3DDC97', transform: 'translateY(-4px)' }}><IdeaIcon id="categories" size={20} /></i>
@@ -187,6 +232,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
             <span className="display" style={{ fontSize: 15, lineHeight: 1.2, color: '#FFD23F' }}>+٧ ألعاب جاية</span>
             <span style={{ fontSize: 10.5, fontWeight: 800, color: '#fff' }}>صوّت للي عاوزها</span>
           </button>
+          ])}
         </div>
       </section>
 

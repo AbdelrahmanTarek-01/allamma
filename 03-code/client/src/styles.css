@@ -900,7 +900,7 @@ button:disabled { cursor: not-allowed; }
 .h3-act { height: 64px; border: 3px solid var(--ink); border-radius: 20px; background: var(--white); box-shadow: 4px 4px 0 var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; font: 900 16px 'Cairo', sans-serif; color: var(--ink); transition: transform .1s, box-shadow .1s; }
 .h3-act:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: none; }
 .h3-all { border: 0; background: none; padding: 0; font: 900 12.5px 'Cairo', sans-serif; text-decoration: underline; color: var(--ink); }
-.h3-rail { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--gutter)); padding: 2px var(--gutter) 8px; }
+.h3-rail { scroll-padding-inline: var(--gutter); display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--gutter)); padding: 2px var(--gutter) 8px; }
 .h3-rail::-webkit-scrollbar { display: none; }
 .h3-card { flex: none; width: clamp(104px, calc((min(100vw, 480px) - 42px) / 2.6), 160px); height: 132px; position: relative; text-align: right; background: var(--white); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink); scroll-snap-align: start; transition: transform .1s, box-shadow .1s; }
 .h3-card:active { transform: translate(4px, 4px); box-shadow: none; }
