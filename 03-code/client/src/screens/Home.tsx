@@ -74,10 +74,10 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       <header className="row" style={{ gap: 8 }}>
         <span className="logo" style={{ fontSize: 38, lineHeight: 1 }}>اللمّة<i>.</i></span>
         <div className="row" style={{ gap: 8, marginInlineStart: 'auto' }}>
-          <button className="h3-btn" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy size={22} /></button>
+          <button className="h3-btn" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy size={28} /></button>
           <MuteButton bare card />
           <button onClick={onEditProfile} aria-label="غيّر اسمك أو شخصيتك" style={{ border: 0, background: 'none', padding: 0, display: 'flex' }}>
-            <span style={{ display: 'flex', borderRadius: '50%', boxShadow: '0 0 0 2.5px #111', background: '#fff' }}><Character id={profile!.avatar} size={44} /></span>
+            <span style={{ display: 'flex', borderRadius: '50%', boxShadow: '0 0 0 2.5px #111', background: '#fff' }}><Character id={profile!.avatar} size={42} /></span>
           </button>
         </div>
       </header>

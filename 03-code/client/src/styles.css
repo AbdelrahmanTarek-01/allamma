@@ -652,7 +652,7 @@ button:disabled { cursor: not-allowed; }
 @keyframes flick { 0% { transform: scale(.6) rotate(-14deg); } 40% { transform: scale(1.35) rotate(10deg); } 70% { transform: scale(.95) rotate(-5deg); } 100% { transform: none; } }
 
 .hbar { display: flex; align-items: center; flex: none; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink); overflow: hidden; }
-.hbar-btn { width: 42px; height: 42px; padding: 0; border: 0; border-radius: 0; background: transparent; display: flex; align-items: center; justify-content: center; }
+.hbar-btn { width: 46px; height: 46px; padding: 0; border: 0; border-radius: 0; background: transparent; display: flex; align-items: center; justify-content: center; }
 .hbar-btn:active { background: var(--yellow-soft); }
 .hbar-sep { width: 2px; height: 24px; background: var(--ink); opacity: .15; }
 .ticket { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: var(--white); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink); padding: 8px 14px; text-align: right; }
@@ -892,7 +892,7 @@ button:disabled { cursor: not-allowed; }
 
 /* Home V3 (canvas HomeV3): the whole page fits one screen, 360 x 740 and up. Hero takes the leftover height; actions in the thumb zone; games on a snap rail. */
 .home3 { --gutter: 18px; box-sizing: border-box; height: 100dvh; min-height: 640px; max-width: 480px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
-.h3-btn { width: 42px; height: 42px; flex: none; padding: 0; border: 2.5px solid var(--ink); border-radius: 14px; background: var(--white); box-shadow: 3px 3px 0 var(--ink); display: flex; align-items: center; justify-content: center; }
+.h3-btn { width: 46px; height: 46px; flex: none; padding: 0; border: 2.5px solid var(--ink); border-radius: 15px; background: var(--white); box-shadow: 3px 3px 0 var(--ink); display: flex; align-items: center; justify-content: center; }
 .h3-btn:active { transform: translate(3px, 3px); box-shadow: none; }
 .h3-hero { position: relative; flex: 1; min-height: 150px; box-sizing: border-box; background: var(--white); border: 3px solid var(--ink); border-radius: 26px; box-shadow: 6px 6px 0 var(--ink); padding: 14px 16px 0; overflow: hidden; }
 .h3-live { width: 8px; height: 8px; border-radius: 50%; background: #1F9E6A; animation: blink 1.4s infinite; }

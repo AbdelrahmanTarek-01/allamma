@@ -116,12 +116,12 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
         </div>
         {/* one grouped bar: trophy, settings (host only), sound */}
         <div className="hbar">
-          <button className="hbar-btn" aria-label="ترتيب القعدة" onClick={() => { sfx.tap(); onBoard(); }}><Trophy size={22} /></button>
+          <button className="hbar-btn" aria-label="ترتيب القعدة" onClick={() => { sfx.tap(); onBoard(); }}><Trophy size={28} /></button>
           {isHost && (
             <>
               <span className="hbar-sep" />
               <button className="hbar-btn" aria-label="إعدادات اللعبة والقعدة" onClick={() => { setDraft(room.name); setSettingsOpen(true); }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
               </button>
             </>
           )}
