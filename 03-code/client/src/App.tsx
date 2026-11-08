@@ -17,7 +17,7 @@ export function App() {
 
   let key: string;
   let screen;
-  if (!profile || editing) { key = 'onboarding'; screen = <Onboarding />; }
+  if (!profile || editing) { key = 'onboarding'; screen = <Onboarding onCancel={() => setEditing(false)} />; }
   else if (!hasConnected) { key = 'waking'; screen = <SkeletonHome note="بنصحّي السيرفر… ثواني" />; }
   else if (!room) {
     key = status === 'online' ? 'home' : 'reconnect';
