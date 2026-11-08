@@ -9,6 +9,7 @@ import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Room } from './screens/Room';
 import { SpyGame } from './screens/Spy';
+import { hasInviteLink, hasSeenWelcome, markWelcomed, Welcome } from './screens/Welcome';
 
 // the map game brings the generated maps (a few hundred KB): only players who open it download it
 const WaveGame = lazy(() => import('./screens/WaveGame').then((m) => ({ default: m.WaveGame })));
@@ -18,13 +19,16 @@ export function App() {
   const { profile, status, room, toast, hasConnected } = useStore();
   const [editing, setEditing] = useState(false);
   const [autoHelp, setAutoHelp] = useState<string | null>(null);
+  // the welcome screen is for a first visit only: not for returning users (they have a profile) and not for invite links
+  const [welcomed, setWelcomed] = useState(() => hasSeenWelcome() || hasInviteLink());
 
   useEffect(() => { start(); }, []);
   useEffect(() => { setEditing(false); }, [profile?.name, profile?.avatar]);
 
   let key: string;
   let screen;
-  if (!profile || editing) { key = 'onboarding'; screen = <Onboarding onCancel={() => setEditing(false)} />; }
+  if (!profile && !welcomed) { key = 'welcome'; screen = <Welcome onStart={() => { markWelcomed(); setWelcomed(true); }} />; }
+  else if (!profile || editing) { key = 'onboarding'; screen = <Onboarding onCancel={() => setEditing(false)} />; }
   else if (!hasConnected) { key = 'waking'; screen = <SkeletonHome note="بنصحّي السيرفر… ثواني" />; }
   else if (!room) {
     key = status === 'online' ? 'home' : 'reconnect';

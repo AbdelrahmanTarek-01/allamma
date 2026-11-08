@@ -581,3 +581,6 @@ button:disabled { cursor: not-allowed; }
 .team-player { display: flex; align-items: center; gap: 6px; padding: 2px 6px; background: var(--yellow-soft); border: 2.5px solid var(--ink); border-radius: 12px; font-weight: 800; font-size: 13.5px; text-align: start; transition: transform .1s; }
 .team-player:active { transform: scale(.96); }
 .team-player span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* welcome screen */
+.welcome-cast { display: flex; justify-content: center; align-items: flex-start; gap: 2px; padding-block: 6px; }
