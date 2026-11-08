@@ -7,6 +7,8 @@ import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
 import { OpenRooms } from './OpenRooms';
 
+const HERO = ['c2', 'c5', 'c1', 'c4', 'c3'];
+
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
   const [code, setCode] = useState('');
@@ -52,11 +54,12 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     setBusy(false);
   };
 
+  // every hook lives above this early return (a hook after it crashes with "rendered fewer hooks" when the open-rooms screen shows)
+  const railRef = useRef<HTMLDivElement>(null);
+
   if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
 
   const count = lobby?.length ?? null;
-  const railRef = useRef<HTMLDivElement>(null);
-  const HERO = ['c2', 'c5', 'c1', 'c4', 'c3'];
   return (
     <main className="home3">
       <header className="row" style={{ gap: 8 }}>
