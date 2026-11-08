@@ -173,6 +173,18 @@ export class QuizEngine implements GameEngine {
     return this.teamScores[this.teams[playerId] ?? 0];
   }
 
+  /** Host ended the game. */
+  abort(ctx: EngineCtx) {
+    if (this.phase !== 'final') this.finish(ctx);
+  }
+
+  /** Share of the board cells played. */
+  progress() {
+    const total = this.rows.reduce((n, r) => n + r.cells.length, 0);
+    const left = this.rows.reduce((n, r) => n + r.cells.filter((c) => !c.used).length, 0);
+    return total ? Math.min(1, Math.max(0, (total - left) / total)) : 0;
+  }
+
   isOver() {
     return this.phase === 'final';
   }

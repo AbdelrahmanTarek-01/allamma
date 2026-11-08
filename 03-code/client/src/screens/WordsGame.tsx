@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
@@ -39,7 +40,7 @@ function TopBar({ room, g }: P) {
         <div className="row" style={{ gap: 6 }}>
           <TeamChatButton room={room} game="words" team={g.team} chat={g.chat} />
           <HelpButton gameId="words" />
-          <MuteButton />
+          <GameMenu /><MuteButton />
         </div>
       </div>
       <section className="wd-top">
@@ -227,7 +228,7 @@ function BoardEndView({ room, g }: P) {
       {bomb && t > B && t < B + 0.35 && <div className="wd-flash" style={{ opacity: 1 - (t - B) / 0.35 }} />}
       <div className="row between" style={{ width: '100%', position: 'relative' }}>
         <span className="wd-tag">{bomb ? `${name(r.by)} قلب «${r.word}»` : `${winnerName} قلب آخر كلمة`}</span>
-        <MuteButton />
+        <GameMenu /><MuteButton />
       </div>
       <div className="wd-stage">
         {bomb && rings.map((x, i) => <span key={i} aria-hidden="true" style={{ position: 'absolute', width: x.size, height: x.size, borderRadius: '50%', border: `6px solid ${x.color}`, opacity: x.op }} />)}

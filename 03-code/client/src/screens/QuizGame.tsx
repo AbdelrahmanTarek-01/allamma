@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
@@ -49,7 +50,7 @@ function Tools({ room, g, timer = true }: P & { timer?: boolean }) {
     <div className="row" style={{ gap: 6 }}>
       <HelpButton gameId="quiz" />
       <TeamChatButton room={room} game="quiz" team={g.team} chat={g.chat} />
-      <MuteButton />
+      <GameMenu /><MuteButton />
       {timer && g.endsAt && g.phase !== 'reveal' && <Timer endsAt={g.endsAt} />}
     </div>
   );
@@ -187,7 +188,7 @@ function Board({ room, g }: P) {
         <span style={{ display: 'flex', flex: 'none', gap: 6, alignItems: 'center' }}>
           <TeamChatButton room={room} game="quiz" team={g.team} chat={g.chat} />
           <HelpButton gameId="quiz" />
-          <MuteButton />
+          <GameMenu /><MuteButton />
         </span>
       </div>
       <section className="qz-board">
@@ -290,7 +291,7 @@ function Question({ room, g }: P) {
         <span className="grow" />
         <TeamChatButton room={room} game="quiz" team={g.team} chat={g.chat} />
         <HelpButton gameId="quiz" />
-        {!reveal ? <Ring key={g.phase + String(q.early)} endsAt={g.endsAt} color={col} /> : <MuteButton />}
+        {!reveal ? <Ring key={g.phase + String(q.early)} endsAt={g.endsAt} color={col} /> : <><GameMenu /><MuteButton /></>}
       </header>
 
       <section className="qz-qcard">

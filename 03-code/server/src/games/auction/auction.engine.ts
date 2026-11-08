@@ -151,6 +151,17 @@ export class AuctionEngine implements GameEngine {
     return this.money[playerId] ?? 0;
   }
 
+  /** Host ended the game. */
+  abort(ctx: EngineCtx) {
+    if (this.phase !== 'final') this.finish(ctx);
+  }
+
+  /** Share of the lots played. */
+  progress() {
+    const done = this.phase === 'reveal' || this.phase === 'final' ? this.lotNo : this.lotNo - 1;
+    return Math.min(1, Math.max(0, done / Math.max(1, this.lots.length)));
+  }
+
   isOver() {
     return this.phase === 'final';
   }

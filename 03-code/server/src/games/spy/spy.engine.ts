@@ -147,6 +147,21 @@ export class SpyEngine implements GameEngine {
     return this.scores[playerId] ?? 0;
   }
 
+  /** Host ended the game: straight to the final screen with the points so far (a round in progress is not scored). */
+  abort(ctx: EngineCtx) {
+    ctx.clearTimer();
+    this.g.phase = 'final';
+    this.g.endsAt = null;
+    ctx.emit();
+  }
+
+  /** Share of the rounds played (a round counts once it has its result). */
+  progress() {
+    const g = this.g;
+    const done = g.phase === 'result' || g.phase === 'final' ? g.round : g.round - 1;
+    return Math.min(1, Math.max(0, done / g.totalRounds));
+  }
+
   isOver() {
     return this.g?.phase === 'final';
   }

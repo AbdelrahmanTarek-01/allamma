@@ -159,6 +159,17 @@ export class WordsEngine implements GameEngine {
     return 300 + (this.everGuide.has(playerId) ? 100 : 0);
   }
 
+  /** Host ended the game. */
+  abort(ctx: EngineCtx) {
+    if (this.phase !== 'final') this.finish(ctx);
+  }
+
+  /** Share of the boards played. */
+  progress() {
+    const done = this.phase === 'guess' || this.phase === 'clue' ? this.boardNo - 1 : this.boardNo;
+    return Math.min(1, Math.max(0, done / this.settings.boards));
+  }
+
   isOver() {
     return this.phase === 'final';
   }

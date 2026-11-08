@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { Dial, type DialNeedle } from '../components/Dial';
@@ -40,7 +41,7 @@ function Header({ g }: { g: WaveGameView }) {
         <HelpButton gameId="wave" />
       </div>
       <div className="row" style={{ gap: 8 }}>
-        <MuteButton />
+        <GameMenu /><MuteButton />
         {g.endsAt && g.phase !== 'reveal' && <Timer endsAt={g.endsAt} />}
       </div>
     </header>
@@ -327,7 +328,7 @@ function RevealView({ room, g }: P) {
           <span className="chip pink">الدور {AR(g.turn)} من {AR(g.totalTurns)}</span>
           <HelpButton gameId="wave" />
         </div>
-        <MuteButton />
+        <GameMenu /><MuteButton />
       </header>
       <div className="col center" style={{ gap: 2 }}>
         <span className="muted" style={{ color: '#E9DDFF' }}>كلمة {name(g.narratorId)}</span>

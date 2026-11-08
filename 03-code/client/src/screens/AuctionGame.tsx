@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
@@ -75,7 +76,7 @@ function Bidding({ room, g }: P) {
 
   return (
     <main className="screen au-screen">
-      <div className="row between"><span className="display" style={{ fontSize: 20 }}>مزاد المعلومات</span><div className="row" style={{ gap: 6 }}><HelpButton gameId="auction" /><MuteButton /></div></div>
+      <div className="row between"><span className="display" style={{ fontSize: 20 }}>مزاد المعلومات</span><div className="row" style={{ gap: 6 }}><HelpButton gameId="auction" /><GameMenu /><MuteButton /></div></div>
       <section className="au-lot">
         <span className="au-lotno">المعلومة {AR(g.lotNo)} من {AR(g.lots)}</span>
         <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.65, marginTop: 4 }}>المزاد على سؤال في</span>
@@ -179,7 +180,7 @@ function Answer({ room, g }: P) {
 
   return (
     <main className="screen au-screen">
-      <div className="row between"><span className="display" style={{ fontSize: 20 }}>مزاد المعلومات</span><div className="row" style={{ gap: 6 }}><HelpButton gameId="auction" /><MuteButton /></div></div>
+      <div className="row between"><span className="display" style={{ fontSize: 20 }}>مزاد المعلومات</span><div className="row" style={{ gap: 6 }}><HelpButton gameId="auction" /><GameMenu /><MuteButton /></div></div>
       <div className="au-buyer">
         <Character id={avatar(g.buyer)} size={40} />
         <div className="col grow" style={{ lineHeight: 1.25 }}>

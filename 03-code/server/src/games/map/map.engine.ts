@@ -205,6 +205,20 @@ export class MapEngine implements GameEngine {
     return this.scores[playerId] ?? 0;
   }
 
+  /** Host ended the game: straight to the final screen with the points so far. */
+  abort(ctx: EngineCtx) {
+    ctx.clearTimer();
+    this.phase = 'final';
+    this.endsAt = null;
+    ctx.emit();
+  }
+
+  /** Share of the places played. */
+  progress() {
+    const done = this.phase === 'guess' ? this.round - 1 : this.round;
+    return Math.min(1, Math.max(0, done / Math.max(1, this.queue.length)));
+  }
+
   isOver() {
     return this.phase === 'final';
   }

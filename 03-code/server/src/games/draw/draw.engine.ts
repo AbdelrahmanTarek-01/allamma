@@ -156,6 +156,22 @@ export class DrawEngine implements GameEngine {
     return this.scores[playerId] ?? 0;
   }
 
+  /** Host ended the game. */
+  abort(ctx: EngineCtx) {
+    if (this.phase !== 'final') this.finish(ctx);
+  }
+
+  /** Share of the drawings played. */
+  progress() {
+    const done = this.phase === 'reveal' || this.phase === 'final' ? this.roundNo : this.roundNo - 1;
+    return Math.min(1, Math.max(0, done / Math.max(1, this.order.length)));
+  }
+
+  /** The lounge went back without results: stop the stroke flush timer. */
+  dispose() {
+    this.clearFlush();
+  }
+
   isOver() {
     return this.phase === 'final';
   }

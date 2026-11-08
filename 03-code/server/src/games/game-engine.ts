@@ -37,6 +37,12 @@ export interface GameEngine {
   viewFor(playerId: string): unknown;
   /** Points this player earned in the current game (fresh each game). */
   scoreOf(playerId: string): number;
+  /** The host ended the game: stop every timer and go to the final screen with the points so far (the room then shows the shared results). */
+  abort(ctx: EngineCtx): void;
+  /** Share of the rounds played so far, 0..1. The room leaderboard only counts a game that was ended early when at least half was played. */
+  progress(): number;
+  /** The lounge dropped this game without results: free anything the engine keeps outside the room timer. */
+  dispose?(): void;
   /** True once the game reached its final screen. Lounge scores are updated at that moment. */
   isOver(): boolean;
   /** Who played this game (the room leaderboard ranks them). Without it every player in the room is ranked. */

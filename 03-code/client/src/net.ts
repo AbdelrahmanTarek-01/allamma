@@ -359,6 +359,7 @@ socket.on('connect', () => { set({ status: 'online', hasConnected: true }); hell
 socket.on('disconnect', () => set({ status: 'offline' }));
 socket.on('connect_error', () => set({ status: state.hasConnected ? 'offline' : 'waking' }));
 socket.on('room:state', (room: RoomView) => set({ room, offset: room.serverNow - Date.now() }));
+socket.on('room:notice', (d: { text: string }) => toast(d.text)); // e.g. the host ended the game
 socket.on('room:kicked', () => { set({ room: null, chat: [] }); sfx.leave(); toast('المضيف طلّعك من الأوضة'); });
 socket.on('chat:history', (list: ChatView[]) => set({ chat: list.slice(-MAX_CHAT), chatBase: list[list.length - 1]?.id }));
 socket.on('chat:new', (m: ChatView) => {

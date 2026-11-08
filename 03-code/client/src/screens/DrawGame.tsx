@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { DrawCanvas, Strokes } from '../components/DrawCanvas';
@@ -59,7 +60,7 @@ function TopBar({ g }: { g: DrawGameView }) {
   return (
     <div className="row between">
       <div className="row" style={{ gap: 8 }}><span className="display" style={{ fontSize: 20 }}>ارسم وخمّن</span><span className="chip">جولة {AR(g.round)} من {AR(g.rounds)}</span></div>
-      <div className="row" style={{ gap: 6 }}><HelpButton gameId="draw" /><MuteButton /></div>
+      <div className="row" style={{ gap: 6 }}><HelpButton gameId="draw" /><GameMenu /><MuteButton /></div>
     </div>
   );
 }

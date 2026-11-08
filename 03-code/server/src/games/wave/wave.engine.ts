@@ -181,6 +181,22 @@ export class WaveEngine implements GameEngine {
     return this.teamsMode ? this.teamScores[this.teams[playerId] ?? 0] : this.scores[playerId] ?? 0;
   }
 
+  /** Host ended the game. */
+  abort(ctx: EngineCtx) {
+    if (this.phase !== 'final') this.finish(ctx);
+  }
+
+  /** Share of the turns played. */
+  progress() {
+    const done = this.phase === 'reveal' || this.phase === 'final' ? this.turnNo : this.turnNo - 1;
+    return Math.min(1, Math.max(0, done / Math.max(1, this.order.length)));
+  }
+
+  /** The lounge went back without results: stop the live-needle flush timer. */
+  dispose() {
+    this.clearFlush();
+  }
+
   isOver() {
     return this.phase === 'final';
   }

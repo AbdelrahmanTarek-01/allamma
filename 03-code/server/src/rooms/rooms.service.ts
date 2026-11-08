@@ -40,6 +40,7 @@ export class RoomsService implements OnModuleDestroy {
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room, only?: string[]) => void = () => {};
   private onPush: (room: Room, ids: string[], event: string, data: unknown) => void = () => {};
+  private noBoard = new Set<string>(); // rooms whose game was ended early before half: no room-leaderboard points
   private randomWon = new Set<string>(); // majority mode: rooms where 'random' already triggered its pick
   private rolls = new Map<string, { game: string; timer: NodeJS.Timeout }>(); // room code -> the random game roll in progress
   private onNotify: (socketId: string, event: string, data: unknown) => void = () => {};
@@ -565,10 +566,28 @@ export class RoomsService implements OnModuleDestroy {
     this.begin(room);
   }
 
+  /**
+   * The host ends the game early. 'results': the engine goes to its final screen with the current scores and everyone sees the shared results
+   * (the room leaderboard only counts it when at least half was played). 'lobby': no results, everyone is back in the room.
+   */
+  endGame(playerId: string, mode: unknown) {
+    const room = this.mustHost(playerId);
+    const e = room.engine;
+    if (!e || e.isOver()) throw new GameError('مش وقته دلوقتي');
+    if (mode !== 'results' && mode !== 'lobby') throw new GameError('اختيار مش صح');
+    this.systemMessage(room, 'الهوست أنهى اللعبة');
+    this.onPush(room, [...room.players.keys()], 'room:notice', { text: 'الهوست أنهى اللعبة' });
+    if (mode === 'lobby') return this.backToRoom(playerId);
+    if (e.progress() < 0.5) this.noBoard.add(room.code);
+    e.abort(this.ctx(room));
+    this.emit(room); // the engine's own emit already settled it; this is a safety net
+  }
+
   /** Back to the lounge to pick a game. Lounge scores stay. */
   backToRoom(playerId: string) {
     const room = this.mustHost(playerId);
     this.clearTimer(room);
+    room.engine?.dispose?.();
     room.engine = null;
     room.settled = false;
     room.gameVotes.clear();
@@ -591,6 +610,7 @@ export class RoomsService implements OnModuleDestroy {
     if (online.length < def.minPlayers) throw new GameError(`محتاجين ${def.minPlayers} لاعيبة على الأقل`);
     def.validateStart?.(room.settings[def.id], online.length);
     this.clearTimer(room);
+    this.noBoard.delete(room.code);
     room.engine = def.create(room.settings[def.id], room.difficulty);
     room.settled = false;
     this.systemMessage(room, `بدأت لعبة ${def.name}`);
@@ -605,6 +625,7 @@ export class RoomsService implements OnModuleDestroy {
     room.gameVotes.clear(); // the game ended: votes start fresh for the next pick
     this.randomWon.delete(room.code);
     room.players.forEach((p) => (p.lounge += e.scoreOf(p.id)));
+    if (this.noBoard.delete(room.code)) return; // ended early: the results show, the room leaderboard does not move
     this.recordBoard(room, e);
   }
 

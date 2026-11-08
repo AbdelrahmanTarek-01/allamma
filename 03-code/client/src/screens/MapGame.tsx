@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
@@ -48,7 +49,7 @@ function Header({ g }: { g: MapGameView }) {
         <HelpButton gameId="map" />
       </div>
       <div className="row" style={{ gap: 8 }}>
-        <MuteButton />
+        <GameMenu /><MuteButton />
         {g.phase === 'guess' && g.endsAt && <Timer endsAt={g.endsAt} />}
       </div>
     </header>

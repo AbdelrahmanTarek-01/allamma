@@ -1,3 +1,4 @@
+import { GameMenu } from '../components/GameMenu';
 import { useEffect, useRef, useState } from 'react';
 import { Character, SpyIcon } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
@@ -46,7 +47,7 @@ function Header({ g, title, tag }: { g: GameView; title: string; tag?: string })
         <span className="display" style={{ fontSize: 26 }}>{title}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>
-        <MuteButton />
+        <GameMenu /><MuteButton />
         {g.endsAt && <Timer endsAt={g.endsAt} />}
       </div>
     </header>
@@ -430,7 +431,7 @@ function ResultView({ room, g }: P) {
             <span className="chip">الجولة {AR(g.round)} من {AR(g.totalRounds)}</span>
             <HelpButton gameId="spy" />
           </div>
-          <MuteButton />
+          <GameMenu /><MuteButton />
         </div>
         <h1 className="display pop-in" style={{ fontSize: 36, lineHeight: 1.15 }}>{title}</h1>
         <span style={{ fontWeight: 700 }}>{sub}</span>
