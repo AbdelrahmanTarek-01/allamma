@@ -29,9 +29,21 @@ export interface GameView {
   outcome: 'detectives' | 'spy-escaped' | 'spy-guessed' | null;
   roundPoints: Record<string, number>;
 }
+/** One row of the public lobby list (home screen). */
+export interface LobbyRoom {
+  code: string;
+  name: string;
+  host: { name: string; avatar: string };
+  game: string;
+  players: number;
+  max: number;
+  status: 'waiting' | 'playing';
+}
 export interface RoomView {
   code: string;
   name: string;
+  privacy: 'private' | 'public';
+  locked: boolean;
   selectedGame: string;
   hostId: string;
   youId: string;

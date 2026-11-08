@@ -2,9 +2,12 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { EngineCtx } from '../games/game-engine';
 import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
-import { AVATARS, GameError, Player, Room } from './rooms.types';
+import { maskBad } from '../common/profanity';
+import { AVATARS, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
 const MAX_PLAYERS = 10;
+const CHAT_GAP_MS = 1000;
+const LOBBY_THROTTLE_MS = 1000;
 const MAX_ROOM_NAME = 24;
 const EMPTY_ROOM_TTL_MS = 15 * 60 * 1000;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -21,14 +24,24 @@ export class RoomsService implements OnModuleDestroy {
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room) => void = () => {};
   private sweeper = setInterval(() => this.sweep(), 60 * 1000);
+  private lastChatAt = new Map<string, number>();
+  private lobbyListener: (list: LobbyRoom[]) => void = () => {};
+  private lobbySig = '';
+  private lobbyLastAt = 0;
+  private lobbyTimer: NodeJS.Timeout | null = null;
 
   onModuleDestroy() {
     clearInterval(this.sweeper);
+    if (this.lobbyTimer) clearTimeout(this.lobbyTimer);
     this.rooms.forEach((r) => r.timer && clearTimeout(r.timer));
   }
 
   setListener(fn: (room: Room) => void) {
     this.onChange = fn;
+  }
+
+  setLobbyListener(fn: (list: LobbyRoom[]) => void) {
+    this.lobbyListener = fn;
   }
 
   getRoom(code: string) {
@@ -43,7 +56,7 @@ export class RoomsService implements OnModuleDestroy {
   // ---------- identity & connection ----------
 
   cleanProfile(name: unknown, avatar: unknown) {
-    const n = String(name ?? '').trim().slice(0, 14);
+    const n = maskBad(String(name ?? '').trim()).slice(0, 14);
     if (!n) throw new GameError('اكتب اسمك الأول');
     const a = AVATARS.includes(avatar as any) ? String(avatar) : 'c1';
     return { name: n, avatar: a };
@@ -88,6 +101,9 @@ export class RoomsService implements OnModuleDestroy {
       code,
       name: this.cleanRoomName(`قعدة ${name}`),
       hostId: playerId,
+      privacy: 'private',
+      locked: false,
+      banned: new Set(),
       players: new Map(),
       chat: [],
       selectedGame: def.id,
@@ -109,6 +125,8 @@ export class RoomsService implements OnModuleDestroy {
       this.attachSocket(playerId, socketId, name, avatar);
       return room;
     }
+    if (room.banned.has(playerId)) throw new GameError('المضيف طلّعك من القعدة دي');
+    if (room.locked) throw new GameError('القعدة مقفولة');
     if (room.players.size >= MAX_PLAYERS) throw new GameError('الأوضة مليانة');
     this.leave(playerId);
     this.addPlayer(room, playerId, name, avatar, socketId);
@@ -145,6 +163,7 @@ export class RoomsService implements OnModuleDestroy {
     const room = this.mustHost(hostId);
     const t = this.mustOtherMember(room, hostId, targetId);
     const socketIds = [...t.socketIds];
+    room.banned.add(t.id);
     this.leave(t.id);
     return socketIds;
   }
@@ -165,8 +184,12 @@ export class RoomsService implements OnModuleDestroy {
 
   chat(playerId: string, text: unknown) {
     const room = this.mustRoom(playerId);
-    const t = String(text ?? '').trim().slice(0, 200);
+    let t = String(text ?? '').trim().slice(0, 200);
     if (!t) return;
+    const now = Date.now();
+    if (now - (this.lastChatAt.get(playerId) ?? 0) < CHAT_GAP_MS) throw new GameError('استنى ثانية');
+    this.lastChatAt.set(playerId, now);
+    if (room.privacy === 'public') t = maskBad(t);
     room.chat.push({ id: randomUUID(), from: playerId, text: t, at: Date.now() });
     if (room.chat.length > 40) room.chat.splice(0, room.chat.length - 40);
     this.emit(room);
@@ -178,6 +201,66 @@ export class RoomsService implements OnModuleDestroy {
     if (!n) throw new GameError('اكتب اسم للقعدة');
     room.name = n;
     this.emit(room);
+  }
+
+  setPrivacy(playerId: string, privacy: unknown) {
+    const room = this.mustHost(playerId);
+    if (privacy !== 'private' && privacy !== 'public') throw new GameError('اختيار مش صح');
+    room.privacy = privacy as Privacy;
+    this.emit(room);
+  }
+
+  setLocked(playerId: string, locked: unknown) {
+    const room = this.mustHost(playerId);
+    room.locked = !!locked;
+    this.emit(room);
+  }
+
+  // ---------- public lobby ----------
+
+  /** Public, unlocked, not full rooms that someone is still in. */
+  lobbyList(): LobbyRoom[] {
+    return [...this.rooms.values()]
+      .filter((r) => r.privacy === 'public' && !r.locked && r.players.size < MAX_PLAYERS && [...r.players.values()].some((p) => p.connected))
+      .map((r) => {
+        const host = r.players.get(r.hostId) ?? [...r.players.values()][0];
+        return {
+          code: r.code,
+          name: this.shownName(r),
+          host: { name: host.name, avatar: host.avatar },
+          game: r.selectedGame,
+          players: r.players.size,
+          max: MAX_PLAYERS,
+          status: (r.engine && !r.engine.isOver() ? 'playing' : 'waiting') as LobbyRoom['status']
+        };
+      })
+      .sort((a, b) => Number(a.status === 'playing') - Number(b.status === 'playing') || b.players - a.players || a.code.localeCompare(b.code));
+  }
+
+  /** Join the fullest public room that is waiting and has a free seat, otherwise open a new public room. */
+  quickPlay(playerId: string, name: string, avatar: string, socketId: string) {
+    const mine = this.roomOf(playerId);
+    const best = this.lobbyList().find((l) => l.status === 'waiting' && l.code !== mine?.code && !this.rooms.get(l.code)!.banned.has(playerId));
+    if (best) return { room: this.joinRoom(best.code, playerId, name, avatar, socketId), created: false };
+    const room = this.createRoom(playerId, name, avatar, socketId);
+    room.privacy = 'public';
+    this.emit(room);
+    return { room, created: true };
+  }
+
+  /** Tell lobby watchers the list changed, at most once per second and only if it really changed. */
+  private touchLobby() {
+    if (this.lobbyTimer) return;
+    const wait = Math.max(0, this.lobbyLastAt + LOBBY_THROTTLE_MS - Date.now());
+    this.lobbyTimer = setTimeout(() => {
+      this.lobbyTimer = null;
+      const list = this.lobbyList();
+      const sig = JSON.stringify(list);
+      if (sig === this.lobbySig) return;
+      this.lobbySig = sig;
+      this.lobbyLastAt = Date.now();
+      this.lobbyListener(list);
+    }, wait);
   }
 
   selectGame(playerId: string, game: unknown) {
@@ -265,7 +348,9 @@ export class RoomsService implements OnModuleDestroy {
       }));
     return {
       code: room.code,
-      name: room.name,
+      name: this.shownName(room),
+      privacy: room.privacy,
+      locked: room.locked,
       hostId: room.hostId,
       youId: playerId,
       players,
@@ -286,6 +371,11 @@ export class RoomsService implements OnModuleDestroy {
       schedule: (seconds, fn) => this.schedule(room, seconds, fn),
       clearTimer: () => this.clearTimer(room)
     };
+  }
+
+  /** Room name as strangers see it: bad words masked while the room is public. */
+  private shownName(room: Room) {
+    return room.privacy === 'public' ? maskBad(room.name) : room.name;
   }
 
   private cleanRoomName(name: unknown) {
@@ -313,7 +403,9 @@ export class RoomsService implements OnModuleDestroy {
   }
 
   private passHost(room: Room) {
-    const next = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).find((p) => p.connected);
+    const all = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt);
+    // if the host is gone from the room and nobody is online, still hand it to someone who is left
+    const next = all.find((p) => p.connected) ?? (room.players.has(room.hostId) ? undefined : all[0]);
     if (next) room.hostId = next.id;
   }
 
@@ -334,6 +426,7 @@ export class RoomsService implements OnModuleDestroy {
     this.clearTimer(room);
     room.players.forEach((p) => this.playerRoom.delete(p.id));
     this.rooms.delete(room.code);
+    this.touchLobby();
   }
 
   private sweep() {
@@ -347,6 +440,7 @@ export class RoomsService implements OnModuleDestroy {
     if (!this.rooms.has(room.code)) return;
     this.settle(room);
     this.onChange(room);
+    this.touchLobby();
   }
 
   stats() {

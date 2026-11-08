@@ -20,6 +20,12 @@ function useOnChange<T>(value: T, fn: (prev: T) => void) {
   }, [value]);
 }
 
+/** Shown to someone who joined while a round was running: they watch and chat, and play from the next round. */
+const WATCHING = 'دخلت والجولة شغالة، هتلعب من الجولة الجاية';
+function WatchBanner({ g }: { g: GameView }) {
+  return g.you ? null : <div className="card flat center" style={{ padding: '8px 12px', fontWeight: 800, fontSize: 14 }}>{WATCHING}</div>;
+}
+
 function Header({ g, title, tag }: { g: GameView; title: string; tag?: string }) {
   return (
     <header className="row between" style={{ gap: 10 }}>
@@ -71,6 +77,7 @@ function Discuss({ room, g }: P) {
   return (
     <main className="screen">
       <Header g={g} title="مين الجاسوس؟" />
+      <WatchBanner g={g} />
 
       <div key={g.askerId} className="card flat row flash" style={{ padding: '10px 14px', boxShadow: '4px 4px 0 #111' }}>
         {asker && <span className="pop-in"><Character id={asker.avatar} size={42} /></span>}
@@ -108,8 +115,8 @@ function Discuss({ room, g }: P) {
         </div>
       ) : (
         <div className="card col center grow" style={{ justifyContent: 'center' }}>
-          <span className="display h2">الجولة دي بدأت من غيرك</span>
-          <span className="muted">هتدخل معاهم في الجولة الجاية</span>
+          <span className="display h2" style={{ textAlign: 'center' }}>{WATCHING}</span>
+          <span className="muted">اتفرج وادردش معاهم لحد ما الجولة تخلص</span>
         </div>
       )}
 
@@ -151,6 +158,7 @@ function Vote({ room, g }: P) {
   return (
     <main className="screen">
       <Header g={g} title="مين فيكم الجاسوس؟" tag="وقت التصويت" />
+      <WatchBanner g={g} />
       <p style={{ margin: 0, fontWeight: 700 }}>دوس على اللي شاكك فيه. لو الأغلبية مسكوه، تكسبوا الجولة.</p>
 
       <div className="grid2 stagger">
@@ -364,6 +372,7 @@ function Result({ room, g }: P) {
         <span style={{ fontWeight: 700 }}>{sub}</span>
         <span className="chip soft" style={{ alignSelf: 'flex-start', fontSize: 13, marginTop: 4 }}>المكان كان: {g.place}</span>
       </div>
+      <WatchBanner g={g} />
       <Leaderboard room={room} g={g} showRound />
       <div className="col push" style={{ gap: 10 }}>
         {isHost ? (

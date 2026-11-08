@@ -86,13 +86,19 @@ export function Room({ room }: { room: RoomView }) {
         </button>
       </header>
 
-      <button className="btn full" style={{ background: 'var(--green)' }} onClick={whatsapp}>
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5l2.2 4.4-1.7 1.7a12 12 0 006.3 6.3l1.7-1.7 4.4 2.2c.4.2.6.6.5 1l-.5 2.1c-.1.5-.6.9-1.1.9C10.4 20.4 3.6 13.6 3.1 5.1c0-.5.4-1 .9-1.1l2.1-.5c.5-.1.9.1 1 .5z" fill="#fff" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /></svg>
-        افتحوا مكالمة واتساب
-      </button>
+      {room.privacy === 'private' && (
+        <button className="btn full" style={{ background: 'var(--green)' }} onClick={whatsapp}>
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5l2.2 4.4-1.7 1.7a12 12 0 006.3 6.3l1.7-1.7 4.4 2.2c.4.2.6.6.5 1l-.5 2.1c-.1.5-.6.9-1.1.9C10.4 20.4 3.6 13.6 3.1 5.1c0-.5.4-1 .9-1.1l2.1-.5c.5-.1.9.1 1 .5z" fill="#fff" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /></svg>
+          افتحوا مكالمة واتساب
+        </button>
+      )}
 
       <div className="col" style={{ gap: 0 }}>
-        <span className="label" style={{ fontSize: 12 }}>القعدة</span>
+        <div className="row" style={{ gap: 8 }}>
+          <span className="label" style={{ fontSize: 12 }}>القعدة</span>
+          <span className="chip soft">{room.privacy === 'public' ? 'عامة' : 'خاصة'}</span>
+          {room.locked && <span className="chip dark">مقفولة</span>}
+        </div>
         {isHost ? (
           <button className="row" aria-label="غيّر اسم القعدة" onClick={() => { setDraft(room.name); setRenaming(true); }} style={{ border: 0, background: 'none', padding: 0, gap: 8, textAlign: 'right' }}>
             <span className="display h2" style={{ overflowWrap: 'anywhere' }}>{room.name}</span>
@@ -160,6 +166,20 @@ export function Room({ room }: { room: RoomView }) {
           <span style={{ fontWeight: 800, fontSize: 14 }}>{AR(room.settings.discussSeconds / 60)} دقايق · {roundsText(room.settings.rounds)}</span>
         )}
       </section>
+
+      {isHost && (
+        <section className="card col" style={{ gap: 10, padding: '14px 16px' }}>
+          <span className="label" style={{ fontSize: 12 }}>مين يقدر يدخل؟</span>
+          <div className="seg" role="group" aria-label="خصوصية القعدة">
+            <button aria-pressed={room.privacy === 'private'} onClick={() => send('room:privacy', { privacy: 'private' })}>خاصة</button>
+            <button aria-pressed={room.privacy === 'public'} onClick={() => send('room:privacy', { privacy: 'public' })}>عامة</button>
+          </div>
+          <span className="muted" style={{ fontSize: 12 }}>{room.privacy === 'public' ? 'القعدة ظاهرة لأي حد في "قعدات مفتوحة"' : 'بالكود أو اللينك بس'}</span>
+          <button className={`btn sm ${room.locked ? 'black' : ''}`} aria-pressed={room.locked} onClick={() => send('room:lock', { locked: !room.locked })}>
+            {room.locked ? 'الدخول مقفول، دوس تفتحه' : 'اقفل الدخول'}
+          </button>
+        </section>
+      )}
 
       <div className="row between">
         <h2 className="display h2">اللاعيبة</h2>

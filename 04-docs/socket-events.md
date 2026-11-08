@@ -9,10 +9,15 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `room:create` | – | anyone | Ack `{ code }`. Leaves any previous room. |
 | `room:join` | `{ code }` | anyone | Max 10 players. |
 | `room:leave` | – | member | |
-| `room:kick` | `{ playerId }` | host | Removes another player like `room:leave` (mid-game handling included). Not yourself. The kicked player's sockets get `room:kicked`. |
+| `room:kick` | `{ playerId }` | host | Removes another player like `room:leave` (mid-game handling included) and **bans** them from this lounge: rejoining fails with "المضيف طلّعك من القعدة دي". Not yourself. The kicked player's sockets get `room:kicked`. |
 | `room:makeHost` | `{ playerId }` | host | Transfers hosting to another connected player. Not yourself. |
+| `room:privacy` | `{ privacy: 'private'\|'public' }` | host | Private (default) = code/link only. Public = listed in the lobby. Can change anytime. |
+| `room:lock` | `{ locked }` | host | A locked room rejects new joins with "القعدة مقفولة". Members reconnecting still get in. |
+| `lobby:list` | – | anyone | Ack `{ rooms: LobbyRoom[] }` and subscribes the socket to `lobby:update`. Only public, unlocked, not full rooms that someone is in. |
+| `lobby:leave` | – | anyone | Unsubscribes from `lobby:update` (home screen closed). |
+| `lobby:quick` | – | anyone | Joins the fullest public waiting room with a free seat (never one that banned you), otherwise creates a new public room. Ack `{ code, created }`. |
 | `room:ready` | `{ ready }` | member | |
-| `room:chat` | `{ text }` | member | Up to 200 chars. The last 40 are kept. |
+| `room:chat` | `{ text }` | member | Up to 200 chars. The last 40 are kept. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. |
 | `room:rename` | `{ name }` | host | Lounge name, trimmed, max 24 chars, not empty. |
 | `room:selectGame` | `{ game }` | host | Only in the lounge (no game running). Only `spy` is playable, anything else is rejected with "اللعبة دي جاية قريب". |
 | `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Settings of the selected game (shown here: spy). Only while no game is running. Kept per game. |
@@ -28,12 +33,19 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 Game events (`spy:*`, `game:next`) are routed by `RoomsService.gameAction` to the room's active engine. Actions an engine lists in `hostActions` (spy: `next`) are host-only.
 
 ## Server → client
+`lobby:update` (`LobbyRoom[]`): pushed to sockets subscribed through `lobby:list`, at most once per second and only when the list changed.
+```ts
+LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'waiting' | 'playing' }
+```
+
 `room:kicked` (no payload): sent to a player the host removed. The client goes home and shows "المضيف طلّعك من الأوضة".
 
 `room:state` (personalized, after every change):
 ```ts
 {
-  code, name /* lounge name */, hostId, youId,
+  code, name /* lounge name, bad words masked while public */,
+  privacy /* 'private' | 'public' */, locked,
+  hostId, youId,
   players: [{ id, name, avatar, ready, connected,
               score /* this game's points, 0 in the lounge */,
               lounge /* lounge total across games */ }],

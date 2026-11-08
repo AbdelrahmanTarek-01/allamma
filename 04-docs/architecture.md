@@ -13,6 +13,14 @@ A room is a **lounge**: it outlives any single game and can play game after game
 - Per-game points live in the game engine and start fresh every game. When a game reaches its final screen they are added to the lounge scores once. Leaving a game early (back to the lounge before the final screen) adds nothing.
 - After the final screen the host picks `game:again` (same game, same settings, fresh round scores) or `game:backToRoom` (back to the lounge to pick a game).
 
+## Private and public lounges
+- **Private** (default): reachable only by code or link. **Public**: listed in the home screen's "قعدات مفتوحة" and used by quick play. The host can switch anytime and can **lock** the lounge so nobody new joins.
+- **Bans:** a player the host kicks is added to the room's ban list and can't rejoin that lounge (in memory, gone with the room).
+- **Lobby list:** `RoomsService.lobbyList()` builds it on demand: public, unlocked, not full, someone connected. The home screen subscribes with `lobby:list`; the service pushes `lobby:update` when the list changed, throttled to once per second.
+- **Quick play** joins the fullest public waiting room with a seat, otherwise creates a new public room.
+- **Safety:** `common/profanity.ts` masks bad words (Egyptian Arabic + English) with `***` in player names (always), and in room names and chat while the room is public. Chat is limited to 1 message per second per player. This is a first line of defence: extend the lists as needed.
+- **Joining mid-game** is allowed: the newcomer watches and chats, and plays from the next round.
+
 ## Server (`03-code/server`)
 - **RoomsService** (`rooms/`) owns room concerns only: players, host, kick, chat, settings, lounge scores and lifecycle. State is in memory: `rooms: Map<code, Room>` and `playerRoom: Map<playerId, code>`. It delegates every game action to the room's active engine. The client only sends intents.
 - **GameEngine** (`games/game-engine.ts`): the interface a game implements: `start`, `handle(action)`, `onLeave`, `onPresenceChange`, `viewFor(player)`, `scoreOf`, `isOver`, plus `hostActions` (the actions only the host may trigger, enforced by RoomsService). A new engine instance is created per game and gets an `EngineCtx` (the room, `emit`, and the single per-room timer).

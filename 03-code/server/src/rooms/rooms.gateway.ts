@@ -21,6 +21,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   afterInit() {
     this.rooms.setListener((room) => this.broadcast(room));
+    this.rooms.setLobbyListener((list) => this.server.to('lobby').emit('lobby:update', list));
   }
 
   private broadcast(room: Room) {
@@ -71,6 +72,37 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('room:join')
   join(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     return this.run(c, (id) => ({ code: this.rooms.joinRoom(b?.code, id, c.data.name, c.data.avatar, c.id).code }));
+  }
+
+  // The home screen asks for the list once (this also subscribes it to pushes) and unsubscribes when it closes.
+  @SubscribeMessage('lobby:list')
+  lobbyList(@ConnectedSocket() c: Socket): Ack {
+    c.join('lobby');
+    return { ok: true, rooms: this.rooms.lobbyList() };
+  }
+
+  @SubscribeMessage('lobby:leave')
+  lobbyLeave(@ConnectedSocket() c: Socket): Ack {
+    c.leave('lobby');
+    return { ok: true };
+  }
+
+  @SubscribeMessage('lobby:quick')
+  quick(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => {
+      const { room, created } = this.rooms.quickPlay(id, c.data.name, c.data.avatar, c.id);
+      return { code: room.code, created };
+    });
+  }
+
+  @SubscribeMessage('room:privacy')
+  privacy(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.setPrivacy(id, b?.privacy));
+  }
+
+  @SubscribeMessage('room:lock')
+  lock(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.setLocked(id, b?.locked));
   }
 
   @SubscribeMessage('room:leave')

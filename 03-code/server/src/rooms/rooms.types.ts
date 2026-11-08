@@ -21,11 +21,30 @@ export interface ChatMsg {
   at: number;
 }
 
+export type Privacy = 'private' | 'public';
+
+/** One row of the public lobby list. */
+export interface LobbyRoom {
+  code: string;
+  name: string;
+  host: { name: string; avatar: string };
+  game: string;
+  players: number;
+  max: number;
+  status: 'waiting' | 'playing';
+}
+
 /** A lounge (قعدة): a persistent room that can play game after game. */
 export interface Room {
   code: string;
   name: string;
   hostId: string;
+  /** private = code/link only (default). public = listed in the lobby. */
+  privacy: Privacy;
+  /** Locked: nobody new can join (members reconnecting still can). */
+  locked: boolean;
+  /** Players the host kicked: they can't rejoin this lounge. */
+  banned: Set<string>;
   players: Map<string, Player>;
   chat: ChatMsg[];
   selectedGame: string;
