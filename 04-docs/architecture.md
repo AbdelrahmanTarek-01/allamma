@@ -91,3 +91,8 @@ result ──host──▶ back to the lounge
 - Difficulty table `QUIZ_LEVELS`: answer time 30/20/15/10 s, 50:50 cards 2/1/1/0, wrong-answer penalty 0/0/50%/100%, and the question tier of the 200/400/600 cells.
 - Cards (setting `cards`): ×٢ before picking a cell, ٥٠:٥٠ on the answering team's question, سرقة on the other team's question (they answer first). One treasure (×٢) and one bomb (wrong answer loses the value) hide on the board.
 - Teams use `room.settings.quiz.teams` + `normalizeTeams`; `TeamChat` (games/team-chat.ts) keeps one chat per team. Lounge leaderboard: winning team 8, losers 2.
+
+## شبكة الكلمات (words)
+- Engine `server/src/games/words/words.engine.ts`, pack `words.ts` (314 words, tiers 1-4, 7 themes). Phases per board: clue (guide) → guess (team) → boardEnd (bomb / win, host can skip) → next board or final match (best of 1/3/5, setting `boards`).
+- Difficulty table `WORDS_LEVELS`: words per team 6/7/8/9, neutral 7/5/3/0, bombs 1/1/1/2, bomb loses the board (not on easy), guide time open/90/60/45 s, extra try, secret picks on ماكس, word tiers (hard and max draw from the same few themes).
+- Guides rotate every board; the clue is checked against hidden board words (normalised, prefix/suffix). The key is only in the guides' `viewFor`. Lounge points: winners +300, guides +100; room leaderboard 8 / 2.

@@ -138,6 +138,37 @@ export interface QuizGameView {
   final: { star: { id: string; right: number; total: number } | null; moment: { text: string; sub: string } | null } | null;
 }
 
+/** شبكة الكلمات (words). The colour key (`keys`) only reaches the two guides until the board is over. */
+export interface WordsGameView {
+  type: 'words';
+  phase: 'clue' | 'guess' | 'boardEnd' | 'final';
+  endsAt: number | null;
+  participants: string[];
+  teams: Record<string, 0 | 1>;
+  team: 0 | 1 | null;
+  level: string;
+  boards: number;
+  boardNo: number;
+  wins: [number, number];
+  need: number;
+  history: { n: number; how: string; winner: 0 | 1 }[];
+  chat: TeamMsg[];
+  knobs: { extra: boolean; bombLoses: boolean; secretPicks: boolean; guideSecs: number | null; perTeam: number; bombs: number };
+  turn: 0 | 1;
+  guides: [string | null, string | null];
+  role: 'guide' | 'guide-wait' | 'guesser' | 'watcher';
+  cards: { word: string; flipped: boolean; kind: 't0' | 't1' | 'n' | 'b' | null; by: string | null }[];
+  keys: ('t0' | 't1' | 'n' | 'b')[] | null;
+  clue: { word: string; num: number; guideId: string } | null;
+  tries: number;
+  remaining: [number, number];
+  marks: Record<number, string[]>;
+  myMark: number | null;
+  last: { word: string; kind: 'own' | 'neutral' | 'enemy' | 'bomb'; by: string | null; team: 0 | 1 } | null;
+  result: { kind: 'bomb' | 'win'; winner: 0 | 1; loser: 0 | 1 | null; by: string | null; word: string | null; margin: number } | null;
+  final: { winner: 0 | 1 | null; awards: { k: string; id: string | null; why: string }[] } | null;
+}
+
 export interface BoardRow {
   id: string; name: string; avatar: string;
   /** Still in the lounge (rows of players who left stay, greyed). */
@@ -188,7 +219,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | MapGameView | WaveGameView | QuizGameView | null;
+  game: GameView | MapGameView | WaveGameView | QuizGameView | WordsGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }

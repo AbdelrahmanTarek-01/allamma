@@ -717,3 +717,39 @@ button:disabled { cursor: not-allowed; }
 .qz-bar { height: 22px; border: 2.5px solid var(--ink); border-radius: 99px; overflow: hidden; display: flex; background: #f3ecd0; }
 .qz-bar > span { border-inline-end: 2.5px solid var(--ink); }
 .qz-stat { background: var(--white); border: 3px solid var(--ink); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+
+/* شبكة الكلمات (words): canvas artboards WordsGuide / WordsGuess / WordsEnd / WordsMatch */
+.wd-screen { gap: 12px; }
+.wd-top { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.wd-team { background: var(--white); border: 3px solid var(--ink); border-radius: 16px; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center; transition: background .3s; }
+.wd-team.on { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--ink); }
+.wd-team b { font-size: 18px; }
+.wd-clock { display: flex; }
+.wd-banner { display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 12px; font-size: 13.5px; font-weight: 800; }
+.wd-clue { background: var(--white); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); padding: 8px 12px; display: flex; align-items: center; gap: 10px; animation: cardIn .4s cubic-bezier(.2, 1.4, .4, 1); }
+.wd-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; perspective: 700px; }
+.wd-card { position: relative; height: 56px; border: 0; padding: 0; background: transparent; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; }
+.wd-face { position: absolute; inset: 0; backface-visibility: hidden; border: 2.5px solid var(--ink); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; text-align: center; line-height: 1.1; padding: 0 2px; overflow: hidden; }
+.wd-back { transform: rotateY(180deg); opacity: .92; }
+.wd-marks { position: absolute; top: -9px; left: -4px; display: flex; }
+.wd-marks i { margin-left: -6px; display: flex; border-radius: 50%; background: #fff; }
+.wd-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; font-weight: 900; }
+.wd-legend span { display: flex; align-items: center; gap: 4px; }
+.wd-legend i { width: 12px; height: 12px; border-radius: 4px; border: 2px solid var(--ink); }
+.wd-toast { border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 18px; animation: toastIn .35s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes toastIn { 0% { transform: translateY(16px) scale(.9); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.wd-cluebox { background: var(--white); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.wd-input { flex: 1; min-width: 0; height: 52px; box-sizing: border-box; border: 3px solid var(--ink); border-radius: 14px; background: #FFF6D6; padding: 0 12px; font: 700 22px 'Marhey', 'Cairo', sans-serif; color: var(--ink); }
+.wd-step { display: flex; align-items: center; border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; background: var(--white); flex: none; }
+.wd-step button { width: 38px; height: 46px; border: 0; background: var(--white); font: 900 22px 'Cairo', sans-serif; }
+.wd-step b { width: 34px; text-align: center; font-size: 24px; }
+.wd-end { position: relative; align-items: center; gap: 14px; overflow: hidden; transition: background .3s; }
+.wd-flash { position: absolute; inset: 0; background: #fff; pointer-events: none; z-index: 5; }
+.wd-tag { font-size: 12.5px; font-weight: 900; background: #fff; color: #111; border: 2px solid #111; border-radius: 99px; padding: 0 10px; }
+.wd-stage { position: relative; z-index: 1; width: 260px; height: 230px; flex: none; display: flex; align-items: center; justify-content: center; margin-top: 4px; }
+.wd-boom { position: absolute; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 64px; -webkit-text-stroke: 3px #111; paint-order: stroke fill; text-shadow: 4px 4px 0 #111; white-space: nowrap; }
+.wd-win-card { height: 50px; border: 2.5px solid var(--ink); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 14px; color: #111; box-shadow: 3px 3px 0 var(--ink); }
+.wd-sub { font-size: 15px; font-weight: 900; text-align: center; background: var(--ink); color: #fff; border-radius: 99px; padding: 2px 14px; }
+.wd-verdict { flex: 1; border: 3px solid var(--ink); border-radius: 18px; padding: 8px 10px; display: flex; flex-direction: column; line-height: 1.15; color: #fff; }
+.wd-verdict b { font-size: 12px; }
+.wd-left { align-self: stretch; background: var(--white); color: #111; border: 3px solid var(--ink); border-radius: 20px; box-shadow: 5px 5px 0 var(--ink); padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }

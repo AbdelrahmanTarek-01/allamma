@@ -97,7 +97,7 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 36a19 19 0 0138 0z" fill="#fff" {...S} /><path d="M24 36L14.5 19.5A19 19 0 0133.5 19.5z" fill="#FFD23F" {...S} /><path d="M24 36L19.2 27.8A9.5 9.5 0 0128.8 27.8z" fill="#FF4F9A" {...S} /><path d="M24 36l8-13" stroke="#111" strokeWidth={3.5} strokeLinecap="round" /><circle cx="24" cy="36" r="3.5" fill="#111" /><path d="M3 36h42" stroke="#111" strokeWidth={3} strokeLinecap="round" /></svg>)
   },
   {
-    id: 'words', name: 'شبكة الكلمات', tagline: 'تلميح واحد، كلمات كتير', color: '#3DDC97', ready: false,
+    id: 'words', name: 'شبكة الكلمات', tagline: 'تلميح واحد، كلمات كتير', color: '#3DDC97', ready: true,
     icon: (<svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="17" height="17" rx="4" fill="#fff" {...S} /><rect x="26" y="5" width="17" height="17" rx="4" fill="#FF4F9A" {...S} /><rect x="5" y="26" width="17" height="17" rx="4" fill="#4D9DFF" {...S} /><rect x="26" y="26" width="17" height="17" rx="4" fill="#fff" {...S} /><path d="M10 12h7M10 16h5M31 33h7M31 37h5" {...S} /></svg>)
   },
   {
