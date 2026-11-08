@@ -149,13 +149,11 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
    * (label on the right, the helper of the selected option on the left, equal-width buttons below). Rendered from the schema, so every game gets it.
    */
   const gameFields = () => {
-    const hasDice = schema.some((f) => f.options.some((o) => o.dice));
     return (
       <div className="sg-card">
         <div className="sg-head">
           <span className="icontile" style={{ background: game.color, width: 42, height: 42, borderRadius: 13, flex: 'none' }}><span style={{ display: 'flex', transform: 'scale(.78)' }}>{game.icon}</span></span>
           <span className="display" style={{ fontSize: 22 }}>{game.name}</span>
-          {hasDice && <span className="sg-legend"><DiceGlyph size={20} />= عشوائي</span>}
         </div>
 
         {/* shared difficulty first, in the level colours */}
@@ -201,7 +199,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
           return (
             <section key={f.key} className="sg-row">
               <div className="sg-line"><span className="sg-label">{f.label}</span><span className="sg-help">{chosen?.help ?? hintFor(f)}</span></div>
-              <div className={`seg sg-btns${f.icon ? ' tall' : ''}`} role="group" aria-label={f.label}>
+              <div className={`seg sg-btns${f.icon ? ' tall' : ''}${f.options.length > 4 ? ' sg-grid' : ''}`} role="group" aria-label={f.label}>
                 {f.options.map((o) => {
                   const selected = room.settings[f.key] === o.value;
                   // not enough players yet: faded with a lock. The selected option never shows a requirement.
@@ -216,7 +214,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
                       aria-label={locked ? `${o.full ?? o.label}، محتاج ${AR(o.minPlayers!)} لاعيبة على الأقل` : (o.full ?? o.label)}
                       onClick={() => locked ? tapLocked(key, o.minPlayers!) : send('room:settings', { [f.key]: o.value })}
                     >
-                      {o.dice ? <DiceGlyph size={20} /> : f.icon === 'spy' ? (
+                      {o.dice ? <><DiceGlyph size={20} /><span>{o.label}</span></> : f.icon === 'spy' ? (
                         <>
                           <span className="num-big">{AR(o.value)}</span>
                           <span className="hats" aria-hidden="true">{Array.from({ length: Number(o.value) }, (_, i) => <span key={i} className="hat"><SpyIcon size={14} /></span>)}</span>
