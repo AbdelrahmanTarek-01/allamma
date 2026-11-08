@@ -246,6 +246,28 @@ export function Room({ room }: { room: RoomView }) {
                 <span className="muted setting-hint">بتغيّر الوقت وعدد الاختيارات والأماكن</span>
               </div>
             )}
+            {/* الموجة in teams mode: shuffle the teams or tap a player to move them to the other team */}
+            {room.selectedGame === 'wave' && room.settings.mode === 'teams' && room.teams && (
+              <div className="col" style={{ gap: 6 }}>
+                <div className="row between">
+                  <span className="label" style={{ fontSize: 12.5 }}>الفريقين</span>
+                  <button className="btn sm" onClick={() => { sfx.select(); send('room:teams', { op: 'shuffle' }); }}>اخلط</button>
+                </div>
+                <div className="grid2">
+                  {[0, 1].map((t) => (
+                    <div key={t} className="team-col" style={{ ['--tc' as any]: t === 0 ? '#4D9DFF' : '#FF8A3D' }}>
+                      <span className="display" style={{ fontSize: 15 }}>{t === 0 ? 'الأزرق' : 'البرتقالي'}</span>
+                      {room.players.filter((p) => room.teams![p.id] === t).map((p) => (
+                        <button key={p.id} className="team-player" aria-label={`انقل ${p.name} للفريق التاني`} onClick={() => { sfx.card(); send('room:teams', { op: 'move', playerId: p.id }); }}>
+                          <Character id={p.avatar} size={26} /><span>{p.id === room.youId ? 'إنت' : p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <span className="muted setting-hint">دوس على لاعب علشان ينتقل للفريق التاني · محتاجين ٤ لاعيبة على الأقل</span>
+              </div>
+            )}
             {/* every group: title, buttons with ONE word or number each, one small helper line */}
             {schema.map((f) => (
               <div key={f.key} className="col" style={{ gap: 4 }}>

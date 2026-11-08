@@ -20,7 +20,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   constructor(private readonly rooms: RoomsService) {}
 
   afterInit() {
-    this.rooms.setListener((room) => this.broadcast(room));
+    this.rooms.setListener((room, only) => this.broadcast(room, only));
     this.rooms.setLobbyListener((list) => this.server.to('lobby').emit('lobby:update', list));
     // chat is not part of room:state: each new message is pushed on its own
     this.rooms.setChatListener((room, msg) => {
@@ -33,9 +33,9 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     client.emit('chat:history', room.chat);
   }
 
-  private broadcast(room: Room) {
+  private broadcast(room: Room, only?: string[]) {
     room.players.forEach((p) => {
-      if (p.socketIds.size === 0) return;
+      if (p.socketIds.size === 0 || (only && !only.includes(p.id))) return;
       const view = this.rooms.viewFor(room, p.id);
       p.socketIds.forEach((sid) => this.server.to(sid).emit('room:state', view));
     });
@@ -227,6 +227,47 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('map:hint')
   mapHint(@ConnectedSocket() c: Socket): Ack {
     return this.run(c, (id) => this.rooms.gameAction(id, 'map', 'hint'));
+  }
+
+  // الموجة (wave): the target, solo needles and the team needle stay on the server until they may be shown.
+  @SubscribeMessage('wave:redraw')
+  waveRedraw(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'redraw'));
+  }
+
+  @SubscribeMessage('wave:clue')
+  waveClue(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'clue', { text: b?.text, voice: !!b?.voice }));
+  }
+
+  @SubscribeMessage('wave:needle')
+  waveNeedle(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'needle', { angle: b?.angle }));
+  }
+
+  @SubscribeMessage('wave:lock')
+  waveLock(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'lock', { angle: b?.angle }));
+  }
+
+  @SubscribeMessage('wave:unlock')
+  waveUnlock(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'unlock'));
+  }
+
+  @SubscribeMessage('wave:call')
+  waveCall(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'call', { side: b?.side }));
+  }
+
+  @SubscribeMessage('wave:teamChat')
+  waveTeamChat(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'wave', 'teamChat', { text: b?.text }));
+  }
+
+  @SubscribeMessage('room:teams')
+  teams(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.teamsAction(id, b?.op, b?.playerId));
   }
 
   @SubscribeMessage('game:next')

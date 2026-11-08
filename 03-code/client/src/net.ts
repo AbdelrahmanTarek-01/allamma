@@ -64,6 +64,40 @@ export interface MapGameView {
   roundPoints: Record<string, number>;
 }
 
+/** الموجة (wave). The target only reaches the narrator until the reveal; in solo only your own needle is here; in teams only your team's. */
+export interface WaveReveal {
+  needles: { id: string; angle: number | null; points: number }[];
+  narratorAvg: number | null;
+  zone: number | null;
+  call: { correct: boolean | null; side: 'left' | 'right'; calls: Record<string, 'left' | 'right'> } | null;
+  teamPoints: [number, number] | null;
+}
+export interface WaveGameView {
+  type: 'wave';
+  mode: 'solo' | 'teams';
+  phase: 'clue' | 'guess' | 'call' | 'reveal' | 'final';
+  endsAt: number | null;
+  turn: number;
+  totalTurns: number;
+  participants: string[];
+  teams: Record<string, 0 | 1> | null;
+  teamScores: [number, number] | null;
+  narratorId: string | null;
+  narratorTeam: 0 | 1 | null;
+  card: { left: string; right: string } | null;
+  multiplier: number;
+  difficulty: 'easy' | 'medium' | 'hard' | null;
+  canRedraw: boolean;
+  clue: { text: string | null; voice: boolean } | null;
+  target: number | null;
+  /** Who locked (ids only; never where). In teams: who agreed to lock. In the call phase: who already called. */
+  lockedIds: string[];
+  you: { role: 'narrator' | 'guesser' | 'caller' | 'watcher'; team: 0 | 1 | null; needle: number | null; locked: boolean; call: 'left' | 'right' | null } | null;
+  team: { index: 0 | 1; needle: number | null; fingers: { id: string; angle: number }[]; chat: { id: string; from: string; text: string; at: number }[]; need: number } | null;
+  reveal: WaveReveal | null;
+  roundPoints: Record<string, number>;
+}
+
 /** A game's settings schema: the lounge renders its settings sheet generically from this. */
 /** Rule for all settings: one word or number per button (`label`), any explanation in the group's one helper line (`hint`). */
 export interface SettingOption { value: number | string; label: string; full?: string; hintName?: string; minPlayers?: number }
@@ -90,6 +124,8 @@ export interface RoomView {
   /** Shared lounge difficulty (host-only). Only games with a level table show it (`hasLevels`). */
   difficulty: Level;
   hasLevels: boolean;
+  /** الموجة: the team (0 or 1) of every player, for the host's teams editor. */
+  teams: Record<string, 0 | 1> | null;
   hostId: string;
   youId: string;
   players: PlayerView[];
@@ -97,7 +133,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | MapGameView | null;
+  game: GameView | MapGameView | WaveGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }

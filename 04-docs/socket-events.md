@@ -33,6 +33,13 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `map:lock` | – | player, guess phase | Locks the pin (needs one). Only the ids of who locked are broadcast. When every connected player locked, the reveal starts at once. |
 | `map:unlock` | – | player, guess phase | "Change my mind": unlocks the pin. |
 | `map:hint` | – | player, guess phase | Once per place. The server picks the hint type (text / circle / half) by the rules in `01-brainstorm/map-game.md` and sends it to this player only. Costs 25% of this place's points. |
+| `room:teams` | `{ op: 'shuffle' }` or `{ op: 'move', playerId }` | host, lounge, الموجة | Edits the two teams (stored with the game's settings; the room view carries `teams` for everyone). |
+| `wave:redraw` | – | narrator, clue phase | "كارت تاني": a new card and a new target, once per turn. |
+| `wave:clue` | `{ text, voice }` | narrator, clue phase | The typed clue (shown to everyone) or `voice: true` ("قلته بصوتي"). Starts the guess phase. |
+| `wave:needle` | `{ angle }` (0-180) | guesser | Solo: stored privately, nothing is broadcast. Teams: the shared needle, sent to the narrator's team only, at most ~10 times a second; moving it clears the team's lock votes. |
+| `wave:lock` / `wave:unlock` | `{ angle? }` | guesser | Solo: locks your needle (all locked -> reveal). Teams: your vote to lock; a majority of the connected guessers locks it. |
+| `wave:call` | `{ side: 'left' \| 'right' }` | other team, call phase | Teams only: the target is left/right of the needle. Majority of the team; a tie counts as no call. |
+| `wave:teamChat` | `{ text }` | team member (not the narrator) | Team-only chat, 1 message per second, last 30 per turn, shown in that team's view only. |
 | `game:next` | – | host, result phase | Next round/place, or `final` after the last one. (فين دي؟ also moves on by itself 25s after the results.) |
 | `game:backToRoom` | – | host | Ends the game and returns to the lounge to pick a game. Lounge scores stay (a game left before its final screen adds nothing). |
 

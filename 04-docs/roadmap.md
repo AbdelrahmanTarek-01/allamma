@@ -15,6 +15,7 @@
 - **Chat:** floating chat with quick replies and bubbles everywhere, history once on join then one message at a time, system dividers, last 50 messages in memory.
 - **Spy rules:** 1-3 spies by player count, difficulty per place (easy / medium / hard / mix) with point multipliers, settings behind the host's gear (generic schema per game).
 - **New game: فين دي؟ (map pin game):** pin the place on our own stylized maps (Egypt / Arab world / world, generated from Natural Earth), personal hints (text / circle / half map, -25%), animated reveal and results. 219 starter places in `games/map/places/`.
+- **New game: الموجة:** solo and teams modes (shared live needle, team-only chat, majority lock, the other team's left/right call), narrator dial with the 4/3/2 zones, dark reveal with the rotating cover. 44 starter card pairs tagged easy/medium/hard (x1 / x1.5 / x2). It has no row in the shared difficulty table yet.
 - **Shared difficulty (Spy first):** one host-only level per lounge (سهل / متوسط / صعب / ماكس) with one table per game (`SPY_LEVELS`): question time, guess options, place tiers 1-4, second spy on max. Next: add the map row (and the other games' rows) from `01-brainstorm/difficulty.md`.
 - **How to play:** "?" help sheet per game, opened once automatically the first time a game starts.
 - Host controls (kick, make host), phone layout pass (players strip, docked start button, game tiles), onboarding edit mode with a back button and back gesture, same role card for every role.

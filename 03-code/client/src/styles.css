@@ -537,3 +537,47 @@ button:disabled { cursor: not-allowed; }
 .rank-row.leader { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); z-index: 2; }
 .rank-n { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; }
 .replay { gap: 6px; }
+
+/* ---------- الموجة (wave) ---------- */
+.wave-screen { gap: 10px; }
+.screen.dark.wave-screen { gap: 10px; }
+.dial-wrap { display: flex; flex-direction: column; gap: 6px; }
+.dial { display: block; width: 100%; height: auto; overflow: visible; touch-action: none; user-select: none; -webkit-user-select: none; }
+.dial.live { cursor: grab; }
+.dial-face { fill: var(--white); stroke: var(--ink); stroke-width: 3.5px; stroke-linejoin: round; }
+.dial-zone { transform-box: view-box; animation: popin .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.dial-zone-n { font-family: var(--font-display); font-weight: 800; font-size: 11px; fill: var(--ink); pointer-events: none; }
+.dial-tick { stroke: var(--ink); stroke-opacity: .35; stroke-width: 1.5px; stroke-linecap: round; }
+.dial-rim { fill: none; stroke: var(--ink); stroke-width: 3.5px; stroke-linecap: round; }
+.dial-base { stroke: var(--ink); stroke-width: 3.5px; stroke-linecap: round; }
+.dial-needle { animation: needle-in .45s cubic-bezier(.3, 1.5, .5, 1) backwards; transform-box: view-box; transform-origin: 160px 168px; }
+@keyframes needle-in { from { transform: rotate(-70deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.dial-dot { pointer-events: none; }
+/* the cover hides the target, then rotates away around the dial's center */
+.dial-cover { transform-box: view-box; transform-origin: 160px 168px; transition: transform 1s cubic-bezier(.6, -.2, .3, 1), opacity .4s .6s; pointer-events: none; }
+.dial-cover.open { transform: rotate(-180deg); opacity: 0; }
+.dial-cover-q { font-family: var(--font-display); font-weight: 800; font-size: 64px; fill: var(--ink); opacity: .85; }
+.dial-poles { display: flex; justify-content: space-between; gap: 10px; }
+.pole { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 800; font-size: 16px; line-height: 1.25; padding: 4px 10px; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); color: var(--ink); text-align: center; }
+.screen.dark .pole { box-shadow: 3px 3px 0 #000; }
+.clue-card .place-name { font-size: 28px; }
+
+/* teams */
+.team-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.team-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; font-weight: 900; font-size: 14px; border-inline-start-width: 10px; border-inline-start-color: var(--tc); transition: transform .2s, box-shadow .2s; }
+.team-chip.on { background: var(--yellow-soft); box-shadow: 3px 3px 0 var(--ink); transform: translateY(-1px); }
+.team-chip b { font-size: 22px; }
+.team-chat { padding: 8px 10px; gap: 6px; display: flex; flex-direction: column; border-color: var(--tc, var(--ink)); }
+.tc-list { max-height: 112px; min-height: 52px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.tc-msg { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.tc-msg.mine { background: var(--yellow-soft); border-radius: 12px; padding-inline: 6px; }
+.locked-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.locked-row .lk { position: relative; display: inline-flex; opacity: .5; transition: opacity .2s, transform .2s; }
+.locked-row .lk.on { opacity: 1; transform: scale(1.08); }
+.locked-row .lk i { position: absolute; bottom: -4px; inset-inline-end: -4px; width: 17px; height: 17px; border-radius: 50%; background: var(--green); border: 2px solid var(--ink); font-style: normal; font-weight: 900; font-size: 11px; line-height: 13px; text-align: center; }
+
+/* the host's teams editor */
+.team-col { display: flex; flex-direction: column; gap: 4px; padding: 6px; background: var(--white); border: 3px solid var(--ink); border-inline-start-width: 8px; border-inline-start-color: var(--tc); border-radius: 14px; min-height: 64px; }
+.team-player { display: flex; align-items: center; gap: 6px; padding: 2px 6px; background: var(--yellow-soft); border: 2.5px solid var(--ink); border-radius: 12px; font-weight: 800; font-size: 13.5px; text-align: start; transition: transform .1s; }
+.team-player:active { transform: scale(.96); }
+.team-player span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

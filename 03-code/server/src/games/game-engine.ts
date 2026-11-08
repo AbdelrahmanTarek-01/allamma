@@ -6,6 +6,8 @@ export interface EngineCtx {
   room: Room;
   /** Broadcast a fresh personalized snapshot to everyone in the room. */
   emit(): void;
+  /** Same, but only these players get a snapshot (e.g. a team's live needle: the other team must not receive it). */
+  emitTo(playerIds: string[]): void;
   /** Run `fn` after `seconds`. Replaces any pending timer of the room. */
   schedule(seconds: number, fn: () => void): void;
   clearTimer(): void;
@@ -80,5 +82,7 @@ export interface GameDef<S = any> {
   defaultSettings(): S;
   /** The game's difficulty table, one row per level. A game without one ignores the room's difficulty (no control is shown). */
   levels?: Record<Level, object>;
+  /** Throws a GameError (Arabic) when this game can't start with these settings and this many connected players. */
+  validateStart?(settings: S, players: number): void;
   create(settings: S, level: Level): GameEngine;
 }

@@ -4,6 +4,7 @@ import type { EngineCtx } from '../games/game-engine';
 import { DEFAULT_LEVEL, isLevel } from '../games/difficulty';
 import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
 import { applySettings } from '../games/settings';
+import { normalizeTeams } from '../games/wave/wave.engine';
 import { maskBad } from '../common/profanity';
 import { AVATARS, ChatMsg, GameError, LobbyRoom, Player, Privacy, Room } from './rooms.types';
 
@@ -16,6 +17,7 @@ const EMPTY_ROOM_TTL_MS = 15 * 60 * 1000;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const shuffled = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
 
 /**
  * Room concerns only: players, host, chat, settings, lounge scores and lifecycle.
@@ -25,7 +27,7 @@ const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 export class RoomsService implements OnModuleDestroy {
   private rooms = new Map<string, Room>();
   private playerRoom = new Map<string, string>();
-  private onChange: (room: Room) => void = () => {};
+  private onChange: (room: Room, only?: string[]) => void = () => {};
   private onChat: (room: Room, msg: ChatMsg) => void = () => {};
   private sweeper = setInterval(() => this.sweep(), 60 * 1000);
   private lastChatAt = new Map<string, number>();
@@ -40,7 +42,7 @@ export class RoomsService implements OnModuleDestroy {
     this.rooms.forEach((r) => r.timer && clearTimeout(r.timer));
   }
 
-  setListener(fn: (room: Room) => void) {
+  setListener(fn: (room: Room, only?: string[]) => void) {
     this.onChange = fn;
   }
 
@@ -302,6 +304,24 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
+  /** الموجة, teams mode: the host shuffles the teams or moves one player to the other team (stored with the game's settings). */
+  teamsAction(playerId: string, op: unknown, targetId: unknown) {
+    const room = this.mustHost(playerId);
+    if (room.engine) throw new GameError('مينفعش تغيّر الفرق واللعبة شغالة');
+    if (room.selectedGame !== 'wave') throw new GameError('مش وقته دلوقتي');
+    const s = (room.settings.wave ??= GAME_DEFS.wave.defaultSettings());
+    const members = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id);
+    const cur = normalizeTeams(members, s.teams ?? {});
+    if (op === 'shuffle') {
+      s.teams = Object.fromEntries(shuffled(members).map((id, i) => [id, i % 2]));
+    } else if (op === 'move') {
+      const id = String(targetId ?? '');
+      if (!room.players.has(id)) throw new GameError('اللاعب ده مش في الأوضة');
+      s.teams = { ...cur, [id]: cur[id] === 0 ? 1 : 0 };
+    } else throw new GameError('اختيار مش صح');
+    this.emit(room);
+  }
+
   /** Settings of the selected game. */
   updateSettings(playerId: string, patch: unknown) {
     const room = this.mustHost(playerId);
@@ -351,6 +371,7 @@ export class RoomsService implements OnModuleDestroy {
     const def = GAME_DEFS[room.selectedGame];
     const online = [...room.players.values()].filter((p) => p.connected);
     if (online.length < def.minPlayers) throw new GameError(`محتاجين ${def.minPlayers} لاعيبة على الأقل`);
+    def.validateStart?.(room.settings[def.id], online.length);
     this.clearTimer(room);
     room.engine = def.create(room.settings[def.id], room.difficulty);
     room.settled = false;
@@ -388,6 +409,10 @@ export class RoomsService implements OnModuleDestroy {
       selectedGame: room.selectedGame,
       minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
       difficulty: room.difficulty,
+      // الموجة: the team of every player (saved choices + automatic balance), for the host's teams editor
+      teams: room.selectedGame === 'wave'
+        ? normalizeTeams([...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id), room.settings.wave?.teams ?? {})
+        : null,
       hasLevels: !!GAME_DEFS[room.selectedGame].levels, // only games with a level table show the difficulty control
       settings: room.settings[room.selectedGame],
       // the selected game's settings schema: the lounge renders its settings sheet from this (not needed during a game)
@@ -403,6 +428,7 @@ export class RoomsService implements OnModuleDestroy {
     return {
       room,
       emit: () => this.emit(room),
+      emitTo: (ids) => { if (this.rooms.has(room.code)) this.onChange(room, ids); },
       schedule: (seconds, fn) => this.schedule(room, seconds, fn),
       clearTimer: () => this.clearTimer(room),
       system: (text) => this.systemMessage(room, text)
