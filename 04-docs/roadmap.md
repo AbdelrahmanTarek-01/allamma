@@ -14,6 +14,7 @@
 - **Public and private lounges:** lobby list on Home, quick play, lock joining, bans after a kick, bad-words filter and chat rate limit.
 - **Chat:** floating chat with quick replies and bubbles everywhere, history once on join then one message at a time, system dividers, last 50 messages in memory.
 - **Spy rules:** 1-3 spies by player count, difficulty per place (easy / medium / hard / mix) with point multipliers, settings behind the host's gear (generic schema per game).
+- **New game: فين دي؟ (map pin game):** pin the place on our own stylized maps (Egypt / Arab world / world, generated from Natural Earth), personal hints (text / circle / half map, -25%), animated reveal and results. 219 starter places in `games/map/places/`.
 - **How to play:** "?" help sheet per game, opened once automatically the first time a game starts.
 - Host controls (kick, make host), phone layout pass (players strip, docked start button, game tiles), onboarding edit mode with a back button and back gesture, same role card for every role.
 

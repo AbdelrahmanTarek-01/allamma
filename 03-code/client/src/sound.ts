@@ -166,6 +166,10 @@ export const sfx = {
   boo: play(() => { [392, 330, 262].forEach((f, i) => tone(f, 0.3, 'sawtooth', 0.06, 0.15 + i * 0.18)); }),
   win: play(() => { [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, 'triangle', 0.12, i * 0.1)); buzz([40, 60, 40, 60, 120]); }),
   lose: play(() => { tone(330, 0.25, 'triangle', 0.08); tone(262, 0.4, 'triangle', 0.08, 0.2); }),
+  // فين دي؟: a pin landing on the map, a line being drawn to the target, a crown landing on the winner
+  pinDrop: play(() => { tone(520, 0.1, 'sine', 0.1, 0, 180); noise(0.05, 0.05, 0.07, 700, 'lowpass'); buzz(20); }),
+  lineDraw: play(() => { noise(0.9, 0.035, 0, 1200, 'bandpass'); tone(300, 0.9, 'sine', 0.035, 0, 900); }),
+  crown: play(() => { tone(880, 0.1, 'triangle', 0.1); tone(1320, 0.14, 'triangle', 0.1, 0.08); tone(1760, 0.2, 'triangle', 0.09, 0.17); buzz([30, 30, 60]); }),
   fanfare: play(() => { [392, 523, 659, 784, 659, 784, 1047, 1047].forEach((f, i) => tone(f, i === 7 ? 0.6 : 0.18, 'triangle', 0.13, i * 0.12)); buzz([60, 80, 60, 80, 200]); })
 };
 

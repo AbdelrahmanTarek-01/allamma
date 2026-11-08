@@ -6,19 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen:maps": "node scripts/gen-maps.mjs"
   },
   "dependencies": {
     "allamma": "file:..",
+    "d3-geo": "^3.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^4.7.0",
+    "topojson-client": "^3.1.0",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "world-atlas": "^2.0.2"
   }
 }

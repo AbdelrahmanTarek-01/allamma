@@ -28,10 +28,14 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `spy:startVote` | – | host, discussion | Starts the vote now, even if not everyone is ready. When the discussion timer ends the vote still starts automatically. (Replaces the old `spy:callVote`.) |
 | `spy:vote` | `{ targetId }` | round player | Can change the vote until the tally. |
 | `spy:guess` | `{ place }` | spy, guess phase | Must be one of the guess options. |
-| `game:next` | – | host, result phase | Next round, or `final` after the last round. |
+| `map:pin` | `{ lat, lon }` | player, guess phase | فين دي؟: drops/moves your pin. Stored privately on the server (no broadcast), so a time-out can lock it. Rejected while locked. |
+| `map:lock` | – | player, guess phase | Locks the pin (needs one). Only the ids of who locked are broadcast. When every connected player locked, the reveal starts at once. |
+| `map:unlock` | – | player, guess phase | "Change my mind": unlocks the pin. |
+| `map:hint` | – | player, guess phase | Once per place. The server picks the hint type (text / circle / half) by the rules in `01-brainstorm/map-game.md` and sends it to this player only. Costs 25% of this place's points. |
+| `game:next` | – | host, result phase | Next round/place, or `final` after the last one. (فين دي؟ also moves on by itself 25s after the results.) |
 | `game:backToRoom` | – | host | Ends the game and returns to the lounge to pick a game. Lounge scores stay (a game left before its final screen adds nothing). |
 
-Game events (`spy:*`, `game:next`) are routed by `RoomsService.gameAction` to the room's active engine. Actions an engine lists in `hostActions` (spy: `next`) are host-only.
+Game events (`spy:*`, `game:next`) are routed by `RoomsService.gameAction` to the room's active engine. Actions an engine lists in `hostActions` (spy: `next`, `startVote`; map: `next`) are host-only. The room view also carries `minPlayers` of the selected game (spy 3, map 2).
 
 ## Server → client
 **Chat is not part of `room:state`.** The server sends the history once when a socket enters a room (after `hello` finds the player already in a room, and after `room:create`, `room:join`, `lobby:quick`), then pushes each new message on its own. The client keeps its own list, capped at 50.

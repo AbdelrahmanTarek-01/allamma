@@ -41,6 +41,28 @@ export interface GameView {
   outcome: 'detectives' | 'spy-escaped' | 'spy-guessed' | null;
   roundPoints: Record<string, number>;
 }
+/** فين دي؟ (map pin game). The server only sends what each player may see: the target and the other pins arrive with the reveal. */
+export type MapHint =
+  | { kind: 'text'; text: string }
+  | { kind: 'circle'; lat: number; lon: number; radiusKm: number }
+  | { kind: 'half'; axis: 'lat' | 'lon'; at: number; shade: 'north' | 'south' | 'east' | 'west' };
+export interface MapEntry { id: string; lat: number | null; lon: number | null; km: number | null; points: number; hinted: boolean; fast: boolean; auto: boolean }
+export interface MapGameView {
+  type: 'map';
+  round: number;
+  totalRounds: number;
+  phase: 'guess' | 'reveal' | 'result' | 'final';
+  endsAt: number | null;
+  scope: 'egypt' | 'arab' | 'world';
+  participants: string[];
+  /** Who locked (ids only; never where). */
+  lockedIds: string[];
+  place: { name: string; theme: 'cities' | 'landmarks' | 'stadiums' | 'dishes'; difficulty: 'easy' | 'medium' | 'hard'; multiplier: number; hardText: boolean } | null;
+  you: { pin: { lat: number; lon: number } | null; locked: boolean; hint: MapHint | null; canHint: boolean } | null;
+  reveal: { target: { lat: number; lon: number }; fact: string; entries: MapEntry[] } | null;
+  roundPoints: Record<string, number>;
+}
+
 /** A game's settings schema: the lounge renders its settings sheet generically from this. */
 /** Rule for all settings: one word or number per button (`label`), any explanation in the group's one helper line (`hint`). */
 export interface SettingOption { value: number | string; label: string; full?: string; hintName?: string; minPlayers?: number }
@@ -62,6 +84,8 @@ export interface RoomView {
   privacy: 'private' | 'public';
   locked: boolean;
   selectedGame: string;
+  /** Players the selected game needs to start. */
+  minPlayers: number;
   hostId: string;
   youId: string;
   players: PlayerView[];
@@ -69,7 +93,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | null;
+  game: GameView | MapGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }

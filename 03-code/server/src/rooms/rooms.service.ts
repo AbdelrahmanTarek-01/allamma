@@ -375,6 +375,7 @@ export class RoomsService implements OnModuleDestroy {
       youId: playerId,
       players,
       selectedGame: room.selectedGame,
+      minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
       settings: room.settings[room.selectedGame],
       // the selected game's settings schema: the lounge renders its settings sheet from this (not needed during a game)
       settingsSchema: e ? null : GAME_DEFS[room.selectedGame].settings,

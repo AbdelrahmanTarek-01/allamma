@@ -5,6 +5,7 @@ import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
+import { loadMapDef } from '../games/map/maps';
 
 const LockMini = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#111" /><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="#111" strokeWidth={3} /></svg>
@@ -45,6 +46,14 @@ export function Room({ room }: { room: RoomView }) {
     if (n !== room.name) await send('room:rename', { name: n });
   };
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
+
+  // the map game is a separate download: warm it up (code + the chosen map) while the lounge is open
+  const mapScope = room.settings.scope;
+  useEffect(() => {
+    if (room.selectedGame !== 'map') return;
+    import('./MapGame').catch(() => {});
+    loadMapDef(mapScope).catch(() => {});
+  }, [room.selectedGame, mapScope]);
 
   // sound for people joining and leaving (chat sounds and bubbles come from the floating chat)
   const seen = useRef(room.players.length);
@@ -183,8 +192,8 @@ export function Room({ room }: { room: RoomView }) {
       <div className="dock push">
         {isHost ? (
           <>
-            <span className="label center" style={{ textAlign: 'center' }}>محتاجين ٣ على الأقل · معاكم {AR(online)}</span>
-            <button className="btn big full" disabled={online < 3} onClick={() => send('game:start')}>ابدأ اللعبة</button>
+            <span className="label center" style={{ textAlign: 'center' }}>محتاجين {AR(room.minPlayers)} على الأقل · معاكم {AR(online)}</span>
+            <button className="btn big full" disabled={online < room.minPlayers} onClick={() => send('game:start')}>ابدأ اللعبة</button>
           </>
         ) : (
           <>

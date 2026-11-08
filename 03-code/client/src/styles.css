@@ -450,3 +450,90 @@ button:disabled { cursor: not-allowed; }
   opacity: 1; background: var(--yellow-soft); color: rgba(17,17,17,.5);
   border-style: dashed; box-shadow: 0 6px 0 rgba(17,17,17,.12);
 }
+
+/* ---------- فين دي؟ (map pin game) ---------- */
+.map-screen { gap: 10px; }
+.place-card { padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.place-name { font-size: 30px; line-height: 1.15; overflow-wrap: anywhere; }
+.place-card.compact .place-name { font-size: 24px; }
+.fact { margin: 4px 0 0; display: flex; gap: 8px; align-items: flex-start; font-weight: 700; font-size: 14px; }
+.points-line { margin: 0; font-weight: 800; font-size: 14.5px; }
+.hint-card { display: flex; gap: 8px; align-items: center; background: var(--white); border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; font-weight: 800; font-size: 14px; box-shadow: 3px 3px 0 var(--ink); }
+
+/* the time left for this place: a bar that empties */
+.timebar { height: 9px; border: 2.5px solid var(--ink); border-radius: 99px; background: var(--white); overflow: hidden; flex: none; }
+.timebar i { display: block; height: 100%; background: var(--pink); animation: timebar linear forwards; }
+@keyframes timebar { from { width: 100%; } to { width: 0; } }
+
+/* the map box: pan/zoom happens inside, so the browser must not scroll or zoom the page on it */
+.mapbox { position: relative; flex: 1 1 300px; min-height: 280px; border: 3px solid var(--ink); border-radius: 22px; box-shadow: 6px 6px 0 var(--ink); overflow: hidden; background: #CFE5FF; }
+.map-stage { position: absolute; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.map-svg { display: block; }
+.mp-sea { fill: #CFE5FF; }
+.mp-grid { fill: none; stroke: #4D9DFF; stroke-opacity: .16; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mp-nbr { fill: var(--yellow-soft); stroke: #C9A93A; stroke-width: 1.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mp-hl { fill: var(--white); stroke: var(--ink); stroke-width: 2.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mp-river { fill: none; stroke: var(--blue); stroke-width: 3px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mp-river.thin { stroke-width: 2px; }
+.map-label { font-family: var(--font-body); font-weight: 700; font-size: 11.5px; fill: #2F6FB8; opacity: .85; paint-order: stroke; stroke: #CFE5FF; stroke-width: 3px; pointer-events: none; }
+.map-tag { font-family: var(--font-display); font-weight: 800; font-size: 12.5px; fill: var(--ink); }
+.map-controls { position: absolute; inset-inline-start: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.map-btn { width: 40px; height: 40px; padding: 0; border: 3px solid var(--ink); border-radius: 12px; background: var(--white); box-shadow: 2px 2px 0 var(--ink); font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: transform .1s, box-shadow .1s; }
+.map-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* pins keep one size at any zoom; they drop onto the map */
+.pin-drop { transform-box: fill-box; transform-origin: 50% 100%; animation: pin-drop .55s cubic-bezier(.3, .8, .4, 1) backwards; }
+@keyframes pin-drop {
+  0% { transform: translateY(-70px) scale(1, 1); opacity: 0; }
+  55% { transform: translateY(0) scale(1.15, .85); opacity: 1; }
+  75% { transform: translateY(-9px) scale(.96, 1.05); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.crown-drop { transform-box: fill-box; transform-origin: 50% 100%; animation: crown-drop .6s cubic-bezier(.3, .9, .4, 1.2) .15s backwards; }
+@keyframes crown-drop { from { transform: translateY(-46px) rotate(-25deg); opacity: 0; } 60% { transform: translateY(4px) rotate(6deg); opacity: 1; } to { transform: none; } }
+.target-ring { transform-box: fill-box; transform-origin: center; animation: target-ring 1.6s ease-out infinite; }
+@keyframes target-ring { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.2); opacity: 0; } }
+.target-pop { transform-box: fill-box; transform-origin: center; animation: target-pop .5s cubic-bezier(.3, 1.5, .5, 1) backwards; }
+@keyframes target-pop { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1); } }
+.reveal-line { fill: none; stroke-width: 3.5px; stroke-linecap: round; }
+
+/* hints on the map */
+.hint-circle { fill: rgba(255, 79, 154, .14); stroke: var(--pink); stroke-width: 3px; stroke-dasharray: 10 7; vector-effect: non-scaling-stroke; animation: dash-move 1.2s linear infinite; }
+.hint-circle.grow { transform-box: fill-box; transform-origin: center; animation: circle-grow .9s cubic-bezier(.2, .9, .3, 1.1) backwards, dash-move 1.2s linear infinite; }
+@keyframes circle-grow { from { transform: scale(.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes dash-move { to { stroke-dashoffset: -34; } }
+.hint-half { fill: rgba(17, 17, 17, .36); }
+.hint-cut { stroke: var(--pink); stroke-width: 3px; stroke-dasharray: 9 6; vector-effect: non-scaling-stroke; animation: dash-move 1.2s linear infinite; }
+
+/* guess controls */
+.hint-btn { gap: 6px; }
+.locked-chip { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 10px; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); transition: transform .1s, box-shadow .1s; }
+.locked-chip:active { transform: translate(3px, 3px); box-shadow: none; }
+.plus-chip { margin-inline-start: 6px; font-size: 11px; padding: 0 7px; }
+.btn.change-btn { height: 58px; font-size: 18px; }
+
+/* reveal: distance bars that grow, re-sort and crown the closest */
+.bars { flex: none; overflow-y: auto; border: 3px solid var(--ink); border-radius: 16px; background: var(--white); padding: 2px 6px; }
+.bars-inner { position: relative; }
+.bar-row { position: absolute; inset-inline: 0; top: 0; display: flex; align-items: center; gap: 6px; padding-inline: 2px; border-radius: 10px; transition: transform .4s cubic-bezier(.34, 1.3, .5, 1), background .3s; }
+.bar-row.win { background: var(--yellow-soft); }
+.bar-name { width: 52px; flex: none; font-weight: 900; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; min-width: 0; height: 13px; border: 2px solid var(--ink); border-radius: 99px; background: #F1EFE6; overflow: hidden; }
+.bar-track i { display: block; height: 100%; border-radius: 99px; }
+.bar-km { width: 78px; flex: none; text-align: start; font-weight: 900; font-size: 12.5px; }
+.bar-crown { position: absolute; top: -9px; inset-inline-start: 0; }
+
+/* reveal: the winner card */
+.winner-card { display: flex; align-items: center; gap: 14px; background: var(--yellow-soft); }
+.winner-who { position: relative; flex: none; width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
+.winner-avatar { display: flex; animation: winner-bounce .9s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+@keyframes winner-bounce { 0% { transform: translateY(24px) scale(.6); } 55% { transform: translateY(-12px) scale(1.08); } 100% { transform: none; } }
+.winner-crown { position: absolute; top: -18px; left: 50%; margin-left: -23px; animation-delay: .35s; }
+.points-sticker { position: absolute; bottom: -8px; inset-inline-end: -12px; padding: 0 9px; background: var(--pink); border: 3px solid var(--ink); border-radius: 12px; box-shadow: 2px 2px 0 var(--ink); font-family: var(--font-display); font-weight: 800; font-size: 19px; line-height: 1.3; transform: rotate(-8deg); animation: popin .4s cubic-bezier(.2, .9, .3, 1.5) .5s backwards; }
+
+/* results: the ranking that moves from the old order to the new one */
+.rank-board { position: relative; }
+.rank-row { position: absolute; inset-inline: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: 4px 10px; background: var(--white); border: 3px solid var(--ink); border-radius: 16px; transition: transform .75s cubic-bezier(.34, 1.56, .64, 1), background .3s, box-shadow .3s; }
+.rank-row.leader { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); z-index: 2; }
+.rank-n { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; }
+.replay { gap: 6px; }

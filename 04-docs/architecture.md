@@ -62,3 +62,12 @@ result ──host──▶ back to the lounge
 - `net.ts`: socket, a tiny external store (`useSyncExternalStore`), `send()` returning acks, toasts, invite links (`/?room=CODE`).
 - Screens switch on state: no profile → Onboarding; not connected yet → skeleton; no room → Home; room without a running game → Room (the lounge: name, game picker, settings, players, chat); otherwise the Spy screen for the current phase.
 - `index.html` pings `/api/health` before the app loads, so a sleeping free server starts waking while the player is still picking a name.
+
+## فين دي؟ (map pin game)
+- **Engine:** `server/src/games/map/map.engine.ts`, registered in `games/registry.ts`. Phases: `guess` (timer, ends early when every connected player locked) -> `reveal` (6s + 0.8s per pin) -> `result` (host `next`, or auto after 25s) -> `final`.
+- **Secrets (`viewFor`):** the true location, the fact and everyone's pins only exist in the view from `reveal` on. During `guess` a player only gets their own pin, their own hint and the ids of who locked. `map:pin` is not broadcast.
+- **Scoring:** haversine km; `round(1000 * exp(-km / scale))` with scale 150 (Egypt) / 400 (Arab world) / 1500 (world); x place difficulty (1 / 1.5 / 2); +50 if locked in the first 5s; -25% with a hint; no pin = 0.
+- **Hints:** picked on the server when asked. circle: radius >= 30% of the map's short side (bigger when easy), target 35-75% of the radius from the centre, >= 3 other pack places inside. half: the open side keeps >= 40% of the pack. Hard places: text only. text is the fallback.
+- **Places:** `games/map/places/{egypt,arab,world}.ts`, 4 themes each (cities, landmarks, stadiums, dishes). Add a place with `p(name, lat, lon, 'e'|'m'|'h', fact, hint1, hint2, hint3)`.
+- **Maps:** `client/scripts/gen-maps.mjs` (`npm run gen:maps` in client, dev dependencies world-atlas + topojson-client + d3-geo) writes `client/src/games/map/maps/{egypt,arab,world}.ts`: SVG markup, projection parameters and the "fit" focus box. The client rebuilds the same d3 projection to turn a tap into lat/lon. Each map is a lazy chunk (`maps.ts`), warmed up while the lounge is open.
+- **Client:** `components/MapView.tsx` (pinch / drag / wheel / buttons, camera animation, pins), `screens/MapGame.tsx` (guess, reveal timeline, results ranking animation, final).

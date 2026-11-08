@@ -203,6 +203,27 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.gameAction(id, 'spy', 'guess', { place: b?.place }));
   }
 
+  // فين دي؟ (map pin game): the pin stays private on the server until the reveal.
+  @SubscribeMessage('map:pin')
+  mapPin(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'map', 'pin', { lat: b?.lat, lon: b?.lon }));
+  }
+
+  @SubscribeMessage('map:lock')
+  mapLock(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'map', 'lock'));
+  }
+
+  @SubscribeMessage('map:unlock')
+  mapUnlock(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'map', 'unlock'));
+  }
+
+  @SubscribeMessage('map:hint')
+  mapHint(@ConnectedSocket() c: Socket): Ack {
+    return this.run(c, (id) => this.rooms.gameAction(id, 'map', 'hint'));
+  }
+
   @SubscribeMessage('game:next')
   next(@ConnectedSocket() c: Socket): Ack {
     return this.run(c, (id) => this.rooms.gameAction(id, null, 'next'));

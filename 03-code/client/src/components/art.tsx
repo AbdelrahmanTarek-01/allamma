@@ -89,6 +89,10 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
     icon: <SpyIcon />
   },
   {
+    id: 'map', name: 'فين دي؟', tagline: 'حط الدبوس على الخريطة', color: '#3DDC97', ready: true,
+    icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M4 12l13-5 14 5 13-5v29l-13 5-14-5-13 5z" fill="#CFE5FF" {...S} /><path d="M17 7v29M31 12v29" {...S} strokeWidth={2} /><path d="M24 4c-5.5 0-9 4-9 8.5C15 19 24 28 24 28s9-9 9-15.5C33 8 29.500 4 24 4z" fill="#FF4F9A" {...S} /><circle cx="24" cy="12.500" r="3.300" fill="#fff" {...S} strokeWidth={2} /></svg>)
+  },
+  {
     id: 'wave', name: 'الموجة', tagline: 'خمّنوا المكان على المقياس', color: '#4D9DFF', ready: false,
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 36a19 19 0 0138 0z" fill="#fff" {...S} /><path d="M24 36L14.5 19.5A19 19 0 0133.5 19.5z" fill="#FFD23F" {...S} /><path d="M24 36L19.2 27.8A9.5 9.5 0 0128.8 27.8z" fill="#FF4F9A" {...S} /><path d="M24 36l8-13" stroke="#111" strokeWidth={3.5} strokeLinecap="round" /><circle cx="24" cy="36" r="3.5" fill="#111" /><path d="M3 36h42" stroke="#111" strokeWidth={3} strokeLinecap="round" /></svg>)
   },

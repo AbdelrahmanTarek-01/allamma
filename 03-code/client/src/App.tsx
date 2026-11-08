@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { GameChat } from './components/GameChat';
 import { HelpSheet } from './components/HelpSheet';
 import { takeFirstTimeHelp } from './games';
@@ -9,6 +9,9 @@ import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Room } from './screens/Room';
 import { SpyGame } from './screens/Spy';
+
+// the map game brings the generated maps (a few hundred KB): only players who open it download it
+const MapGame = lazy(() => import('./screens/MapGame').then((m) => ({ default: m.MapGame })));
 
 export function App() {
   const { profile, status, room, toast, hasConnected } = useStore();
@@ -27,6 +30,10 @@ export function App() {
     screen = status === 'online' ? <Home onEditProfile={() => setEditing(true)} /> : <SkeletonHome note="بنرجّع الاتصال…" />;
   }
   else if (!room.game) { key = 'room'; screen = <Room room={room} />; }
+  else if (room.game.type === 'map') {
+    key = `map-${room.game.round}-${room.game.phase}`;
+    screen = <Suspense fallback={<SkeletonHome note="بنجهّز الخريطة…" />}><MapGame room={room} g={room.game} /></Suspense>;
+  }
   else { key = `spy-${room.game.round}-${room.game.phase}`; screen = <SpyGame room={room} g={room.game} />; }
 
   // the first time a game starts for this player, open its how-to-play once (remembered per game on this device)
@@ -35,7 +42,11 @@ export function App() {
 
   // background music follows the moment: lively in menus, tense while playing, silent for the drama
   const phase = room?.game?.phase;
-  const track: MusicName = phase === 'discuss' || phase === 'vote' ? 'tension' : phase === 'reveal' || phase === 'guess' ? null : 'lobby';
+  const isMap = room?.game?.type === 'map';
+  // spy: tense while talking, silent on the dark reveal/guess. map: tense while the clock runs, lively for the yellow reveal
+  const track: MusicName = isMap
+    ? (phase === 'guess' ? 'tension' : 'lobby')
+    : phase === 'discuss' || phase === 'vote' ? 'tension' : phase === 'reveal' || phase === 'guess' ? null : 'lobby';
   useEffect(() => { music.play(track); }, [track]);
 
   return (
@@ -47,7 +58,7 @@ export function App() {
       <div key={key} className="enter">{screen}</div>
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
-      {room && <GameChat room={room} lounge={!room.game} discuss={phase === 'discuss'} visible={!room.game || phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
+      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && phase === 'discuss'} visible={!room.game || (isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result')} />}
       {toast && <div key={toast} className="toast" role="status">{toast}</div>}
     </>
   );
