@@ -910,7 +910,7 @@ button:disabled { cursor: not-allowed; }
 .h3-all { border: 0; background: none; padding: 0; font: 900 12.5px 'Cairo', sans-serif; text-decoration: underline; color: var(--ink); }
 .h3-rail { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--gutter)); padding: 2px var(--gutter) 8px; }
 .h3-rail::-webkit-scrollbar { display: none; }
-.h3-card { flex: none; width: 112px; height: 132px; position: relative; text-align: right; background: var(--white); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink); scroll-snap-align: start; transition: transform .1s, box-shadow .1s; }
+.h3-card { flex: none; width: clamp(104px, calc((min(100vw, 480px) - 42px) / 2.6), 160px); height: 132px; position: relative; text-align: right; background: var(--white); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink); scroll-snap-align: start; transition: transform .1s, box-shadow .1s; }
 .h3-card:active { transform: translate(4px, 4px); box-shadow: none; }
 .h3-min { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 900; background: #FFF3C4; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; }
 .h3-soon { background: var(--ink); color: #fff; box-shadow: 4px 4px 0 var(--pink); background-image: radial-gradient(rgba(255, 255, 255, .16) 1.4px, transparent 1.6px); background-size: 12px 12px; }
@@ -923,3 +923,7 @@ button:disabled { cursor: not-allowed; }
 @keyframes wlFall { 0% { transform: translate(0, 0) rotate(0); } 100% { transform: translate(var(--dx), 900px) rotate(var(--r)); } }
 .wl-confetti { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
 .wl-confetti > span { position: absolute; top: -20px; border: 1.5px solid var(--ink); border-radius: 2px; }
+
+/* the rail runs off the screen edge: cards sized so the last visible one is cut ~40%, plus a fade on that edge */
+.h3-rail { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30px); mask-image: linear-gradient(to right, transparent 0, #000 30px); }
+.h3-more { font-size: 11.5px; font-weight: 900; background: var(--white); border: 2px solid var(--ink); border-radius: 99px; padding: 0 9px; white-space: nowrap; }

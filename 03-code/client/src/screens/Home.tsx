@@ -56,6 +56,15 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
 
   // every hook lives above this early return (a hook after it crashes with "rendered fewer hooks" when the open-rooms screen shows)
   const railRef = useRef<HTMLDivElement>(null);
+  // first Home visit only: the rail nudges ~90px and back once, so people see there is more to swipe (skipped with reduced motion)
+  useEffect(() => {
+    let seen = true;
+    try { seen = !!localStorage.getItem('allamma.railHint'); if (!seen) localStorage.setItem('allamma.railHint', '1'); } catch { /* blocked storage: no nudge */ }
+    if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t1 = setTimeout(() => railRef.current?.scrollTo({ left: -90, behavior: 'smooth' }), 900); // RTL: toward the end is negative
+    const t2 = setTimeout(() => railRef.current?.scrollTo({ left: 0, behavior: 'smooth' }), 1700);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
 
@@ -111,7 +120,7 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
       {/* the games: one horizontal snap rail, ending with the coming-soon card */}
       <section className="col" style={{ gap: 10, flex: 'none' }}>
         <div className="row between" style={{ alignItems: 'baseline' }}>
-          <span className="display" style={{ fontSize: 22 }}>الألعاب</span>
+          <span className="row" style={{ gap: 8 }}><span className="display" style={{ fontSize: 22 }}>الألعاب</span><span className="h3-more">٧ ألعاب · اسحب ←</span></span>
           <button className="h3-all" onClick={() => { sfx.soft(); railRef.current?.scrollTo({ left: railRef.current.scrollWidth, behavior: 'smooth' }); }}>شوف الكل</button>
         </div>
         <div className="h3-rail" ref={railRef}>
