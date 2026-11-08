@@ -152,6 +152,23 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
+  /** Host removes another player. Returns the kicked player's socket ids so the gateway can notify them. */
+  kick(hostId: string, targetId: unknown): string[] {
+    const room = this.mustHost(hostId);
+    const t = this.mustOtherMember(room, hostId, targetId);
+    const socketIds = [...t.socketIds];
+    this.leave(t.id);
+    return socketIds;
+  }
+
+  makeHost(hostId: string, targetId: unknown) {
+    const room = this.mustHost(hostId);
+    const t = this.mustOtherMember(room, hostId, targetId);
+    if (!t.connected) throw new GameError('اللاعب ده النت فاصل عنده');
+    room.hostId = t.id;
+    this.emit(room);
+  }
+
   setReady(playerId: string, ready: boolean) {
     const room = this.mustRoom(playerId);
     room.players.get(playerId)!.ready = !!ready;
@@ -424,6 +441,14 @@ export class RoomsService implements OnModuleDestroy {
     const room = this.mustRoom(playerId);
     if (room.hostId !== playerId) throw new GameError('المضيف بس اللي يقدر يعمل كده');
     return room;
+  }
+
+  private mustOtherMember(room: Room, selfId: string, targetId: unknown) {
+    const id = String(targetId ?? '');
+    if (id === selfId) throw new GameError('مينفعش تعمل كده في نفسك');
+    const t = room.players.get(id);
+    if (!t) throw new GameError('اللاعب ده مش في الأوضة');
+    return t;
   }
 
   private mustPhase(room: Room, phase: SpyGame['phase']) {

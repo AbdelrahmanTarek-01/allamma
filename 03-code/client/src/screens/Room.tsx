@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character, SpyIcon } from '../components/art';
-import { MuteButton } from '../components/ui';
+import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
 
@@ -12,6 +12,11 @@ export function Room({ room }: { room: RoomView }) {
   const isHost = room.hostId === room.youId;
   const online = room.players.filter((p) => p.connected).length;
   const [msg, setMsg] = useState('');
+  const [manageId, setManageId] = useState<string | null>(null);
+  const [confirmKick, setConfirmKick] = useState(false);
+  const target = room.players.find((p) => p.id === manageId && p.id !== room.youId);
+  const closeManage = () => { setManageId(null); setConfirmKick(false); };
+  const roundsText = (r: number) => (r === 1 ? 'جولة' : `${AR(r)} جولات`);
   const chatRef = useRef<HTMLDivElement>(null);
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? '؟';
 
@@ -73,26 +78,32 @@ export function Room({ room }: { room: RoomView }) {
             <span className="display h2">مين الجاسوس؟</span>
           </div>
         </div>
-        <div className="col" style={{ gap: 6 }}>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
-            <span className="label" style={{ fontSize: 12, width: 64 }}>وقت الجولة</span>
-            {MINUTES.map((s) => (
-              <button key={s} className={`chip${room.settings.discussSeconds === s ? ' dark' : ' soft'}`} disabled={!isHost} aria-pressed={room.settings.discussSeconds === s}
-                onClick={() => send('room:settings', { discussSeconds: s })} style={{ padding: '3px 12px', fontSize: 13 }}>
-                {AR(s / 60)} دقايق
-              </button>
-            ))}
+        {isHost ? (
+          <div className="col" style={{ gap: 10 }}>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12 }}>وقت الجولة</span>
+              <div className="seg" role="group" aria-label="وقت الجولة">
+                {MINUTES.map((s) => (
+                  <button key={s} aria-pressed={room.settings.discussSeconds === s} onClick={() => send('room:settings', { discussSeconds: s })}>
+                    {AR(s / 60)} دقايق
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12 }}>عدد الجولات</span>
+              <div className="seg" role="group" aria-label="عدد الجولات">
+                {ROUNDS.map((r) => (
+                  <button key={r} aria-pressed={room.settings.rounds === r} onClick={() => send('room:settings', { rounds: r })}>
+                    {roundsText(r)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
-            <span className="label" style={{ fontSize: 12, width: 64 }}>الجولات</span>
-            {ROUNDS.map((r) => (
-              <button key={r} className={`chip${room.settings.rounds === r ? ' dark' : ' soft'}`} disabled={!isHost} aria-pressed={room.settings.rounds === r}
-                onClick={() => send('room:settings', { rounds: r })} style={{ padding: '3px 12px', fontSize: 13 }}>
-                {r === 1 ? 'جولة واحدة' : `${AR(r)} جولات`}
-              </button>
-            ))}
-          </div>
-        </div>
+        ) : (
+          <span style={{ fontWeight: 800, fontSize: 14 }}>{AR(room.settings.discussSeconds / 60)} دقايق · {roundsText(room.settings.rounds)}</span>
+        )}
       </section>
 
       <div className="row between">
@@ -101,20 +112,29 @@ export function Room({ room }: { room: RoomView }) {
       </div>
 
       <div className="grid3">
-        {room.players.map((p) => (
-          <div key={p.id} className="tile pop-in" style={{ alignItems: 'center', padding: '12px 6px 10px', opacity: p.connected ? 1 : 0.5 }}>
-            {p.id === room.hostId && <span className="chip dark badge" style={{ insetInlineStart: '50%', transform: 'translateX(50%)' }}>المضيف</span>}
-            <Character id={p.avatar} size={60} />
-            <span style={{ fontWeight: 900, fontSize: 14, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {p.name}{p.id === room.youId ? ' (إنت)' : ''}
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: !p.connected ? '#555' : p.ready || p.id === room.hostId ? 'var(--ok)' : '#6b5a00' }}>
-              {!p.connected ? 'النت فصل' : p.id === room.hostId ? 'جاهز' : p.ready ? 'جاهز' : 'لسه'}
-            </span>
-          </div>
-        ))}
+        {room.players.map((p) => {
+          const manageable = isHost && p.id !== room.youId;
+          const Tag = manageable ? 'button' : 'div';
+          return (
+            <Tag
+              key={p.id}
+              className="tile pop-in player"
+              {...(manageable ? { type: 'button' as const, 'aria-label': `خيارات ${p.name}`, onClick: () => { setConfirmKick(false); setManageId(p.id); } } : {})}
+              style={{ alignItems: 'center', padding: '14px 4px 8px', opacity: p.connected ? 1 : 0.5, background: p.id === room.youId ? 'var(--yellow-soft)' : '#fff', cursor: manageable ? 'pointer' : 'default' }}
+            >
+              {p.id === room.hostId && <span className="chip dark badge" style={{ insetInlineStart: '50%', transform: 'translateX(50%)' }}>المضيف</span>}
+              <Character id={p.avatar} size={52} />
+              <span style={{ fontWeight: 900, fontSize: 13.5, lineHeight: 1.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {p.id === room.youId ? 'إنت' : p.name}
+              </span>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: !p.connected ? '#555' : p.ready || p.id === room.hostId ? 'var(--ok)' : '#6b5a00' }}>
+                {!p.connected ? 'النت فصل' : p.id === room.hostId ? 'جاهز' : p.ready ? 'جاهز' : 'لسه'}
+              </span>
+            </Tag>
+          );
+        })}
         {room.players.length < 10 && (
-          <button className="tile" onClick={invite} style={{ alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed', boxShadow: 'none', background: 'transparent' }}>
+          <button className="tile" onClick={invite} style={{ alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed', boxShadow: 'none', background: 'transparent', minHeight: 116 }}>
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             <span style={{ fontWeight: 900, fontSize: 14 }}>ادعي حد</span>
           </button>
@@ -153,6 +173,22 @@ export function Room({ room }: { room: RoomView }) {
           </>
         )}
       </div>
+      {isHost && target && (
+        <Sheet title={target.name} onClose={closeManage}>
+          {confirmKick ? (
+            <>
+              <span style={{ fontWeight: 700 }}>تطرد {target.name} من الأوضة؟ هيرجع للصفحة الرئيسية.</span>
+              <button className="btn big full danger" onClick={async () => { const t = target.id; closeManage(); await send('room:kick', { playerId: t }); }}>أيوه، اطرده</button>
+              <button className="btn full" style={{ height: 52 }} onClick={() => setConfirmKick(false)}>لا، خليه</button>
+            </>
+          ) : (
+            <>
+              <button className="btn big full black" disabled={!target.connected} onClick={async () => { const t = target.id; closeManage(); await send('room:makeHost', { playerId: t }); }}>خليه المضيف</button>
+              <button className="btn big full danger" onClick={() => setConfirmKick(true)}>اطرده من الأوضة</button>
+            </>
+          )}
+        </Sheet>
+      )}
     </main>
   );
 }

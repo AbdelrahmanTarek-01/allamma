@@ -98,6 +98,7 @@ socket.on('connect', () => { set({ status: 'online', hasConnected: true }); hell
 socket.on('disconnect', () => set({ status: 'offline' }));
 socket.on('connect_error', () => set({ status: state.hasConnected ? 'offline' : 'waking' }));
 socket.on('room:state', (room: RoomView) => set({ room, offset: room.serverNow - Date.now() }));
+socket.on('room:kicked', () => { set({ room: null }); sfx.leave(); toast('المضيف طلّعك من الأوضة'); });
 
 export function saveProfile(name: string, avatar: string) {
   const id = state.profile?.id ?? (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));

@@ -78,6 +78,19 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.leave(id));
   }
 
+  @SubscribeMessage('room:kick')
+  kick(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => {
+      const sockets = this.rooms.kick(id, b?.playerId);
+      sockets.forEach((sid) => this.server.to(sid).emit('room:kicked'));
+    });
+  }
+
+  @SubscribeMessage('room:makeHost')
+  makeHost(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.makeHost(id, b?.playerId));
+  }
+
   @SubscribeMessage('room:ready')
   ready(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     return this.run(c, (id) => this.rooms.setReady(id, !!b?.ready));

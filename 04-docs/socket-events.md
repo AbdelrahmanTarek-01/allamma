@@ -9,6 +9,8 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `room:create` | – | anyone | Ack `{ code }`. Leaves any previous room. |
 | `room:join` | `{ code }` | anyone | Max 10 players. |
 | `room:leave` | – | member | |
+| `room:kick` | `{ playerId }` | host | Removes another player like `room:leave` (mid-game handling included). Not yourself. The kicked player's sockets get `room:kicked`. |
+| `room:makeHost` | `{ playerId }` | host | Transfers hosting to another connected player. Not yourself. |
 | `room:ready` | `{ ready }` | member | |
 | `room:chat` | `{ text }` | member | Up to 200 chars. The last 40 are kept. |
 | `room:settings` | `{ discussSeconds: 300\|480\|600, rounds: 1\|3\|5 }` | host | Only while no game is running. |
@@ -21,6 +23,8 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `game:backToRoom` | – | host | Ends the game. |
 
 ## Server → client
+`room:kicked` (no payload): sent to a player the host removed. The client goes home and shows "المضيف طلّعك من الأوضة".
+
 `room:state` (personalized, after every change):
 ```ts
 {
