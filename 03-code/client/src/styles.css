@@ -196,6 +196,16 @@ button:disabled { cursor: not-allowed; }
 }
 .icontile.grey { filter: grayscale(1); } /* coming soon: grey icon, the tile itself stays white and full strength */
 
+/* invite sheet: one compact row per option */
+.invite-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: right;
+  background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; padding: 8px 12px;
+  font-weight: 900; font-size: 15px; box-shadow: 3px 3px 0 var(--ink);
+  transition: transform .1s, box-shadow .1s;
+}
+.invite-row:active { transform: translate(3px, 3px); box-shadow: none; }
+.invite-ic { flex: none; width: 38px; height: 38px; border-radius: 11px; border: 2.5px solid var(--ink); display: flex; align-items: center; justify-content: center; }
+
 /* "?" help button + the how-to-play sheet */
 .help-btn {
   flex: none; width: 30px; height: 30px; border-radius: 50%; padding: 0;

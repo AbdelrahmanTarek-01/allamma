@@ -4,24 +4,36 @@ import { GameTile } from '../components/GameTile';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
 import { sfx } from '../sound';
+import { OpenRooms } from './OpenRooms';
 
 export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   const { profile } = useStore();
   const [code, setCode] = useState('');
   const [codeOpen, setCodeOpen] = useState(false);
+  const [roomsOpen, setRoomsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lobby, setLobby] = useState<LobbyRoom[] | null>(null); // null = still loading
 
-  // public rooms: one request (also subscribes us to pushes), then live updates until we leave the screen
+  const fetchList = async () => {
+    const res = await send('lobby:list'); // also subscribes this socket to live pushes
+    return res.ok ? (res.rooms as LobbyRoom[]) : [];
+  };
+  // the public-rooms count on the row (and the list on its screen) stay live until we leave Home
   useEffect(() => {
     const onUpdate = (list: LobbyRoom[]) => setLobby(list);
     socket.on('lobby:update', onUpdate);
-    send('lobby:list').then((res) => setLobby(res.ok ? (res.rooms as LobbyRoom[]) : []));
+    fetchList().then(setLobby);
     return () => {
       socket.off('lobby:update', onUpdate);
       if (socket.connected) socket.emit('lobby:leave', {}, () => {});
     };
   }, []);
+
+  const refresh = async () => {
+    setLobby(null); // skeleton cards for at least half a second, so the refresh is visible
+    const [list] = await Promise.all([fetchList(), new Promise((r) => setTimeout(r, 500))]);
+    setLobby(list);
+  };
 
   const join = async (c: string) => {
     if (c.trim().length < 4) return toast('اكتب كود القعدة كامل');
@@ -40,6 +52,9 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
     setBusy(false);
   };
 
+  if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
+
+  const count = lobby?.length ?? null;
   return (
     <main className="screen">
       <header className="row between">
@@ -59,29 +74,15 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
         <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
       </div>
 
-      <h2 className="display" style={{ fontSize: 26 }}>قعدات مفتوحة</h2>
-      <div className="col" style={{ gap: 12 }}>
-        {lobby === null && Array.from({ length: 3 }, (_, i) => <div key={i} className="sk card-sk" style={{ height: 78, animationDelay: `${i * 160}ms` }} />)}
-        {lobby?.length === 0 && (
-          <div className="card flat center" style={{ padding: 18, fontWeight: 800, lineHeight: 1.7 }}>مفيش قعدات مفتوحة دلوقتي، اعمل واحدة وخلّي الناس تيجي</div>
-        )}
-        {lobby?.map((r, i) => {
-          const g = GAMES.find((x) => x.id === r.game) ?? GAMES[0];
-          return (
-            <button key={r.code} className="tile pop-in" disabled={busy} onClick={() => join(r.code)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, animationDelay: `${i * 50}ms` }}>
-              <Character id={r.host.avatar} size={46} />
-              <span className="col grow" style={{ gap: 0, minWidth: 0 }}>
-                <span className="display" style={{ fontSize: 19, overflowWrap: 'anywhere' }}>{r.name}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700 }}>{r.host.name} · {g.name}</span>
-              </span>
-              <span className="col" style={{ gap: 4, alignItems: 'flex-end' }}>
-                <span className="chip">{AR(r.players)}/{AR(r.max)}</span>
-                {r.status === 'playing' && <span className="chip pink">بيلعبوا دلوقتي</span>}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {/* one compact row instead of the whole list: the list lives on its own screen */}
+      <button className="tile" onClick={() => { sfx.tap(); setRoomsOpen(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
+        <span className="display" style={{ fontSize: 19 }}>قعدات مفتوحة</span>
+        {count === null ? <span className="sk" style={{ width: 34, height: 22, borderRadius: 99 }} />
+          : count > 0 ? <span className="chip pink">{AR(count)}</span>
+          : <span className="muted">مفيش دلوقتي</span>}
+        <span className="grow" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+      </button>
 
       <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
       <div className="grid2 stagger">
