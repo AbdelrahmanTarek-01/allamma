@@ -112,13 +112,16 @@ export function scorePin(km: number, scope: MapScope, multiplier: number, opts: 
 const SETTINGS: SettingField[] = [
   {
     key: 'scope', label: 'الخريطة', hint: 'عشوائي = كل مكان من خريطة شكل: مصر أو العرب أو العالم',
-    options: [{ value: 'egypt', label: 'مصر' }, { value: 'arab', label: 'العرب', full: 'الوطن العربي' }, { value: 'world', label: 'العالم' }, { value: 'random', label: 'عشوائي' }]
+    options: [
+      { value: 'egypt', label: 'مصر', help: 'مصر بس' }, { value: 'arab', label: 'العرب', full: 'الوطن العربي', help: 'كل الدول العربية' },
+      { value: 'world', label: 'العالم', help: 'أي حتة في العالم' }, { value: 'random', label: 'عشوائي', full: 'خرايط عشوائية', dice: true, help: 'كل مكان من خريطة شكل' }
+    ]
   },
   {
     key: 'theme', label: 'هتدوّروا على إيه؟', hint: 'مدن = المدن والعواصم · أكلات = الأكلة دي جاية منين',
     options: [
-      { value: 'cities', label: 'مدن' }, { value: 'landmarks', label: 'معالم' }, { value: 'stadiums', label: 'ملاعب' },
-      { value: 'dishes', label: 'أكلات' }, { value: 'all', label: 'كله' }
+      { value: 'cities', label: 'مدن', help: 'المدن والعواصم' }, { value: 'landmarks', label: 'معالم', help: 'أماكن مشهورة' }, { value: 'stadiums', label: 'ملاعب', help: 'ملاعب الكورة' },
+      { value: 'dishes', label: 'أكلات', help: 'الأكلة دي جاية منين' }, { value: 'all', label: 'عشوائي', full: 'أنواع عشوائية', dice: true, help: 'كل مكان من نوع شكل' }
     ]
   },
   {

@@ -59,6 +59,10 @@ export interface SettingOption {
   hintName?: string;
   /** Needs at least this many connected players (shown locked until then). */
   minPlayers?: number;
+  /** Helper text for this choice: the row's helper line follows the selected option (falls back to the field's `hint`). */
+  help?: string;
+  /** "Random": drawn as a small square dice button at the end of the row, no text. */
+  dice?: boolean;
 }
 
 /**

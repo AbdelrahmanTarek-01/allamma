@@ -242,7 +242,7 @@ export interface BoardView { rows: BoardRow[]; played: { n: number; game: string
 
 /** A game's settings schema: the lounge renders its settings sheet generically from this. */
 /** Rule for all settings: one word or number per button (`label`), any explanation in the group's one helper line (`hint`). */
-export interface SettingOption { value: number | string; label: string; full?: string; hintName?: string; minPlayers?: number }
+export interface SettingOption { value: number | string; label: string; full?: string; hintName?: string; minPlayers?: number; help?: string; dice?: boolean }
 export interface SettingField { key: string; label: string; hint?: string; icon?: 'spy'; options: SettingOption[] }
 
 /** One row of the public lobby list (home screen). */

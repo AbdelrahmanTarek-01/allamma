@@ -21,6 +21,11 @@ const setSkipped = (code: string, game: string, on: boolean) => {
   skipSetup.set(code, set);
 };
 
+/** The small outlined die: the "random" button and its legend (takes the text colour). */
+const DiceGlyph = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ flex: 'none' }}><rect x="3" y="3" width="18" height="18" rx="5" fill="transparent" stroke="currentColor" strokeWidth="2.2" /><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor" /><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor" /><circle cx="12" cy="12" r="1.7" fill="currentColor" /></svg>
+);
+
 export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void }) {
   const me = room.players.find((p) => p.id === room.youId)!;
   const isHost = room.hostId === room.youId;
@@ -139,36 +144,38 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
     { key: 'wa', label: 'ابعت على واتساب', color: 'var(--green)', onClick: sendOnWhatsapp, icon: <><path d="M12 3a9 9 0 00-7.7 13.6L3 21l4.5-1.2A9 9 0 1012 3z" fill="#fff" stroke="#111" strokeWidth={2} strokeLinejoin="round" /><path d="M9.3 8.4l1.1 2.2-.9.9a6 6 0 003.3 3.3l.9-.9 2.2 1.1c.2.1.3.3.3.5l-.2 1c0 .3-.3.5-.6.5A7.5 7.5 0 018.3 9.1c0-.3.2-.5.5-.6l1-.2c.2 0 .4.1.5.1z" fill="#3DDC97" stroke="#111" strokeWidth={1.2} strokeLinejoin="round" /></> }
   ];
 
-  /** The selected game's settings, rendered generically from its schema: used by the gear sheet (editLevel) and the start sheet (level read-only). */
-  const gameFields = (editLevel: boolean) => (
-    <>
-        {/* shared difficulty: one control for every game that has a level table, in the level colours */}
+  /**
+   * The selected game's settings as ONE white card (canvas GeoSettings): a header with the game and the dice legend, then one row per setting
+   * (label on the right, the helper of the selected option on the left, equal-width buttons below). Rendered from the schema, so every game gets it.
+   */
+  const gameFields = () => {
+    const hasDice = schema.some((f) => f.options.some((o) => o.dice));
+    return (
+      <div className="sg-card">
+        <div className="sg-head">
+          <span className="icontile" style={{ background: game.color, width: 42, height: 42, borderRadius: 13, flex: 'none' }}><span style={{ display: 'flex', transform: 'scale(.78)' }}>{game.icon}</span></span>
+          <span className="display" style={{ fontSize: 22 }}>{game.name}</span>
+          {hasDice && <span className="sg-legend"><DiceGlyph size={20} />= عشوائي</span>}
+        </div>
+
+        {/* shared difficulty first, in the level colours */}
         {room.hasLevels && (
-          <div className="col" style={{ gap: 4 }}>
-            <span className="label" style={{ fontSize: 12.5 }}>الصعوبة</span>
-            {editLevel ? (
-              <div className="seg" role="group" aria-label="الصعوبة">
-                {LEVELS.map((l) => {
-                  const on = room.difficulty === l.id;
-                  return (
-                    <button
-                      key={l.id}
-                      aria-pressed={on}
-                      style={on ? { background: l.color, color: '#111' } : { boxShadow: `inset 0 -6px 0 ${l.color}` }}
-                      onClick={() => send('room:difficulty', { level: l.id })}
-                    >{l.label}</button>
-                  );
-                })}
-              </div>
-            ) : (
-              <span className="chip" style={{ background: levelOf(room.difficulty).color, alignSelf: 'flex-start', fontSize: 14 }}>{levelOf(room.difficulty).label}</span>
-            )}
-            <span className="muted setting-hint">{editLevel ? 'بتغيّر الوقت وعدد الاختيارات والأماكن والنقط' : 'ثابتة من إعدادات القعدة، وبتغيّر الوقت والاختيارات والنقط'}</span>
-          </div>
+          <section className="sg-row">
+            <div className="sg-line"><span className="sg-label">الصعوبة</span><span className="sg-help">بتغيّر الوقت وعدد الاختيارات والأماكن والنقط</span></div>
+            <div className="seg sg-btns" role="group" aria-label="الصعوبة">
+              {LEVELS.map((l) => {
+                const on = room.difficulty === l.id;
+                return (
+                  <button key={l.id} aria-pressed={on} style={{ background: on ? l.color : '#fff', color: '#111' }} onClick={() => send('room:difficulty', { level: l.id })}>{l.label}</button>
+                );
+              })}
+            </div>
+          </section>
         )}
+
         {/* الموجة in teams mode: shuffle the teams or tap a player to move them to the other team */}
         {room.teams && (
-          <div className="col" style={{ gap: 6 }}>
+          <div className="sg-row">
             <div className="row between">
               <span className="label" style={{ fontSize: 12.5 }}>الفريقين</span>
               <button className="btn sm" onClick={() => { sfx.select(); send('room:teams', { op: 'shuffle' }); }}>اخلط</button>
@@ -188,41 +195,44 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
             <span className="muted setting-hint">دوس على لاعب علشان ينتقل للفريق التاني · محتاجين ٤ لاعيبة على الأقل</span>
           </div>
         )}
-        {/* every group: title, buttons with ONE word or number each, one small helper line */}
-        {schema.map((f) => (
-          <div key={f.key} className="col" style={{ gap: 4 }}>
-            <span className="label" style={{ fontSize: 12.5 }}>{f.label}</span>
-            <div className={`seg${f.icon ? ' tall' : ''}`} role="group" aria-label={f.label}>
-              {f.options.map((o) => {
-                const selected = room.settings[f.key] === o.value;
-                // not enough players yet: faded with a lock. The selected option never shows a requirement.
-                const locked = !!o.minPlayers && online < o.minPlayers && !selected;
-                const key = `${f.key}:${o.value}`;
-                return (
-                  <button
-                    key={String(o.value)}
-                    className={`${locked ? 'locked' : ''}${shaking === key ? ' shake' : ''}`}
-                    aria-pressed={selected}
-                    aria-disabled={locked}
-                    aria-label={locked ? `${o.full ?? o.label}، محتاج ${AR(o.minPlayers!)} لاعيبة على الأقل` : (o.full ?? o.label)}
-                    onClick={() => locked ? tapLocked(key, o.minPlayers!) : send('room:settings', { [f.key]: o.value })}
-                  >
-                    {f.icon === 'spy' ? (
-                      <>
-                        <span className="num-big">{AR(o.value)}</span>
-                        <span className="hats" aria-hidden="true">{Array.from({ length: Number(o.value) }, (_, i) => <span key={i} className="hat"><SpyIcon size={14} /></span>)}</span>
-                      </>
-                    ) : <span>{o.label}</span>}
-                    {locked && <span className="lock-corner" aria-hidden="true"><LockMini /></span>}
-                  </button>
-                );
-              })}
-            </div>
-            <span className="muted setting-hint">{hintFor(f)}</span>
-          </div>
-        ))}
-    </>
-  );
+
+        {schema.map((f) => {
+          const chosen = f.options.find((o) => o.value === room.settings[f.key]);
+          return (
+            <section key={f.key} className="sg-row">
+              <div className="sg-line"><span className="sg-label">{f.label}</span><span className="sg-help">{chosen?.help ?? hintFor(f)}</span></div>
+              <div className={`seg sg-btns${f.icon ? ' tall' : ''}`} role="group" aria-label={f.label}>
+                {f.options.map((o) => {
+                  const selected = room.settings[f.key] === o.value;
+                  // not enough players yet: faded with a lock. The selected option never shows a requirement.
+                  const locked = !!o.minPlayers && online < o.minPlayers && !selected;
+                  const key = `${f.key}:${o.value}`;
+                  return (
+                    <button
+                      key={String(o.value)}
+                      className={`${o.dice ? 'sg-dice' : ''}${locked ? ' locked' : ''}${shaking === key ? ' shake' : ''}`}
+                      aria-pressed={selected}
+                      aria-disabled={locked}
+                      aria-label={locked ? `${o.full ?? o.label}، محتاج ${AR(o.minPlayers!)} لاعيبة على الأقل` : (o.full ?? o.label)}
+                      onClick={() => locked ? tapLocked(key, o.minPlayers!) : send('room:settings', { [f.key]: o.value })}
+                    >
+                      {o.dice ? <DiceGlyph size={20} /> : f.icon === 'spy' ? (
+                        <>
+                          <span className="num-big">{AR(o.value)}</span>
+                          <span className="hats" aria-hidden="true">{Array.from({ length: Number(o.value) }, (_, i) => <span key={i} className="hat"><SpyIcon size={14} /></span>)}</span>
+                        </>
+                      ) : <span>{o.label}</span>}
+                      {locked && <span className="lock-corner" aria-hidden="true"><LockMini /></span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <main className="screen">
@@ -370,10 +380,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
       )}
       {isHost && setup && (
         <Sheet title="ظبّط اللعبة" onClose={() => setSetup(null)}>
-          <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
-            <span className="row" style={{ gap: 8 }}><span className="display" style={{ fontSize: 18 }}>{game.name}</span></span>
-            {gameFields(true)}
-          </section>
+          {gameFields()}
           <div className="col" style={{ gap: 4 }}>
             <label className="row" style={{ gap: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
               <input type="checkbox" className="ck" checked={dontAsk} onChange={(e) => { e.target.checked ? sfx.toggleOn() : sfx.toggleOff(); setDontAsk(e.target.checked); if (setup === 'edit') setSkipped(room.code, room.selectedGame, e.target.checked); }} />
@@ -387,10 +394,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
       {isHost && settingsOpen && (
         <Sheet title="الإعدادات" onClose={() => setSettingsOpen(false)}>
           {/* a) the selected game's settings, rendered generically from its schema */}
-          <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
-            <span className="display" style={{ fontSize: 18 }}>إعدادات اللعبة</span>
-            {gameFields(true)}
-          </section>
+          {gameFields()}
 
           {/* b) the lounge itself, shared by every game */}
           <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
