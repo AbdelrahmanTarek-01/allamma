@@ -24,7 +24,7 @@ export const BID_STEPS = [50, 100, 200] as const;
 export const FIRST_BID_GRACE = 4; // extra seconds before the very first bid of a lot
 export const SOLD_SECONDS = 3;
 export const ANSWER_SECONDS = 15;
-export const REVEAL_SECONDS = 6;
+export const REVEAL_SECONDS = 14; // the lot result, then the shared standings in the last 8 s
 export const PREDICT_BONUS = 50;
 
 const SETTINGS: SettingField[] = [

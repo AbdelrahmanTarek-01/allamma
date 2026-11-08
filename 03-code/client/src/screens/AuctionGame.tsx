@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
 import { Ring } from '../components/Ring';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 import { Confetti, MuteButton, useTimerSounds } from '../components/ui';
 import { AR, send, serverNow, type AuctionGameView, type RoomView } from '../net';
 import { buzz, gameOver, music, sfx } from '../sound';
@@ -38,8 +39,8 @@ export function AuctionGame(props: P) {
   switch (props.g.phase) {
     case 'bid':
     case 'sold': return <Bidding {...props} />;
-    case 'answer':
-    case 'reveal': return <Answer {...props} />;
+    case 'answer': return <Answer {...props} />;
+    case 'reveal': return <Reveal {...props} />;
     default: return <Final {...props} />;
   }
 }
@@ -228,6 +229,22 @@ function Answer({ room, g }: P) {
       </div>
     </main>
   );
+}
+
+/** The lot's result first; the last seconds of the reveal show the shared standings (not after the last lot). */
+function Reveal(props: P) {
+  const { room, g } = props;
+  const last = g.lotNo >= g.lots;
+  const st = useStandingsStep(g.endsAt, !last);
+  if (!st || !g.result) return <Answer {...props} />;
+  const res = g.result;
+  const gains: Record<string, number> = {};
+  if (res.buyer) gains[res.buyer] = res.delta;
+  res.predictions.forEach((p) => { if (p.ok) gains[p.id] = (gains[p.id] ?? 0) + 50; });
+  const rows = g.participants.map((id) => ({ id, total: g.money[id] ?? 0, gain: gains[id] ?? 0 }));
+  const buyer = res.buyer ? (res.buyer === room.youId ? 'إنت' : room.players.find((p) => p.id === res.buyer)?.name ?? '؟') : null;
+  const hl = res.kind === 'none' ? 'المعلومة دي محدش زايد عليها' : `${buyer} اشترى بـ ${AR(res.price)} ج وجاوب ${res.kind === 'right' ? 'صح' : 'غلط'}`;
+  return <RoundStandings room={room} game="auction" noun="معلومة" unit="ج" round={g.lotNo} rounds={g.lots} highlight={hl} rows={rows} endsAt={g.endsAt} onNext={() => act('next')} />;
 }
 
 /* ---------- final ---------- */

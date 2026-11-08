@@ -3,6 +3,7 @@ import { Character } from '../components/art';
 import { DrawCanvas, Strokes } from '../components/DrawCanvas';
 import { HelpButton } from '../components/HelpSheet';
 import { Ring } from '../components/Ring';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 import { Confetti, MuteButton } from '../components/ui';
 import { AR, send, serverNow, socket, type DrawGameView, type DrawOp, type DrawStroke, type RoomView } from '../net';
 import { gameOver, music, sfx } from '../sound';
@@ -358,7 +359,7 @@ function Guesser({ room, g, live, label }: P & { live: DrawStroke[]; label: stri
 
 /* ---------- round end ---------- */
 
-function Reveal({ room, g }: P) {
+function RevealView({ room, g }: P) {
   const { name, avatar } = useWho(room);
   const res = g.result!;
   const [t, setT] = useState(0);
@@ -419,6 +420,19 @@ function Reveal({ room, g }: P) {
       {room.hostId === room.youId && <button className="btn full" onClick={() => { sfx.tap(); act('next'); }}>كمّل دلوقتي</button>}
     </main>
   );
+}
+
+/** The round-end screen first, then the shared standings in the last seconds (not after the last round). */
+function Reveal(props: P) {
+  const { room, g } = props;
+  const last = g.round >= g.rounds;
+  const st = useStandingsStep(g.endsAt, !last);
+  if (!st || !g.result) return <RevealView {...props} />;
+  const gains: Record<string, number> = {};
+  g.result.gains.forEach((x) => { gains[x.id] = x.gain; });
+  if (g.drawer) gains[g.drawer] = (gains[g.drawer] ?? 0) + g.result.drawerGain;
+  const rows = g.participants.map((id) => ({ id, total: g.scores[id] ?? 0, gain: gains[id] ?? 0 }));
+  return <RoundStandings room={room} game="draw" round={g.round} rounds={g.rounds} highlight={`الجولة دي: الكلمة كانت «${g.result.word ?? '؟'}»`} rows={rows} endsAt={g.endsAt} onNext={() => act('next')} />;
 }
 
 /* ---------- final: winner and the gallery ---------- */

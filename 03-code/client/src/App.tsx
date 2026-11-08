@@ -31,6 +31,8 @@ export function App() {
   const [welcomed, setWelcomed] = useState(() => hasSeenWelcome() || hasInviteLink());
 
   useEffect(() => { start(); }, []);
+  // the game-over screen's "ترتيب القعدة" link opens the room leaderboard
+  useEffect(() => { const open = () => setBoard('view'); window.addEventListener('allamma:board', open); return () => window.removeEventListener('allamma:board', open); }, []);
   useEffect(() => { setEditing(false); }, [profile?.name, profile?.avatar]);
 
   let key: string;
@@ -104,7 +106,7 @@ export function App() {
   useEffect(() => {
     if (!finished) return;
     if (boardShownFor.current === playedCount) return;
-    const t = setTimeout(() => { boardShownFor.current = playedCount; setBoard('auto'); }, 3800);
+    const t = setTimeout(() => { boardShownFor.current = playedCount; setBoard('auto'); }, 9000);
     return () => clearTimeout(t);
   }, [finished, playedCount]);
   // back in the lounge (or out of the room): the automatic board is done

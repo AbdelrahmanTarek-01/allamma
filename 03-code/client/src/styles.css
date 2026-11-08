@@ -823,3 +823,10 @@ button:disabled { cursor: not-allowed; }
 @keyframes drPop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
 @keyframes drWiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg) translateY(-4px); } }
 @keyframes flipIn { 0% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+
+/* shared standings and game over (canvas artboards RoundStandings / GameOver) */
+.rs-screen, .go-screen { gap: 12px; }
+.rs-card { background: var(--white); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); }
+.rs-row { position: absolute; left: 10px; right: 10px; height: 54px; display: flex; align-items: center; gap: 8px; border-radius: 14px; padding: 0 8px; will-change: top; }
+.go-podium { position: relative; display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; height: 230px; }
+.go-rest { display: grid; grid-template-columns: 1fr 1fr; margin-top: -12px; background: var(--white); border: 3px solid var(--ink); border-radius: 0 0 18px 18px; overflow: hidden; }

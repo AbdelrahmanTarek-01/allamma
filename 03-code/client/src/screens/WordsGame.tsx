@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 import { TeamChatButton } from '../components/TeamChatSheet';
 import { Confetti, MuteButton, Timer } from '../components/ui';
 import { TEAM } from '../games/teams';
@@ -194,7 +195,7 @@ function Play({ room, g }: P) {
 
 /* ---------- end of a board: the bomb or the win ---------- */
 
-function BoardEnd({ room, g }: P) {
+function BoardEndView({ room, g }: P) {
   const r = g.result!;
   const bomb = r.kind === 'bomb';
   const { name } = useWho(room);
@@ -267,6 +268,17 @@ function BoardEnd({ room, g }: P) {
       </div>
     </main>
   );
+}
+
+/** The board result first, then the shared team standings in the last seconds (not when the match is decided). */
+function BoardEnd(props: P) {
+  const { room, g } = props;
+  const decided = g.wins[0] >= g.need || g.wins[1] >= g.need || g.boardNo >= g.boards;
+  const st = useStandingsStep(g.endsAt, !decided && !!g.result);
+  if (!st || !g.result) return <BoardEndView {...props} />;
+  const teams = ([0, 1] as const).map((t) => ({ name: TEAM[t].name, color: TEAM[t].color, total: g.wins[t], gain: g.result!.winner === t ? 1 : 0, ids: g.participants.filter((id) => g.teams[id] === t) }));
+  const hl = g.result.kind === 'bomb' ? `اللوحة دي: ${TEAM[g.result.loser!].name} قلب القنبلة` : `اللوحة دي: ${TEAM[g.result.winner].name} كشف كل كلماته`;
+  return <RoundStandings room={room} game="words" noun="لوحة" unit="لوحة" round={g.boardNo} rounds={g.boards} highlight={hl} teams={teams} endsAt={g.endsAt} onNext={() => act('next')} />;
 }
 
 /* ---------- the match result ---------- */

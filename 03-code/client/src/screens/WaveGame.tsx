@@ -6,6 +6,8 @@ import { MysteryBg } from '../components/MysteryBg';
 import { Confetti, MuteButton, Timer } from '../components/ui';
 import { AR, send, type RoomView, type WaveGameView } from '../net';
 import { gameOver, music, sfx } from '../sound';
+import { GameOver } from '../components/GameOver';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 
 type P = { room: RoomView; g: WaveGameView };
 
@@ -282,7 +284,7 @@ function Play({ room, g }: P) {
 
 /* ---------- reveal (dark, like the spy reveal) ---------- */
 
-function Reveal({ room, g }: P) {
+function RevealView({ room, g }: P) {
   const { name, avatar } = useWho(room);
   const rv = g.reveal!;
   const card = g.card!;
@@ -386,65 +388,33 @@ function Reveal({ room, g }: P) {
 
 /* ---------- final ---------- */
 
+function Reveal(props: P) {
+  const { room, g } = props;
+  const last = g.turn >= g.totalTurns;
+  const st = useStandingsStep(g.endsAt, !last);
+  if (!st) return <RevealView {...props} />;
+  const inGame = room.players.filter((p) => g.participants.includes(p.id));
+  const narrator = room.players.find((p) => p.id === g.narratorId)?.name ?? '؟';
+  if (g.mode === 'teams' && g.teamScores) {
+    const tp = g.reveal?.teamPoints ?? [0, 0];
+    const teams = [0, 1].map((t) => ({ name: TEAM[t].name, color: TEAM[t].color, total: g.teamScores![t], gain: tp[t] ?? 0, ids: inGame.filter((p) => g.teams?.[p.id] === t).map((p) => p.id) }));
+    return <RoundStandings room={room} game="wave" noun="دور" round={g.turn} rounds={g.totalTurns} highlight={`الدور ده: ${narrator} كان الراوي`} teams={teams} endsAt={g.endsAt} onNext={() => send('game:next')} />;
+  }
+  const rows = inGame.map((p) => ({ id: p.id, total: p.score, gain: g.roundPoints[p.id] ?? 0 }));
+  return <RoundStandings room={room} game="wave" noun="دور" round={g.turn} rounds={g.totalTurns} highlight={`الدور ده: ${narrator} كان الراوي`} rows={rows} endsAt={g.endsAt} onNext={() => send('game:next')} />;
+}
+
 function Final({ room, g }: P) {
-  const [boom, setBoom] = useState(0);
-  const teams = g.mode === 'teams' && !!g.teamScores;
-  const ranked = [...room.players].sort((a, b) => b.score - a.score);
-  const topTeam = teams ? (g.teamScores![0] === g.teamScores![1] ? null : g.teamScores![0] > g.teamScores![1] ? 0 : 1) : null;
-  const top = teams ? [] : ranked.filter((p) => p.score === ranked[0]?.score);
-  const isHost = room.hostId === room.youId;
-
-  useEffect(() => {
-    music.dip(3);
-    const stopSound = gameOver(teams && topTeam !== null && g.you?.team != null ? (g.you.team === topTeam ? 'win' : 'lose') : null);
-    setBoom(1);
-    const t = setTimeout(() => setBoom(2), 1400);
-    return () => { clearTimeout(t); stopSound(); };
-  }, []);
-
-  return (
-    <main className="screen wave-screen">
-      <Confetti fire={boom} amount={boom === 2 ? 180 : 140} from={boom === 2 ? 'top' : 'center'} />
-      <div className="row" style={{ justifyContent: 'flex-end' }}><HelpButton gameId="wave" /></div>
-      <div className="col center" style={{ gap: 6 }}>
-        {teams ? (
-          <>
-            <div className="row" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-              {ranked.filter((p) => topTeam === null || g.teams?.[p.id] === topTeam).slice(0, 5).map((p) => <span key={p.id} className="pop-in float"><Character id={p.avatar} size={72} /></span>)}
-            </div>
-            <h1 className="display pop-in" style={{ fontSize: 32, textAlign: 'center' }}>{topTeam === null ? 'تعادل!' : `الفريق ${TEAM[topTeam].name} كسب!`}</h1>
-            <div className="team-bar" style={{ width: '100%' }}>
-              {[0, 1].map((t) => (
-                <div key={t} className={`team-chip${topTeam === t ? ' on' : ''}`} style={{ ['--tc' as any]: TEAM[t].color }}><span>{TEAM[t].name}</span><b className="display num">{AR(g.teamScores![t])}</b></div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="row" style={{ justifyContent: 'center' }}>{top.map((p) => <span key={p.id} className="pop-in float"><Character id={p.avatar} size={top.length > 1 ? 90 : 130} /></span>)}</div>
-            <h1 className="display pop-in" style={{ fontSize: 34, textAlign: 'center' }}>{top.length > 1 ? 'تعادل!' : `${top[0]?.name} كسب اللمّة!`}</h1>
-          </>
-        )}
-        <span className="muted">بعد {AR(g.totalTurns)} {g.totalTurns <= 10 ? 'أدوار' : 'دور'}</span>
-      </div>
-      <div className="card col stagger" style={{ padding: 8, gap: 4 }}>
-        {ranked.map((p, i) => (
-          <div key={p.id} className="row" style={{ gap: 10, padding: '6px 10px', borderRadius: 16, background: i === 0 ? 'var(--yellow)' : 'transparent', border: i === 0 ? '2.5px solid #111' : '2.5px solid transparent' }}>
-            <span className="rank-n">{AR(i + 1)}</span>
-            <Character id={p.avatar} size={42} />
-            <span className="grow" style={{ fontWeight: 900, fontSize: 15 }}>{p.id === room.youId ? 'إنت' : p.name}{g.teams ? <span className="chip" style={{ marginInlineStart: 6, fontSize: 11, background: TEAM[g.teams[p.id] ?? 0].color }}>{TEAM[g.teams[p.id] ?? 0].name}</span> : null}</span>
-            <span className="display num" style={{ fontSize: 24 }}>{AR(p.score)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="col push">
-        {isHost ? (
-          <>
-            <button className="btn big full" onClick={() => { sfx.tap(); send('game:again'); }}>نلعبها تاني</button>
-            <button className="btn full" onClick={() => send('game:backToRoom')}>نغيّر اللعبة</button>
-          </>
-        ) : <span className="label" style={{ textAlign: 'center' }}>مستنيين المضيف</span>}
-      </div>
-    </main>
-  );
+  const inGame = room.players.filter((p) => g.participants.includes(p.id));
+  const nm = (id: string) => (id === room.youId ? 'إنت' : room.players.find((p) => p.id === id)?.name ?? '؟');
+  if (g.mode === 'teams' && g.teamScores) {
+    const teams = [0, 1].map((t) => ({ name: `الفريق ${TEAM[t].name}`, color: TEAM[t].color, score: g.teamScores![t], ids: inGame.filter((p) => g.teams?.[p.id] === t).map((p) => p.id) }));
+    const best = [...inGame].sort((a, b) => b.score - a.score)[0];
+    const awards = best ? [{ k: 'نجم الموجة', who: nm(best.id), why: 'أعلى نقط في الفريق' }] : [];
+    return <GameOver room={room} game="wave" doneLabel={`${AR(g.totalTurns)} أدوار`} teams={teams} awards={awards} />;
+  }
+  const rows = inGame.map((p) => ({ id: p.id, total: p.score }));
+  const sorted = [...rows].sort((a, b) => b.total - a.total);
+  const awards = sorted.length > 1 ? [{ k: 'بطل الموجة', who: nm(sorted[0].id), why: `${AR(sorted[0].total)} نقطة` }, { k: 'المنافس القوي', who: nm(sorted[1].id), why: `ورا الأول بـ ${AR(sorted[0].total - sorted[1].total)} نقطة` }] : [];
+  return <GameOver room={room} game="wave" doneLabel={`${AR(g.totalTurns)} أدوار`} rows={rows} awards={awards} />;
 }

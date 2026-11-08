@@ -5,6 +5,8 @@ import { MysteryBg } from '../components/MysteryBg';
 import { Confetti, MuteButton, Sheet, Timer, useCountUp } from '../components/ui';
 import { AR, send, type GameView, type PlayerView, type RoomView } from '../net';
 import { buzz, gameOver, music, sfx } from '../sound';
+import { GameOver } from '../components/GameOver';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 
 type P = { room: RoomView; g: GameView };
 
@@ -397,7 +399,7 @@ function Leaderboard({ room, g, showRound }: P & { showRound: boolean }) {
   );
 }
 
-function Result({ room, g }: P) {
+function ResultView({ room, g }: P) {
   const { name } = usePlayers(room);
   const [boom, setBoom] = useState(0);
   const isHost = room.hostId === room.youId;
@@ -451,39 +453,21 @@ function Result({ room, g }: P) {
   );
 }
 
+/** The result screen first; the last seconds of the phase show the shared standings (never after the last round: that goes to the game-over screen). */
+function Result(props: P) {
+  const { room, g } = props;
+  const last = g.round >= g.totalRounds;
+  const st = useStandingsStep(g.endsAt, !last);
+  if (!st) return <ResultView {...props} />;
+  const rows = room.players.filter((p) => g.participants.includes(p.id)).map((p) => ({ id: p.id, total: p.score, gain: g.roundPoints[p.id] ?? 0 }));
+  const spies = (g.spyIds ?? []).map((id) => (id === room.youId ? 'إنت' : room.players.find((p) => p.id === id)?.name ?? '؟')).join(' و ');
+  return <RoundStandings room={room} game="spy" round={g.round} rounds={g.totalRounds} highlight={`الجولة دي: الجاسوس كان ${spies || '؟'}`} rows={rows} endsAt={g.endsAt} onNext={() => send('game:next')} />;
+}
+
 function Final({ room, g }: P) {
-  const { name } = usePlayers(room);
-  const [boom, setBoom] = useState(0);
-  const ranked = [...room.players].sort((a, b) => b.score - a.score);
-  const top = ranked.filter((p) => p.score === ranked[0]?.score);
-  const isHost = room.hostId === room.youId;
-
-  useEffect(() => {
-    music.dip(3);
-    const stopSound = gameOver(null);
-    setBoom(1);
-    const t = setTimeout(() => setBoom(2), 1400);
-    return () => { clearTimeout(t); stopSound(); };
-  }, []);
-
-  return (
-    <main className="screen">
-      <Confetti fire={boom} amount={boom === 2 ? 180 : 140} from={boom === 2 ? 'top' : 'center'} />
-      <div className="row" style={{ justifyContent: 'flex-end' }}><HelpButton gameId="spy" /></div>
-      <div className="col center" style={{ gap: 6 }}>
-        <div className="row" style={{ justifyContent: 'center' }}>{top.map((p) => <span key={p.id} className="pop-in float"><Character id={p.avatar} size={top.length > 1 ? 90 : 130} /></span>)}</div>
-        <h1 className="display pop-in" style={{ fontSize: 34, textAlign: 'center' }}>{top.length > 1 ? 'تعادل!' : `${top[0]?.name} كسب اللمّة!`}</h1>
-        <span className="muted">بعد {AR(g.totalRounds)} {g.totalRounds === 1 ? 'جولة' : 'جولات'}</span>
-      </div>
-      <Leaderboard room={room} g={g} showRound={false} />
-      <div className="col push">
-        {isHost ? (
-          <>
-            <button className="btn big full" onClick={() => { sfx.tap(); send('game:again'); }}>نلعبها تاني</button>
-            <button className="btn full" onClick={() => send('game:backToRoom')}>نغيّر اللعبة</button>
-          </>
-        ) : <span className="label" style={{ textAlign: 'center' }}>مستنيين المضيف</span>}
-      </div>
-    </main>
-  );
+  const rows = room.players.filter((p) => g.participants.includes(p.id)).map((p) => ({ id: p.id, total: p.score }));
+  const sorted = [...rows].sort((a, b) => b.total - a.total);
+  const nm = (id: string) => (id === room.youId ? 'إنت' : room.players.find((p) => p.id === id)?.name ?? '؟');
+  const awards = sorted.length > 1 ? [{ k: 'بطل اللعبة', who: nm(sorted[0].id), why: `${AR(sorted[0].total)} نقطة` }, { k: 'المنافس القوي', who: nm(sorted[1].id), why: `ورا الأول بـ ${AR(sorted[0].total - sorted[1].total)} نقطة` }] : [];
+  return <GameOver room={room} game="spy" doneLabel={`${AR(g.totalRounds)} جولات`} rows={rows} awards={awards} />;
 }

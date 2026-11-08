@@ -6,6 +6,8 @@ import { Confetti, MuteButton, Sheet, SkeletonHome, Timer, useCountUp } from '..
 import { AR, send, serverNow, toast, type MapEntry, type MapGameView, type MapHint, type PlayerView, type RoomView } from '../net';
 import { isMapLoaded, loadMapDef, getMapDef } from '../games/map/maps';
 import { gameOver, music, sfx } from '../sound';
+import { GameOver } from '../components/GameOver';
+import { RoundStandings, useStandingsStep } from '../components/RoundStandings';
 
 type P = { room: RoomView; g: MapGameView };
 
@@ -456,7 +458,7 @@ function Ranking({ room, g }: P) {
   );
 }
 
-function Result({ room, g }: P) {
+function ResultView({ room, g }: P) {
   const isHost = room.hostId === room.youId;
   const last = g.round >= g.totalRounds;
   const mine = g.reveal?.entries.find((e) => e.id === room.youId);
@@ -500,47 +502,19 @@ function Result({ room, g }: P) {
 
 /* ---------- final ---------- */
 
+function Result(props: P) {
+  const { room, g } = props;
+  const last = g.round >= g.totalRounds;
+  const st = useStandingsStep(g.endsAt, !last);
+  if (!st) return <ResultView {...props} />;
+  const rows = room.players.filter((p) => g.participants.includes(p.id)).map((p) => ({ id: p.id, total: p.score, gain: g.roundPoints[p.id] ?? 0 }));
+  return <RoundStandings room={room} game="map" round={g.round} rounds={g.totalRounds} highlight={`الجولة دي: المكان كان ${g.place?.name ?? '؟'}`} rows={rows} endsAt={g.endsAt} onNext={() => send('game:next')} />;
+}
+
 function Final({ room, g }: P) {
-  const [boom, setBoom] = useState(0);
-  const ranked = [...room.players].sort((a, b) => b.score - a.score);
-  const top = ranked.filter((p) => p.score === ranked[0]?.score);
-  const isHost = room.hostId === room.youId;
-
-  useEffect(() => {
-    music.dip(3);
-    const stopSound = gameOver(null);
-    setBoom(1);
-    const t = setTimeout(() => setBoom(2), 1400);
-    return () => { clearTimeout(t); stopSound(); };
-  }, []);
-
-  return (
-    <main className="screen map-screen">
-      <Confetti fire={boom} amount={boom === 2 ? 180 : 140} from={boom === 2 ? 'top' : 'center'} />
-      <div className="row" style={{ justifyContent: 'flex-end' }}><HelpButton gameId="map" /></div>
-      <div className="col center" style={{ gap: 6 }}>
-        <div className="row" style={{ justifyContent: 'center' }}>{top.map((p) => <span key={p.id} className="pop-in float"><Character id={p.avatar} size={top.length > 1 ? 90 : 130} /></span>)}</div>
-        <h1 className="display pop-in" style={{ fontSize: 34, textAlign: 'center' }}>{top.length > 1 ? 'تعادل!' : `${top[0]?.name} كسب اللمّة!`}</h1>
-        <span className="muted">بعد {AR(g.totalRounds)} {g.totalRounds <= 10 ? 'أماكن' : 'مكان'}</span>
-      </div>
-      <div className="card col stagger" style={{ padding: 8, gap: 4 }}>
-        {ranked.map((p, i) => (
-          <div key={p.id} className="row" style={{ gap: 10, padding: '6px 10px', borderRadius: 16, background: i === 0 ? 'var(--yellow)' : 'transparent', border: i === 0 ? '2.5px solid #111' : '2.5px solid transparent' }}>
-            <span className="rank-n">{AR(i + 1)}</span>
-            <Character id={p.avatar} size={42} />
-            <span className="grow" style={{ fontWeight: 900, fontSize: 15 }}>{p.id === room.youId ? 'إنت' : p.name}</span>
-            <span className="display num" style={{ fontSize: 24 }}>{AR(p.score)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="col push">
-        {isHost ? (
-          <>
-            <button className="btn big full" onClick={() => { sfx.tap(); send('game:again'); }}>نلعبها تاني</button>
-            <button className="btn full" onClick={() => send('game:backToRoom')}>نغيّر اللعبة</button>
-          </>
-        ) : <span className="label" style={{ textAlign: 'center' }}>مستنيين المضيف</span>}
-      </div>
-    </main>
-  );
+  const rows = room.players.filter((p) => g.participants.includes(p.id)).map((p) => ({ id: p.id, total: p.score }));
+  const sorted = [...rows].sort((a, b) => b.total - a.total);
+  const nm = (id: string) => (id === room.youId ? 'إنت' : room.players.find((p) => p.id === id)?.name ?? '؟');
+  const awards = sorted.length > 1 ? [{ k: 'بطل الخريطة', who: nm(sorted[0].id), why: `${AR(sorted[0].total)} نقطة` }, { k: 'المنافس القوي', who: nm(sorted[1].id), why: `ورا الأول بـ ${AR(sorted[0].total - sorted[1].total)} نقطة` }] : [];
+  return <GameOver room={room} game="map" doneLabel={`${AR(g.totalRounds)} جولات`} rows={rows} awards={awards} />;
 }

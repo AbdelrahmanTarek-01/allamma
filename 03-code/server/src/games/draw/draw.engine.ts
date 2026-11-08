@@ -20,7 +20,7 @@ export const DRAW_LEVELS: Record<Level, { drawSecs: number; guessSecs: number; a
 };
 
 export const PICK_SECONDS = 10;
-export const REVEAL_SECONDS = 8;
+export const REVEAL_SECONDS = 16; // the round result, then the shared standings in the last 8 s
 export const WORD_POINTS = [0, 100, 200, 300];
 export const DRAWER_PER_GUESS = 50;
 export const FLUSH_MS = 33; // live strokes: ~30 updates per second

@@ -109,3 +109,8 @@ result ──host──▶ back to the lounge
 - Engine `server/src/games/draw/draw.engine.ts`, pool `draw-words.ts` (316 words, group per level x drawing difficulty 1-3). Phases per round: pick (10 s, 1 of 3 words worth 100/200/300) → draw (live strokes via `ctx.push`) → guess (opens only after submit or draw time) → reveal (8 s) → final with the likes gallery. Setting `cycles` 1/2.
 - Difficulty table `DRAW_LEVELS`: draw 90/70/50/40 s, guess 30/20/15/10 s, attempts 4/3/2/2, reveal-letter cards 2/1/1/0, no eraser on ماكس, word pool objects / places and things / situations / feelings and proverbs.
 - `EngineCtx.push(ids, event, data)` sends small custom events (not snapshots) through the gateway.
+
+## Shared standings and game over (01-brainstorm/standings-and-game-over.md)
+- `components/RoundStandings.tsx`: between rounds, the last 8 seconds of the round-end phase (`useStandingsStep`) show the shared standings (solo rows that re-order with rank arrows, or two team bars), after the game's own result screen; never after the last round. Used by Spy, Map, Wave, Draw, Auction and Words. حزّورة keeps its board (team scores are always on screen). The host's "كمّل دلوقتي" calls the game's own next action.
+- Server timers: Spy result now auto-continues after 24 s (host can still skip), Draw reveal 16 s, Auction reveal 14 s (Map 25 s, Wave 30 s and Words 16 s already fit).
+- `components/GameOver.tsx` is the final screen of Spy, Map and Wave (podium or cup, two awards, the room-leaderboard line). The room leaderboard opens 9 s after a game ends, or from its link (`allamma:board` event).

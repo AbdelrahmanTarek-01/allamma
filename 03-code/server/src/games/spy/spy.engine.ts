@@ -7,6 +7,8 @@ import type { SpyGame, SpyOutcome, SpySettings } from './spy.types';
 
 export const VOTE_SECONDS = 45;
 export const REVEAL_SECONDS = 6;
+/** After a round (not the last): the result screen, then the shared standings in the last 8 seconds, then the next round starts by itself. */
+export const RESULT_SECONDS = 24;
 export const GUESS_SECONDS = 20;
 
 /** One row per level (01-brainstorm/difficulty.md). A new knob is one more field here. */
@@ -373,7 +375,8 @@ export class SpyEngine implements GameEngine {
     ctx.clearTimer();
     g.outcome = outcome;
     g.phase = 'result';
-    g.endsAt = null;
+    g.endsAt = g.round < g.totalRounds ? Date.now() + RESULT_SECONDS * 1000 : null;
+    if (g.endsAt) ctx.schedule(RESULT_SECONDS, () => { try { this.nextRound(ctx); } catch { /* the host decides */ } });
     const caught = g.caught ? g.accusedId : null;
     const pts: Record<string, number> = {};
     g.participants.forEach((id) => {
