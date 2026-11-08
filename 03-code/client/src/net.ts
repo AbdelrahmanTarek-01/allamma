@@ -269,6 +269,10 @@ export interface RoomView {
   locked: boolean;
   /** Who may come in: anyone with the code, new players ask the host, or nobody new. */
   joinMode: 'open' | 'ask' | 'locked';
+  /** Game votes: player id -> game id ('random' allowed). */
+  gameVotes: Record<string, string>;
+  /** Who picks the game: the host (votes are suggestions) or the majority of the votes. */
+  gameChooser: 'host' | 'majority';
   /** Host only: players asking to come in (empty for everyone else). */
   requests: { id: string; name: string; avatar: string; returning: boolean; at: number }[];
   selectedGame: string;

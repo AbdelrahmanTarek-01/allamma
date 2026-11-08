@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { GAMES } from './art';
+import { Character, GAMES } from './art';
 import { HelpButton } from './HelpSheet';
 
 type Game = (typeof GAMES)[number];
@@ -17,7 +17,19 @@ const Lock = () => (
  * inside the tile in the corner opposite the icon; coming-soon tiles stay white with a greyscale icon.
  * `help` adds the "?" button (a sibling of the tile button, since buttons can't nest).
  */
-export function GameTile({ g, selected, onClick, style, help, lit }: { g: Game; selected?: boolean; lit?: boolean; onClick?: () => void; style?: CSSProperties; help?: boolean }) {
+/** Votes shown on a game card: who voted (avatar stack, max 3 + "+N"), the count, and a "صوتك" tag on my card. */
+export interface CardVotes { avatars: string[]; count: number; mine: boolean }
+export function VoteRow({ v }: { v: CardVotes }) {
+  return (
+    <span className="vote-row">
+      {v.avatars.slice(0, 3).map((a, i) => <span key={i} className="vote-av" style={{ marginInlineStart: i ? -8 : 0 }}><Character id={a} size={20} /></span>)}
+      {v.count > 3 && <span className="vote-more">+{v.count - 3}</span>}
+      {v.mine && <span className="vote-mine">صوتك</span>}
+    </span>
+  );
+}
+
+export function GameTile({ g, selected, onClick, style, help, lit, votes }: { g: Game; selected?: boolean; lit?: boolean; votes?: CardVotes; onClick?: () => void; style?: CSSProperties; help?: boolean }) {
   const Tag = onClick ? 'button' : 'div';
   const tile = (
     <Tag
@@ -30,6 +42,8 @@ export function GameTile({ g, selected, onClick, style, help, lit }: { g: Game; 
       <span className={`icontile${g.ready ? '' : ' grey'}`} style={{ background: g.color }}>{g.icon}</span>
       <span className="display game-title">{g.name}</span>
       <span className="game-tag">{g.tagline}</span>
+      {votes && <VoteRow v={votes} />}
+      {votes && votes.count > 0 && <span className="vote-count" aria-label={`${votes.count} أصوات`}>{votes.count}</span>}
     </Tag>
   );
   if (!help) return tile;

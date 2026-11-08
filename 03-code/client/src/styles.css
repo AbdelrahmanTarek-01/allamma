@@ -986,3 +986,11 @@ button:disabled { cursor: not-allowed; }
 .sg-btns.sg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sg-btns.sg-grid button.sg-dice { grid-column: span 2; }
 .sg-btns button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
+
+/* game voting on the rail cards: avatar stack, count badge, "صوتك" tag */
+.game-tile { position: relative; }
+.vote-row { display: flex; align-items: center; gap: 4px; min-height: 24px; margin-top: auto; padding-top: 4px; }
+.vote-av { display: flex; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--ink); }
+.vote-more { font-size: 11px; font-weight: 900; background: var(--ink); color: #fff; border-radius: 99px; padding: 0 6px; margin-inline-start: 2px; }
+.vote-mine { font-size: 10.5px; font-weight: 900; background: var(--pink); color: #111; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; margin-inline-start: auto; }
+.vote-count { position: absolute; top: 8px; inset-inline-start: 8px; min-width: 22px; height: 22px; border-radius: 99px; background: var(--green); border: 2px solid var(--ink); color: #111; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }

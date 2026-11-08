@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GAMES } from './art';
-import { GameTile } from './GameTile';
+import { GameTile, VoteRow, type CardVotes } from './GameTile';
 
 /**
  * The room's "هتلعبوا إيه؟" rail: the selected game is always the first card (order = selected, then the rest in the normal order).
@@ -16,7 +16,7 @@ const Dice = () => (
   </svg>
 );
 
-export function GameRail({ selected, onPick, onRandom, lit }: { selected: string; onPick?: (id: string) => void; onRandom?: () => void; lit?: string | null }) {
+export function GameRail({ selected, onPick, onRandom, lit, votesOf }: { selected: string; onPick?: (id: string) => void; onRandom?: () => void; lit?: string | null; votesOf?: (id: string) => CardVotes }) {
   const [shown, setShown] = useState(selected); // the game the order is built from (follows `selected` after a short delay)
   const railRef = useRef<HTMLDivElement>(null);
   const els = useRef(new Map<string, HTMLElement>());
@@ -91,12 +91,14 @@ export function GameRail({ selected, onPick, onRandom, lit }: { selected: string
             <span className="icontile dice-icon" style={{ background: '#FFD23F' }}><Dice /></span>
             <span className="display game-title">عشوائي</span>
             <span className="game-tag">سيبها للحظ</span>
+            {votesOf && <VoteRow v={votesOf('random')} />}
+            {votesOf && votesOf('random').count > 0 && <span className="vote-count">{votesOf('random').count}</span>}
           </button>
         </div>
       )}
       {ordered.map((g) => (
         <div key={g.id} className="rail-slot" ref={(el) => { if (el) els.current.set(g.id, el); else els.current.delete(g.id); }}>
-          <GameTile g={g} selected={g.id === selected} lit={g.id === lit} onClick={onPick ? () => onPick(g.id) : undefined} />
+          <GameTile g={g} selected={g.id === selected} lit={g.id === lit} votes={votesOf?.(g.id)} onClick={onPick ? () => onPick(g.id) : undefined} />
         </div>
       ))}
     </div>

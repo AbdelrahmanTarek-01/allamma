@@ -93,6 +93,10 @@ export interface Room {
   players: Map<string, Player>;
   chat: ChatMsg[];
   selectedGame: string;
+  /** Game votes: player id -> game id (or 'random'). One per player; cleared when a game ends. */
+  gameVotes: Map<string, string>;
+  /** Who picks the game: the host (votes are suggestions) or the majority of the votes (host-only setting). */
+  gameChooser: 'host' | 'majority';
   /** Shared difficulty of the lounge (host-only). Games that have a level table read it when a game starts. */
   difficulty: Level;
   /** Seats in the lounge (4 / 6 / 8 / 12), set by the host. Joining (code, link, quick play) fails with ROOM_FULL at the cap; a player who is already in may always come back. */

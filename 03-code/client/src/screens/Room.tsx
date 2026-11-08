@@ -46,6 +46,11 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
   // one compact line for everyone, built from the schema: "٨ دقايق · ٣ جولات · جاسوس واحد"
   // (buttons hold one word or number; the summary uses each option's long form when it has one)
   const summary = schema.map((f) => { const o = f.options.find((x) => x.value === room.settings[f.key]); return o ? (o.full ?? o.label) : null; }).filter(Boolean).join(' · ');
+  // game votes: who voted for each card, and which card is mine
+  const votesOf = (id: string) => {
+    const who = room.players.filter((p) => room.gameVotes?.[p.id] === id);
+    return { avatars: who.map((p) => p.avatar), count: who.length, mine: room.gameVotes?.[room.youId] === id };
+  };
   const [shaking, setShaking] = useState<string | null>(null);
   /** Tapping a locked option: shake, error sound, and say how many players it needs. */
   const tapLocked = (key: string, min: number) => {
@@ -287,7 +292,12 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
 
       <div className="col" style={{ gap: 6 }}>
         <span className="label" style={{ fontSize: 12 }}>هتلعبوا إيه؟</span>
-        <GameRail selected={room.selectedGame} lit={lit} onRandom={isHost ? () => { sfx.tap(); send('room:randomGame'); } : undefined} onPick={isHost ? (id) => { sfx.tap(); const g = GAMES.find((x) => x.id === id)!; if (g.ready) send('room:selectGame', { game: id }); else toast(`${g.name} جاية قريب`); } : undefined} />
+        <GameRail
+          selected={room.selectedGame} lit={lit} votesOf={votesOf}
+          // tapping a card is a vote for everyone; the host in "host picks" mode also selects it (and the dice rolls) right away
+          onRandom={() => { sfx.tap(); send('room:voteGame', { game: 'random' }); if (isHost && room.gameChooser !== 'majority') send('room:randomGame'); }}
+          onPick={(id) => { sfx.tap(); const g = GAMES.find((x) => x.id === id)!; if (!g.ready) return toast(`${g.name} جاية قريب`); send('room:voteGame', { game: id }); if (isHost && room.gameChooser !== 'majority') send('room:selectGame', { game: id }); }}
+        />
       </div>
 
       {/* the selected game stays a small card: icon, name, one summary line, "?" help. Settings live behind the host's gear. */}
@@ -404,6 +414,14 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
                 <button className="btn black" style={{ height: 44 }} type="submit" disabled={!draft.trim() || draft.trim() === room.name}>احفظ</button>
               </div>
             </form>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12.5 }}>مين بيختار اللعبة؟</span>
+              <div className="seg" role="group" aria-label="مين بيختار اللعبة">
+                <button aria-pressed={room.gameChooser !== 'majority'} onClick={() => send('room:chooser', { mode: 'host' })}>الهوست</button>
+                <button aria-pressed={room.gameChooser === 'majority'} onClick={() => send('room:chooser', { mode: 'majority' })}>الأغلبية</button>
+              </div>
+              <span className="muted setting-hint">{room.gameChooser === 'majority' ? 'اللعبة اللي عليها أكتر أصوات بتتختار لوحدها' : 'الهوست بيختار، والأصوات اقتراحات'}</span>
+            </div>
             <div className="col" style={{ gap: 4 }}>
               <span className="label" style={{ fontSize: 12.5 }}>الخصوصية</span>
               <div className="seg" role="group" aria-label="خصوصية القعدة">

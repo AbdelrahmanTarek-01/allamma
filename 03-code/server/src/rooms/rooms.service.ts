@@ -40,6 +40,7 @@ export class RoomsService implements OnModuleDestroy {
   private playerRoom = new Map<string, string>();
   private onChange: (room: Room, only?: string[]) => void = () => {};
   private onPush: (room: Room, ids: string[], event: string, data: unknown) => void = () => {};
+  private randomWon = new Set<string>(); // majority mode: rooms where 'random' already triggered its pick
   private rolls = new Map<string, { game: string; timer: NodeJS.Timeout }>(); // room code -> the random game roll in progress
   private onNotify: (socketId: string, event: string, data: unknown) => void = () => {};
   private pendingOf = new Map<string, string>(); // requester id -> room code
@@ -147,6 +148,8 @@ export class RoomsService implements OnModuleDestroy {
       players: new Map(),
       chat: [],
       selectedGame: def.id,
+      gameVotes: new Map(),
+      gameChooser: 'host',
       difficulty: DEFAULT_LEVEL,
       maxPlayers: DEFAULT_MAX_PLAYERS,
       settings: { [def.id]: def.defaultSettings() },
@@ -264,12 +267,14 @@ export class RoomsService implements OnModuleDestroy {
     const room = this.roomOf(playerId);
     if (!room) return;
     room.players.delete(playerId);
+    room.gameVotes.delete(playerId); // a leaver's vote goes with them
     this.playerRoom.delete(playerId);
     if (room.players.size === 0) {
       this.destroy(room);
       return;
     }
     if (room.hostId === playerId) this.passHost(room);
+    this.resolveVotes(room);
     room.engine?.onLeave(this.ctx(room), playerId);
     this.emit(room);
   }
@@ -414,7 +419,10 @@ export class RoomsService implements OnModuleDestroy {
    * Everyone gets `room:roll` now (the clients play the slot-machine roll); the selection itself is applied when the roll ends, so it lands with the animation.
    */
   randomGame(playerId: string) {
-    const room = this.mustHost(playerId);
+    this.rollRandom(this.mustHost(playerId));
+  }
+
+  private rollRandom(room: Room) {
     if (room.engine) throw new GameError('مينفعش تغيّر اللعبة واللعبة شغالة');
     const online = [...room.players.values()].filter((p) => p.connected).length;
     const fit = Object.values(GAME_DEFS).filter((d) => d.minPlayers <= online && d.minPlayers <= room.maxPlayers);
@@ -433,6 +441,52 @@ export class RoomsService implements OnModuleDestroy {
     }, ROLL_MS + 200);
     this.rolls.set(room.code, { game: def.id, timer });
     this.onPush(room, [...room.players.keys()], 'room:roll', { game: def.id, ms: ROLL_MS });
+  }
+
+  /** Any player: vote for a game (or 'random'). One vote each, a new vote moves it. In majority mode the leading game is selected right away. */
+  voteGame(playerId: string, game: unknown) {
+    const room = this.mustRoom(playerId);
+    if (room.engine) throw new GameError('مينفعش تصوّت واللعبة شغالة');
+    const id = String(game ?? '');
+    if (id !== 'random' && !GAME_DEFS[id]) throw new GameError('اللعبة دي جاية قريب');
+    room.gameVotes.set(playerId, id);
+    this.resolveVotes(room);
+    this.emit(room);
+  }
+
+  /** Host only: who picks the game, "host" or "majority". */
+  setGameChooser(playerId: string, mode: unknown) {
+    const room = this.mustHost(playerId);
+    if (mode !== 'host' && mode !== 'majority') throw new GameError('اختيار مش صح');
+    room.gameChooser = mode;
+    this.resolveVotes(room);
+    this.emit(room);
+  }
+
+  /**
+   * Majority mode: the most-voted playable game becomes the selection. A tie keeps the current game when it is among the leaders, otherwise the
+   * host's choice stands. If 'random' leads alone, the random pick runs once (not again on every later vote).
+   */
+  private resolveVotes(room: Room) {
+    if (room.gameChooser !== 'majority' || room.engine) return;
+    const online = [...room.players.values()].filter((p) => p.connected).length;
+    const playable = (id: string) => id === 'random' || (GAME_DEFS[id].minPlayers <= online && GAME_DEFS[id].minPlayers <= room.maxPlayers);
+    const count = new Map<string, number>();
+    room.gameVotes.forEach((g, pid) => { if (room.players.has(pid) && playable(g)) count.set(g, (count.get(g) ?? 0) + 1); });
+    const top = Math.max(0, ...count.values());
+    const leaders = [...count.entries()].filter(([, n]) => n === top && top > 0).map(([g]) => g);
+    if (!(leaders.length === 1 && leaders[0] === 'random')) this.randomWon.delete(room.code);
+    if (!leaders.length || leaders.includes(room.selectedGame) || leaders.length > 1) return;
+    const win = leaders[0];
+    if (win === 'random') {
+      if (this.randomWon.has(room.code)) return;
+      this.randomWon.add(room.code);
+      try { this.rollRandom(room); } catch { /* nothing fits: the selection stays */ }
+      return;
+    }
+    this.cancelRoll(room.code);
+    room.selectedGame = win;
+    room.settings[win] ??= GAME_DEFS[win].defaultSettings();
   }
 
   private cancelRoll(code: string) {
@@ -517,6 +571,7 @@ export class RoomsService implements OnModuleDestroy {
     this.clearTimer(room);
     room.engine = null;
     room.settled = false;
+    room.gameVotes.clear();
     room.players.forEach((p) => (p.ready = false));
     this.emit(room);
   }
@@ -547,6 +602,8 @@ export class RoomsService implements OnModuleDestroy {
     const e = room.engine;
     if (!e || room.settled || !e.isOver()) return;
     room.settled = true;
+    room.gameVotes.clear(); // the game ended: votes start fresh for the next pick
+    this.randomWon.delete(room.code);
     room.players.forEach((p) => (p.lounge += e.scoreOf(p.id)));
     this.recordBoard(room, e);
   }
@@ -646,6 +703,8 @@ export class RoomsService implements OnModuleDestroy {
       minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
       difficulty: room.difficulty,
       maxPlayers: room.maxPlayers,
+      gameVotes: Object.fromEntries(room.gameVotes),
+      gameChooser: room.gameChooser,
       board: this.boardView(room),
       // الموجة: the team of every player (saved choices + automatic balance), for the host's teams editor
       teams: this.usesTeams(room)
