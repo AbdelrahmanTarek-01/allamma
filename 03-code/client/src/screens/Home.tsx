@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Character, GAMES, Plus, Trophy } from '../components/art';
-import { GameSheet } from '../components/GameSheet';
-import { GameTile } from '../components/GameTile';
+import { GameSheet, MIN } from '../components/GameSheet';
 import { IdeaIcon, IdeasSheet } from '../components/IdeasSheet';
 import { MuteButton, Sheet } from '../components/ui';
 import { AR, send, socket, toast, useStore, type LobbyRoom } from '../net';
@@ -56,49 +55,80 @@ export function Home({ onEditProfile }: { onEditProfile: () => void }) {
   if (roomsOpen) return <OpenRooms lobby={lobby} onRefresh={refresh} onClose={() => setRoomsOpen(false)} />;
 
   const count = lobby?.length ?? null;
+  const railRef = useRef<HTMLDivElement>(null);
+  const HERO = ['c2', 'c5', 'c1', 'c4', 'c3'];
   return (
-    <main className="screen home-screen">
-      <header className="row between home-head">
-        <span className="logo">اللمّة<i>.</i></span>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn sm" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy /> الترتيب</button>
-          <MuteButton />
-          <button className="float" onClick={onEditProfile} aria-label="غيّر اسمك أو شخصيتك" style={{ border: 0, background: 'none', padding: 0 }}>
-            <Character id={profile!.avatar} size={54} />
+    <main className="home3">
+      <header className="row" style={{ gap: 8 }}>
+        <span className="logo" style={{ fontSize: 38, lineHeight: 1 }}>اللمّة<i>.</i></span>
+        <div className="row" style={{ gap: 8, marginInlineStart: 'auto' }}>
+          <button className="h3-btn" onClick={() => setBoardOpen(true)} aria-label="الترتيب"><Trophy size={22} /></button>
+          <MuteButton bare card />
+          <button onClick={onEditProfile} aria-label="غيّر اسمك أو شخصيتك" style={{ border: 0, background: 'none', padding: 0, display: 'flex' }}>
+            <span style={{ display: 'flex', borderRadius: '50%', boxShadow: '0 0 0 2.5px #111', background: '#fff' }}><Character id={profile!.avatar} size={44} /></span>
           </button>
         </div>
       </header>
 
-      <h2 className="display" style={{ fontSize: 26 }}>الألعاب</h2>
-      <div className="grid2 stagger">
-        {GAMES.map((g, i) => (
-          <GameTile key={g.id} g={g} style={{ animationDelay: `${i * 60}ms` }} onClick={() => { sfx.card(); setSheetGame(g.id); }} />
-        ))}
-        {/* the last card: what we are cooking next, with a vote per idea */}
-        <button className="tile soon-card" style={{ animationDelay: `${GAMES.length * 60}ms` }} onClick={() => { sfx.card(); setIdeasOpen(true); }}>
-          <span className="soon-badge">+٧</span>
-          <span className="soon-squares" aria-hidden="true">
-            <i style={{ background: '#FF4F9A', transform: 'rotate(-12deg)' }}><IdeaIcon id="mafia" size={26} /></i>
-            <i style={{ background: '#3DDC97', transform: 'translateY(-4px)' }}><IdeaIcon id="categories" size={24} /></i>
-            <i style={{ background: '#4D9DFF', transform: 'rotate(12deg)' }}><IdeaIcon id="whoami" size={26} /></i>
-          </span>
-          <span className="display" style={{ fontSize: 20, marginTop: 8 }}>بنحضّر ٧ كمان</span>
-          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>صوّت للي عاوزها</span>
-        </button>
-      </div>
+      {/* the hero fills whatever height is left: live rooms, a greeting, the crowd and the "we are missing you" bubble */}
+      <section className="h3-hero">
+        <span className="row" style={{ gap: 6, fontSize: 13, fontWeight: 900 }}>
+          <i className="h3-live" />
+          {count === null ? <span className="sk" style={{ width: 110, height: 16, borderRadius: 99 }} /> : `${AR(count)} قعدة شغالة دلوقتي`}
+        </span>
+        <span className="display h3-greet">أهلاً يا {profile!.name}<br />جاهز للمّة النهارده؟</span>
+        <span aria-hidden="true" className="h3-bubble-wrap"><span className="h3-bob" style={{ animationDelay: '.6s' }}><span className="h3-bubble">ناقصينك إنت!</span></span></span>
+        <div aria-hidden="true" className="h3-crowd">
+          {HERO.map((id, i) => (
+            <span key={id} className="h3-bob" style={{ animationDelay: `${i * 0.3}s`, marginInlineStart: i ? -12 : 0, position: 'relative', zIndex: i === 2 ? 1 : 0 }}><Character id={id} size={i === 2 ? 96 : 80} /></span>
+          ))}
+        </div>
+      </section>
 
-      {/* thumb-zone dock: join / open lounges, and the one big action at the very bottom */}
-      <div className="home-dock">
-        <div className="row" style={{ gap: 10 }}>
-                <button className="btn grow" disabled={busy} onClick={() => setCodeOpen(true)}>ادخل بكود</button>
-                <button className="btn grow" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
-                  قعدات مفتوحة
-                  {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} />
-                    : count > 0 ? <span className="chip" style={{ fontSize: 13, background: 'var(--green)' }}>{AR(count)}</span> : null}
-                </button>
-              </div>
-        <button className="btn big full" disabled={busy} onClick={() => create()}><Plus /> اعمل قعدة</button>
-      </div>
+      {/* actions in the thumb zone */}
+      <section className="col" style={{ gap: 12, flex: 'none' }}>
+        <button className="h3-create" disabled={busy} onClick={() => create()}>
+          <span className="h3-create-ic"><Plus /></span>
+          <span className="col" style={{ lineHeight: 1.2, textAlign: 'right' }}>
+            <b className="display" style={{ fontSize: 26 }}>اعمل قعدة</b>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>وابعت اللينك لصحابك</span>
+          </span>
+        </button>
+        <div className="grid2" style={{ gap: 12 }}>
+          <button className="h3-act" disabled={busy} onClick={() => setCodeOpen(true)}>
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="12" height="9" rx="2" fill="#FFD23F" stroke="#111" strokeWidth="2" /><path d="M15 13h6M18 10v6" stroke="#111" strokeWidth="2.2" strokeLinecap="round" /></svg>ادخل بكود
+          </button>
+          <button className="h3-act" onClick={() => { sfx.tap(); setRoomsOpen(true); }}>
+            قعدات مفتوحة
+            {count === null ? <span className="sk" style={{ width: 26, height: 20, borderRadius: 99 }} /> : count > 0 ? <span className="chip" style={{ fontSize: 12, background: 'var(--green)' }}>{AR(count)}</span> : null}
+          </button>
+        </div>
+      </section>
+
+      {/* the games: one horizontal snap rail, ending with the coming-soon card */}
+      <section className="col" style={{ gap: 10, flex: 'none' }}>
+        <div className="row between" style={{ alignItems: 'baseline' }}>
+          <span className="display" style={{ fontSize: 22 }}>الألعاب</span>
+          <button className="h3-all" onClick={() => { sfx.soft(); railRef.current?.scrollTo({ left: railRef.current.scrollWidth, behavior: 'smooth' }); }}>شوف الكل</button>
+        </div>
+        <div className="h3-rail" ref={railRef}>
+          {GAMES.map((g) => (
+            <button key={g.id} className="h3-card" onClick={() => { sfx.card(); setSheetGame(g.id); }}>
+              <span className="icontile" style={{ background: g.color, width: 50, height: 50, borderRadius: 15, filter: g.ready ? 'none' : 'grayscale(1)' }}>{g.icon}</span>
+              <span className="display" style={{ fontSize: 15, lineHeight: 1.2 }}>{g.name}</span>
+              <span className="h3-min">{g.ready ? `${AR(MIN[g.id] ?? 2)}+` : 'قريباً'}</span>
+            </button>
+          ))}
+          <button className="h3-card h3-soon" onClick={() => { sfx.card(); setIdeasOpen(true); }}>
+            <span className="soon-squares" aria-hidden="true">
+              <i style={{ background: '#FF4F9A', transform: 'rotate(-12deg)' }}><IdeaIcon id="mafia" size={22} /></i>
+              <i style={{ background: '#3DDC97', transform: 'translateY(-4px)' }}><IdeaIcon id="categories" size={20} /></i>
+            </span>
+            <span className="display" style={{ fontSize: 15, lineHeight: 1.2, color: '#FFD23F' }}>+٧ ألعاب جاية</span>
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: '#fff' }}>صوّت للي عاوزها</span>
+          </button>
+        </div>
+      </section>
 
       {sheetGame && <GameSheet gameId={sheetGame} busy={busy} onCreate={async (id) => { await create(id); setSheetGame(null); }} onClose={() => setSheetGame(null)} />}
       {ideasOpen && <IdeasSheet onClose={() => setIdeasOpen(false)} />}

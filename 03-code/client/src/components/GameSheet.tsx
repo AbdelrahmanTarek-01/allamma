@@ -5,7 +5,7 @@ import { GAMES } from './art';
 import { Sheet } from './ui';
 
 /** Players each game needs (same numbers as the server's GameDef.minPlayers). */
-const MIN: Record<string, number> = { spy: 3, map: 2, wave: 3, words: 4, auction: 2, quiz: 4, draw: 3 };
+export const MIN: Record<string, number> = { spy: 3, map: 2, wave: 3, words: 4, auction: 2, quiz: 4, draw: 3 };
 
 /**
  * Tapping a game tile on Home: its icon, name, minimum players, a three-line how-to-play (from the game's help content),
