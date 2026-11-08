@@ -919,3 +919,7 @@ button:disabled { cursor: not-allowed; }
 /* room game rail: each card is a slot so the FLIP move can transform it */
 .rail-slot { display: flex; will-change: transform; }
 .rail-slot > .tile { flex: 1; }
+@keyframes wlLogoIn { 0% { transform: scale(.5) rotate(-6deg); opacity: 0; } 70% { transform: scale(1.06); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes wlFall { 0% { transform: translate(0, 0) rotate(0); } 100% { transform: translate(var(--dx), 900px) rotate(var(--r)); } }
+.wl-confetti { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+.wl-confetti > span { position: absolute; top: -20px; border: 1.5px solid var(--ink); border-radius: 2px; }
