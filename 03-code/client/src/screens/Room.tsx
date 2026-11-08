@@ -67,7 +67,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
   useEffect(() => {
     if (room.selectedGame !== 'map') return;
     import('./MapGame').catch(() => {});
-    loadMapDef(mapScope).catch(() => {});
+    (mapScope === 'random' ? ['egypt', 'arab', 'world'] as const : [mapScope as 'egypt' | 'arab' | 'world']).forEach((sc) => loadMapDef(sc).catch(() => {}));
   }, [room.selectedGame, mapScope]);
 
   // sound for people joining and leaving (chat sounds and bubbles come from the floating chat)

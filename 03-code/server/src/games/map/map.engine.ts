@@ -5,13 +5,16 @@ import type { EngineCtx, GameDef, GameEngine, SettingField } from '../game-engin
 import { poolFor, type Difficulty, type MapPlace, type MapScope, type MapTheme } from './places';
 
 export interface MapSettings {
-  scope: MapScope;
+  /** `random`: every place comes from a randomly picked map (egypt / arab / world). */
+  scope: MapScope | 'random';
   theme: MapTheme | 'all';
   places: number;
   seconds: number;
 }
 
-type Place = MapPlace & { id: string; theme: MapTheme };
+/** Each place knows its own map: with the random scope the maps differ from round to round (scoring and hints use the place's map). */
+type Place = MapPlace & { id: string; theme: MapTheme; scope: MapScope };
+const SCOPES: MapScope[] = ['egypt', 'arab', 'world'];
 type Pin = { lat: number; lon: number };
 type Phase = 'guess' | 'reveal' | 'result' | 'final';
 
@@ -108,8 +111,8 @@ export function scorePin(km: number, scope: MapScope, multiplier: number, opts: 
 /** Settings schema. Rule: one word or number per option button; explanations go in the one helper line. */
 const SETTINGS: SettingField[] = [
   {
-    key: 'scope', label: 'الخريطة', hint: 'مصر بس، أو كل الدول العربية، أو العالم كله',
-    options: [{ value: 'egypt', label: 'مصر' }, { value: 'arab', label: 'العرب', full: 'الوطن العربي' }, { value: 'world', label: 'العالم' }]
+    key: 'scope', label: 'الخريطة', hint: 'عشوائي = كل مكان من خريطة شكل: مصر أو العرب أو العالم',
+    options: [{ value: 'egypt', label: 'مصر' }, { value: 'arab', label: 'العرب', full: 'الوطن العربي' }, { value: 'world', label: 'العالم' }, { value: 'random', label: 'عشوائي' }]
   },
   {
     key: 'theme', label: 'هتدوّروا على إيه؟', hint: 'مدن = المدن والعواصم · أكلات = الأكلة دي جاية منين',
@@ -133,7 +136,7 @@ export const mapDef: GameDef<MapSettings> = {
   name: 'فين دي؟',
   minPlayers: 2,
   settings: SETTINGS,
-  defaultSettings: () => ({ scope: 'egypt', theme: 'cities', places: 5, seconds: 20 }),
+  defaultSettings: () => ({ scope: 'world', theme: 'cities', places: 5, seconds: 20 }),
   levels: MAP_LEVELS,
   create: (settings, level) => new MapEngine(settings, level)
 };
@@ -145,7 +148,7 @@ export class MapEngine implements GameEngine {
 
   private readonly settings: MapSettings;
   private room?: Room;
-  private pool: Place[] = [];
+  private pools = new Map<MapScope, Place[]>();
   private queue: Place[] = [];
   private scores: Record<string, number> = {};
   private phase: Phase = 'guess';
@@ -163,7 +166,7 @@ export class MapEngine implements GameEngine {
   start(ctx: EngineCtx, participants: string[]) {
     this.room = ctx.room;
     this.scores = {};
-    this.pool = poolFor(this.settings.scope, this.settings.theme);
+    this.pools.clear();
     this.queue = this.buildQueue();
     this.round = 0;
     this.startPlace(ctx, participants);
@@ -219,7 +222,7 @@ export class MapEngine implements GameEngine {
       totalRounds: this.queue.length,
       phase: this.phase,
       endsAt: this.endsAt,
-      scope: this.settings.scope,
+      scope: place?.scope ?? (this.settings.scope === 'random' ? 'world' : this.settings.scope), // this round's map
       participants: this.participants,
       lockedIds: this.phase === 'guess' ? Object.keys(r.locked) : [],
       place: place && this.phase !== 'final'
@@ -242,13 +245,30 @@ export class MapEngine implements GameEngine {
 
   // ---------- rules ----------
 
-  /** The places of this game: the pool shuffled, preferring the chosen difficulty, capped by what the pack has. */
+  /** The pack of one map for the chosen theme. */
+  private poolOf(scope: MapScope): Place[] {
+    let p = this.pools.get(scope);
+    if (!p) { p = poolFor(scope, this.settings.theme).map((x) => ({ ...x, scope })); this.pools.set(scope, p); }
+    return p;
+  }
+
+  /** The places of this game: shuffled, preferring the level's difficulty, capped by what the pack has. Random scope: a random map per round, never the same one three times in a row. */
   private buildQueue(): Place[] {
-    const { places } = this.settings;
+    const { places, scope } = this.settings;
     const prefer = MAP_LEVELS[this.level].prefer;
-    const all = shuffle(this.pool);
-    const ordered = [...all.filter((x) => x.difficulty === prefer), ...all.filter((x) => x.difficulty !== prefer)];
-    return shuffle(ordered.slice(0, Math.min(places, ordered.length)));
+    const ordered = (sc: MapScope) => { const all = shuffle(this.poolOf(sc)); return [...all.filter((x) => x.difficulty === prefer), ...all.filter((x) => x.difficulty !== prefer)]; };
+    if (scope !== 'random') return shuffle(ordered(scope).slice(0, Math.min(places, this.poolOf(scope).length)));
+    const left = Object.fromEntries(SCOPES.map((sc) => [sc, ordered(sc)])) as Record<MapScope, Place[]>;
+    const out: Place[] = [];
+    while (out.length < places) {
+      const last = out.slice(-2).map((x) => x.scope);
+      const banned = last.length === 2 && last[0] === last[1] ? last[0] : null;
+      let options = SCOPES.filter((sc) => left[sc].length && sc !== banned);
+      if (!options.length) options = SCOPES.filter((sc) => left[sc].length);
+      if (!options.length) break;
+      out.push(left[pick(options)].shift() as Place);
+    }
+    return out;
   }
 
   private startPlace(ctx: EngineCtx, participants: string[]) {
@@ -332,12 +352,12 @@ export class MapEngine implements GameEngine {
   /** Circle: radius >= 30% of the map's short side (bigger when easy), target 35-75% of the radius from the center, >= 3 other pack places inside. */
   private tryCircle(place: Place): Hint | null {
     const f = place.difficulty === 'easy' ? 0.4 : 0.32;
-    const radiusKm = Math.round(SHORT_KM[this.settings.scope] * f);
+    const radiusKm = Math.round(SHORT_KM[place.scope] * f);
     const target = { lat: place.lat, lon: place.lon };
     for (let i = 0; i < 12; i++) {
       const d = radiusKm * (0.35 + Math.random() * 0.4);
       const center = destination(target, Math.random() * 360, d);
-      const inside = this.pool.filter((x) => haversineKm(target, x) > 10 && haversineKm(center, x) <= radiusKm).length;
+      const inside = this.poolOf(place.scope).filter((x) => haversineKm(target, x) > 10 && haversineKm(center, x) <= radiusKm).length;
       if (inside >= 3) return { kind: 'circle', lat: center.lat, lon: center.lon, radiusKm };
     }
     return null;
@@ -345,7 +365,7 @@ export class MapEngine implements GameEngine {
 
   /** Half: shade one side. The unshaded side must keep >= 40% of the pack's places, and the shaded side must rule out something (>= 20%). */
   private tryHalf(place: Place): Hint | null {
-    const b = BOUNDS[this.settings.scope];
+    const b = BOUNDS[place.scope];
     for (let i = 0; i < 16; i++) {
       const shade = pick(['north', 'south', 'east', 'west'] as const);
       const axis = shade === 'north' || shade === 'south' ? 'lat' : 'lon';
@@ -356,7 +376,8 @@ export class MapEngine implements GameEngine {
       if (at <= lo || at >= hi) continue;
       const v = (x: Pin) => (axis === 'lat' ? x.lat : x.lon);
       const shaded = (x: Pin) => (shade === 'north' || shade === 'east' ? v(x) > at : v(x) < at);
-      const out = this.pool.filter(shaded).length / this.pool.length;
+      const pool = this.poolOf(place.scope);
+      const out = pool.filter(shaded).length / pool.length;
       if (1 - out >= 0.4 && out >= 0.2) return { kind: 'half', axis, at, shade };
     }
     return null;
@@ -376,7 +397,7 @@ export class MapEngine implements GameEngine {
       const manual = id in r.locked;
       const fast = manual && r.locked[id] - r.startedAt <= FAST_LOCK_MS;
       const hinted = !!r.hints[id];
-      return { id, lat: pin.lat, lon: pin.lon, km: +km.toFixed(1), points: scorePin(km, this.settings.scope, MAP_LEVELS[this.level].multiplier, { fast, hinted }), hinted, fast, auto: !manual };
+      return { id, lat: pin.lat, lon: pin.lon, km: +km.toFixed(1), points: scorePin(km, place.scope, MAP_LEVELS[this.level].multiplier, { fast, hinted }), hinted, fast, auto: !manual };
     });
     entries.sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity));
     r.entries = entries;

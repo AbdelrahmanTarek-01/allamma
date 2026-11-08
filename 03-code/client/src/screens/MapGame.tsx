@@ -20,13 +20,17 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
 
 export function MapGame(props: P) {
-  // the map file is a separate download: wait for it (instant when the lounge already warmed it up)
-  const [ready, setReady] = useState(() => isMapLoaded(props.g.scope));
+  // the map files are separate downloads: wait for this round's map (instant when the lounge already warmed it up).
+  // With the random scope the map changes between rounds, so all three load as soon as the game starts.
+  const [, bump] = useState(0);
+  const scope = props.g.scope;
+  const random = props.room.settings.scope === 'random';
   useEffect(() => {
     let on = true;
-    loadMapDef(props.g.scope).then(() => on && setReady(true));
+    (random ? (['egypt', 'arab', 'world'] as const) : [scope]).forEach((sc) => { loadMapDef(sc).then(() => on && bump((n) => n + 1)).catch(() => {}); });
     return () => { on = false; };
-  }, [props.g.scope]);
+  }, [scope, random]);
+  const ready = isMapLoaded(scope);
   if (!ready) return <SkeletonHome note="بنجهّز الخريطة…" />;
   switch (props.g.phase) {
     case 'guess': return <Guess {...props} />;
