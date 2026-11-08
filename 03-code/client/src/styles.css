@@ -955,7 +955,7 @@ button:disabled { cursor: not-allowed; }
 .or-act-room { max-width: 100%; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* room: "إعدادات اللعبة" button under the selected-game card, and the start sheet checkbox */
-.gear-btn { height: 48px; font-size: 16px; gap: 8px; display: flex; align-items: center; justify-content: center; }
+.gear-sq { border-radius: 9px; background: #fff; }
 .ck { appearance: none; -webkit-appearance: none; flex: none; width: 26px; height: 26px; margin: 0; border: 3px solid var(--ink); border-radius: 8px; background: #fff; display: grid; place-items: center; cursor: pointer; }
 .ck:checked { background: var(--green); }
 .ck:checked::after { content: ""; width: 11px; height: 6px; border: solid #111; border-width: 0 0 3px 3px; transform: rotate(-45deg) translate(1px, -1px); }

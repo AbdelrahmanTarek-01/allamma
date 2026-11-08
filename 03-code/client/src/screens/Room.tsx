@@ -311,16 +311,12 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
           </span>
           {summary && <span style={{ fontSize: 13, fontWeight: 800 }}>{summary}</span>}
         </div>
-        <div className="col" style={{ gap: 6, alignItems: 'center', flex: 'none' }}>
+        <div className="row" style={{ gap: 8, flex: 'none' }}>
+          {/* host only: the game settings, same small style as the "?" */}
+          {isHost && <button type="button" className="help-btn gear-sq" aria-label="إعدادات اللعبة" onClick={() => { sfx.tap(); openSetup('edit'); }}><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg></button>}
           <HelpButton gameId={game.id} />
         </div>
       </section>
-      {isHost && (
-        <button className="btn full gear-btn" onClick={() => { sfx.tap(); openSetup('edit'); }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3h3.4l.5 2.4 1.7.7 2.1-1.3 2.4 2.4-1.3 2.1.7 1.7 2.4.5v3.4l-2.4.5-.7 1.7 1.3 2.1-2.4 2.4-2.1-1.3-1.7.7-.5 2.4h-3.4l-.5-2.4-1.7-.7-2.1 1.3-2.4-2.4 1.3-2.1-.7-1.7L3 13.7v-3.4l2.4-.5.7-1.7-1.3-2.1 2.4-2.4 2.1 1.3 1.7-.7z" fill="#B48CFF" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#111" strokeWidth={1.8} /></svg>
-          إعدادات اللعبة
-        </button>
-      )}
 
       <div className="row" style={{ gap: 10 }}>
         <h2 className="display h2">اللاعيبة</h2>
