@@ -1,0 +1,9 @@
+# Run on a VPS:  docker compose -f 05-deploy/docker-compose.yml up -d --build
+services:
+  allamma:
+    build:
+      context: ../03-code
+      dockerfile: ../05-deploy/Dockerfile
+    ports:
+      - "80:3000"
+    restart: unless-stopped

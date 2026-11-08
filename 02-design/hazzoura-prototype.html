@@ -1,0 +1,391 @@
+<title>لوحة حزّورة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: night-on-the-ahwa — scoreboard strip on top, brass 6x6 board below, question card zooms out of its tile */
+:root{
+  --bg:#0d2629; --bg-2:#113236; --surface:#173f44; --line:#25575c;
+  --brass:#e9b44c; --brass-deep:#b9822a; --paper:#fbf1dc; --paper-ink:#0d2629;
+  --ink:#fbf1dc; --muted:#9fbdb7;
+  --a:#ff7a4d; --b:#62c0ff; --good:#4fd08a; --bad:#ff5a69;
+  --font-display:"Lalezar","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:
+    radial-gradient(circle at 20% 0%, rgba(233,180,76,.10), transparent 40%),
+    radial-gradient(circle at 90% 100%, rgba(98,192,255,.08), transparent 45%),
+    var(--bg);
+  color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.5;
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;
+  background-image:radial-gradient(var(--brass) 1px,transparent 1.5px);background-size:22px 22px}
+.app{max-width:1120px;margin:0 auto;padding-block:16px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px;position:relative;z-index:1}
+
+/* top bar */
+.top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.team{position:relative;background:var(--bg-2);border:2px solid var(--line);border-radius:14px;padding:10px 14px;
+  display:flex;flex-direction:column;gap:4px;transition:border-color .3s,box-shadow .3s,transform .3s;min-width:0}
+.team[data-t="0"]{--tc:var(--a)} .team[data-t="1"]{--tc:var(--b)}
+.team.on{border-color:var(--tc);box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 22%,transparent),0 10px 30px -12px var(--tc)}
+.team .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.team input{all:unset;font-weight:700;font-size:15px;color:var(--tc);min-width:0;flex:1;border-bottom:1px dashed transparent}
+.team input:focus{border-bottom-color:var(--tc)}
+.turn-tag{font-size:12px;font-weight:600;background:var(--tc);color:var(--paper-ink);padding:1px 10px;border-radius:99px;opacity:0;transform:scale(.8);transition:.25s}
+.team.on .turn-tag{opacity:1;transform:none}
+.score{font-family:var(--font-display);font-size:clamp(34px,5vw,52px);line-height:1;font-variant-numeric:tabular-nums}
+.dbl{align-self:flex-start;font:600 12px var(--font-body);color:var(--ink);background:transparent;border:1.5px solid var(--line);
+  border-radius:99px;padding:3px 12px;cursor:pointer;transition:.2s}
+.dbl:hover:not(:disabled){border-color:var(--tc);color:var(--tc)}
+.dbl.armed{background:var(--tc);border-color:var(--tc);color:var(--paper-ink);animation:pulse 1s infinite alternate}
+.dbl:disabled{opacity:.35;cursor:not-allowed}
+@keyframes pulse{to{box-shadow:0 0 0 6px color-mix(in srgb,var(--tc) 25%,transparent)}}
+.float{position:absolute;inset-inline-end:14px;top:38px;font-family:var(--font-display);font-size:28px;pointer-events:none}
+
+.mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding-inline:8px}
+.logo{font-family:var(--font-display);font-size:clamp(34px,5vw,48px);line-height:1;color:var(--brass);letter-spacing:.5px;
+  text-shadow:0 3px 0 var(--brass-deep),0 10px 24px rgba(0,0,0,.4)}
+.ctrls{display:flex;gap:6px}
+.ic{font:600 12px var(--font-body);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+.ic:hover{color:var(--ink);border-color:var(--muted)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.cat{background:var(--surface);border-radius:10px;padding:10px 6px;text-align:center;font-weight:700;font-size:clamp(11px,1.5vw,15px);
+  line-height:1.3;display:flex;align-items:center;justify-content:center;min-height:56px;text-wrap:balance;border-bottom:3px solid var(--brass-deep)}
+.cell{position:relative;aspect-ratio:16/10;border:0;border-radius:10px;cursor:pointer;
+  background:linear-gradient(160deg,#f6cd72 0%,var(--brass) 45%,var(--brass-deep) 100%);
+  color:var(--paper-ink);font-family:var(--font-display);font-size:clamp(18px,3.2vw,36px);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -4px 0 rgba(0,0,0,.18),0 6px 14px -8px rgba(0,0,0,.6);
+  transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,filter .18s;animation:pop .5s cubic-bezier(.2,.9,.3,1.2) backwards}
+.cell:hover{transform:translateY(-3px) scale(1.03);filter:brightness(1.06)}
+.cell:active{transform:scale(.97)}
+.cell:focus-visible,.btn:focus-visible,.ic:focus-visible,.dbl:focus-visible{outline:3px solid var(--paper);outline-offset:2px}
+.cell.used{background:var(--bg-2);color:var(--line);box-shadow:none;cursor:default;border:2px dashed var(--line);filter:none;transform:none;font-size:clamp(14px,2.2vw,22px)}
+.cell.used[data-w="0"]{border:2px solid var(--a);color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--bg-2))}
+.cell.used[data-w="1"]{border:2px solid var(--b);color:var(--b);background:color-mix(in srgb,var(--b) 12%,var(--bg-2))}
+@keyframes pop{from{transform:scale(.85);opacity:.3}}
+.hint{color:var(--muted);font-size:13px;text-align:center;text-wrap:balance}
+.hint b{color:var(--brass);font-weight:600}
+
+/* question card */
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:rgba(5,18,20,.72);backdrop-filter:blur(6px)}
+.card{width:min(680px,100%);background:var(--paper);color:var(--paper-ink);border-radius:20px;padding:20px 22px 22px;
+  box-shadow:0 0 0 6px var(--brass),0 30px 80px -20px rgba(0,0,0,.8);display:flex;flex-direction:column;gap:14px;transform-origin:center}
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:14px}
+.meta .v{font-family:var(--font-display);font-size:26px;line-height:1;color:var(--brass-deep)}
+.meta .who{margin-inline-start:auto;padding:3px 12px;border-radius:99px;color:var(--paper-ink);font-size:13px;transition:background .3s}
+.banner{border-radius:12px;padding:10px 14px;font-weight:700;display:flex;gap:10px;align-items:center}
+.banner.treasure{background:linear-gradient(90deg,#ffe29a,var(--brass));animation:shine 1.2s ease-out}
+.banner.bomb{background:var(--bad);color:var(--paper)}
+.banner .big{font-family:var(--font-display);font-size:26px;line-height:1}
+.banner.dblb{background:var(--paper-ink);color:var(--brass)}
+@keyframes shine{from{transform:scale(.6) rotate(-3deg);opacity:0}60%{transform:scale(1.05)}}
+.qbody{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.q{font-size:clamp(20px,3.4vw,30px);font-weight:700;line-height:1.45;text-wrap:balance;margin:0}
+.ring{width:78px;height:78px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:7}
+.ring .bg{stroke:color-mix(in srgb,var(--paper-ink) 12%,transparent)}
+.ring .fg{stroke:var(--tc,var(--good));stroke-linecap:round;transition:stroke .3s}
+.ring.warn .fg{stroke:var(--bad)}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-size:26px;font-variant-numeric:tabular-nums}
+.ring.warn span{color:var(--bad);animation:beat .5s infinite alternate}
+@keyframes beat{to{transform:scale(1.15)}}
+.ans{background:var(--paper-ink);color:var(--paper);border-radius:12px;padding:12px 16px;font-size:clamp(18px,2.8vw,24px);font-weight:700}
+.ans small{display:block;font-size:12px;font-weight:500;color:var(--brass);margin-bottom:2px}
+.steal{font-weight:600;font-size:14px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--tc) 22%,var(--paper))}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{flex:1 1 140px;font:700 15px var(--font-body);border:0;border-radius:12px;padding:12px 14px;cursor:pointer;transition:transform .12s,filter .12s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)} .btn:active{transform:scale(.97)}
+.btn.primary{background:var(--paper-ink);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--paper-ink);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--paper-ink) 25%,transparent)}
+.btn.ta{background:var(--a);color:var(--paper-ink)} .btn.tb{background:var(--b);color:var(--paper-ink)}
+
+/* end screen */
+.end .card{text-align:center;align-items:center}
+.end h2{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,8vw,64px);line-height:1.1;margin:0}
+.end p{margin:0;font-size:18px;font-weight:600}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;height:100%}
+
+@media (max-width:640px){
+  .top{grid-template-columns:1fr 1fr}
+  .mid{grid-column:1/-1;order:-1;flex-direction:row;justify-content:space-between}
+  .board{gap:5px}
+  .cat{min-height:48px;padding:6px 3px;border-radius:7px}
+  .cell{border-radius:7px;aspect-ratio:1/1}
+  .qbody{grid-template-columns:1fr}
+  .ring{justify-self:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <section class="team" data-t="0" id="team0">
+      <div class="row"><input id="name0" value="فريق البرتقالي" aria-label="اسم الفريق الأول" maxlength="18"><span class="turn-tag">دوركم</span></div>
+      <div class="score" id="score0">٠</div>
+      <button class="dbl" id="dbl0" title="فعّلها قبل ما تختار خانة: النقط تتضاعف">دبّل ×٢</button>
+    </section>
+    <div class="mid">
+      <div class="logo">حزّورة</div>
+      <div class="ctrls">
+        <button class="ic" id="mute" aria-pressed="false">الصوت: شغال</button>
+        <button class="ic" id="reset">لعبة جديدة</button>
+      </div>
+    </div>
+    <section class="team" data-t="1" id="team1">
+      <div class="row"><input id="name1" value="فريق الأزرق" aria-label="اسم الفريق الثاني" maxlength="18"><span class="turn-tag">دوركم</span></div>
+      <div class="score" id="score1">٠</div>
+      <button class="dbl" id="dbl1" title="فعّلها قبل ما تختار خانة: النقط تتضاعف">دبّل ×٢</button>
+    </section>
+  </header>
+
+  <main class="board" id="board" aria-label="لوحة الأسئلة"></main>
+  <p class="hint">اختاروا خانة. لو غلطتوا، الفريق التاني يقدر يسرق السؤال. في اللوحة <b>كنز</b> بيضاعف النقط و<b>قنبلة</b> بتخصم لو غلطتوا، ومحدش يعرف مكانهم.</p>
+</div>
+
+<div class="overlay" id="qov" hidden>
+  <article class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="qtext">
+    <div class="meta"><span id="qcat"></span><span class="v" id="qval"></span><span class="who" id="qwho"></span></div>
+    <div id="qban"></div>
+    <div class="qbody">
+      <p class="q" id="qtext"></p>
+      <div class="ring" id="ring"><svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" id="ringfg" cx="40" cy="40" r="34"/></svg><span id="ringtxt">٣٠</span></div>
+    </div>
+    <div id="qsteal"></div>
+    <div class="ans" id="qans" hidden><small>الإجابة</small><span id="qanstxt"></span></div>
+    <div class="acts" id="acts"></div>
+  </article>
+</div>
+
+<div class="overlay end" id="endov" hidden>
+  <article class="card" role="dialog" aria-modal="true" aria-labelledby="endtitle">
+    <p>خلصت اللعبة</p>
+    <h2 id="endtitle"></h2>
+    <p id="endscore"></p>
+    <div class="acts" style="width:100%"><button class="btn primary" id="again">لعبة جديدة</button></div>
+  </article>
+</div>
+<canvas id="fx"></canvas>
+
+<script>
+const CATS=[
+ {name:"كورة مصرية",qs:[
+  ["النادي الأهلي اتأسس سنة كام؟","1907"],
+  ["لقب منتخب مصر إيه؟","الفراعنة"],
+  ["مصر كسبت كأس الأمم الأفريقية كام مرة؟","7 مرات"],
+  ["محمد صلاح لعب لأي نادي مصري قبل ما يحترف؟","المقاولون العرب"],
+  ["مين كان مدرب منتخب مصر في كأس العالم 2018؟","هيكتور كوبر"],
+  ["قبل 2018، آخر مرة مصر وصلت كأس العالم كانت سنة كام؟","1990"]]},
+ {name:"أفلام زمان",qs:[
+  ["مين بطلة فيلم «دعاء الكروان»؟","فاتن حمامة"],
+  ["مين غنى ومثّل في «الوسادة الخالية»؟","عبد الحليم حافظ"],
+  ["مين مخرج فيلم «باب الحديد»؟","يوسف شاهين"],
+  ["فيلم «الأرض» مأخوذ عن رواية مين؟","عبد الرحمن الشرقاوي"],
+  ["فيلم «صراع في الوادي» كان أول ظهور لمين في السينما؟","عمر الشريف"],
+  ["فيلم «بداية ونهاية» مأخوذ عن رواية مين؟","نجيب محفوظ"]]},
+ {name:"أكل مصري",qs:[
+  ["الكشري فيه رز ومكرونة و…؟","عدس"],
+  ["الطعمية في إسكندرية اسمها إيه؟","فلافل"],
+  ["الطشة بتاعة الملوخية بتتعمل بإيه؟","ثوم وكزبرة ناشفة"],
+  ["الفسيخ مرتبط بأي مناسبة؟","شم النسيم"],
+  ["حلويات «أم علي» اسمها جاي من مين حسب الحكاية المشهورة؟","زوجة السلطان عز الدين أيبك"],
+  ["المِش بيتعمل من إيه؟","جبنة قديمة متخمّرة"]]},
+ {name:"مسلسلات",qs:[
+  ["مين لعب دور «رأفت الهجان»؟","محمود عبد العزيز"],
+  ["فوازير رمضان اشتهرت بيها نجمتين، اذكر واحدة","نيللي أو شريهان"],
+  ["مين كاتب «ليالي الحلمية»؟","أسامة أنور عكاشة"],
+  ["مسلسل «الكبير أوي» بطولة مين؟","أحمد مكي"],
+  ["«بكار» كان عايش في أي محافظة؟","أسوان"],
+  ["اسم الأب في «لن أعيش في جلباب أبي»؟","عبد الغفور البرعي"]]},
+ {name:"كمّل المثل",qs:[
+  ["اللي ميعرفش يقول…","عدس"],
+  ["ابن الوز…","عوّام"],
+  ["إن جالك الطوفان…","حط ابنك تحت رجليك"],
+  ["اللي على راسه بطحة…","يحسس عليها"],
+  ["يا واخد القرد على ماله…","يروح المال ويفضل القرد على حاله"],
+  ["زي اللي رقصت على السلم…","لا اللي فوق شافوها ولا اللي تحت أخدوا بالهم"]]},
+ {name:"جغرافيا مصر",qs:[
+  ["عاصمة محافظة البحر الأحمر؟","الغردقة"],
+  ["أكبر بحيرة صناعية في مصر؟","بحيرة ناصر"],
+  ["أعلى جبل في مصر؟","جبل سانت كاترين"],
+  ["واحة سيوة تبع أي محافظة؟","مطروح"],
+  ["قناة السويس اتفتحت للملاحة سنة كام؟","1869"],
+  ["مصر فيها كام محافظة؟","27 محافظة"]]}
+];
+const VALUES=[200,200,400,400,600,600];
+const ar=n=>Number(n).toLocaleString("ar-EG");
+const $=id=>document.getElementById(id);
+const board=$("board"), qov=$("qov"), card=$("card"), acts=$("acts");
+const names=()=>[$("name0").value.trim()||"الفريق الأول",$("name1").value.trim()||"الفريق الثاني"];
+const tcol=i=>i===0?"var(--a)":"var(--b)";
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let S, cellEls={};
+
+/* ---------- sound ---------- */
+let ac=null, muted=false;
+function actx(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
+function tone(f,d,type="sine",vol=.12,when=0,to){const c=actx();if(!c||muted)return;const t=c.currentTime+when,o=c.createOscillator(),g=c.createGain();
+ o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.03)}
+const sfx={
+ click(){tone(620,.05,"triangle",.07)},
+ open(){tone(260,.28,"sine",.1,0,880)},
+ tick(){tone(1100,.04,"square",.04)},
+ good(){[523,659,784,1047].forEach((f,i)=>tone(f,.2,"triangle",.13,i*.08))},
+ bad(){tone(200,.4,"sawtooth",.09,0,80)},
+ treasure(){[880,1175,1568,2093,2637].forEach((f,i)=>tone(f,.14,"sine",.09,i*.06))},
+ bomb(){tone(140,.7,"sawtooth",.16,0,35);tone(70,.8,"square",.08,.05,30)},
+ steal(){tone(400,.12,"square",.07);tone(600,.12,"square",.07,.12)},
+ win(){[392,523,659,784,659,784,1047].forEach((f,i)=>tone(f,.22,"triangle",.13,i*.12))}
+};
+
+/* ---------- confetti ---------- */
+const fx=$("fx"),g2=fx.getContext("2d");let parts=[],fxOn=false;
+function sizeFx(){fx.width=innerWidth*devicePixelRatio;fx.height=innerHeight*devicePixelRatio}
+addEventListener("resize",sizeFx);sizeFx();
+function confetti(n=120,x=innerWidth/2,y=innerHeight/2){if(reduce)n=Math.min(n,20);
+ const cols=["#e9b44c","#ff7a4d","#62c0ff","#4fd08a","#fbf1dc"];
+ for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=4+Math.random()*9;
+  parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-6,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:4+Math.random()*4,c:cols[i%5],life:1})}
+ if(!fxOn){fxOn=true;requestAnimationFrame(fxLoop)}}
+function fxLoop(){const d=devicePixelRatio;g2.clearRect(0,0,fx.width,fx.height);
+ parts=parts.filter(p=>p.life>0);parts.forEach(p=>{p.vy+=.28;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.life-=.008;
+  g2.save();g2.globalAlpha=Math.max(0,Math.min(1,p.life*2));g2.translate(p.x*d,p.y*d);g2.rotate(p.r);g2.fillStyle=p.c;g2.fillRect(-p.w*d/2,-p.h*d/2,p.w*d,p.h*d);g2.restore()});
+ if(parts.length)requestAnimationFrame(fxLoop);else{fxOn=false;g2.clearRect(0,0,fx.width,fx.height)}}
+
+/* ---------- game ---------- */
+function newGame(){
+ const ids=[];for(let c=0;c<6;c++)for(let r=0;r<6;r++)ids.push(c+"-"+r);
+ for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}
+ S={scores:[0,0],turn:Math.random()<.5?0:1,used:{},dbl:[true,true],dblOn:false,treasure:ids[0],bomb:ids[1],cur:null};
+ buildBoard();renderTop();
+}
+function buildBoard(){
+ board.innerHTML="";cellEls={};
+ CATS.forEach(c=>{const h=document.createElement("div");h.className="cat";h.textContent=c.name;board.appendChild(h)});
+ for(let r=0;r<6;r++)for(let c=0;c<6;c++){
+  const id=c+"-"+r,b=document.createElement("button");
+  b.className="cell";b.dataset.id=id;b.textContent=ar(VALUES[r]);
+  b.setAttribute("aria-label",CATS[c].name+"، "+VALUES[r]+" نقطة");
+  b.style.animationDelay=(r*6+c)*18+"ms";
+  b.onclick=()=>openQ(id,b);board.appendChild(b);cellEls[id]=b}
+}
+function renderTop(){
+ [0,1].forEach(i=>{$("team"+i).classList.toggle("on",S.turn===i);
+  const d=$("dbl"+i);d.disabled=!S.dbl[i]||S.turn!==i;d.classList.toggle("armed",S.dblOn&&S.turn===i);
+  d.textContent=S.dblOn&&S.turn===i?"مدبّلة ×٢":(S.dbl[i]?"دبّل ×٢":"اتلعبت")})
+}
+[0,1].forEach(i=>$("dbl"+i).onclick=()=>{if(S.turn!==i||!S.dbl[i])return;actx();
+ S.dblOn=!S.dblOn;sfx.steal();renderTop()});
+
+function addScore(i,delta){
+ const el=$("score"+i),from=S.scores[i],to=from+delta;S.scores[i]=to;
+ const t0=performance.now(),dur=reduce?1:700;
+ (function step(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=ar(Math.round(from+(to-from)*e));if(k<1)requestAnimationFrame(step)})(t0);
+ el.animate([{transform:"scale(1)"},{transform:"scale(1.25)"},{transform:"scale(1)"}],{duration:450,easing:"ease-out"});
+ const f=document.createElement("span");f.className="float";f.textContent=(delta>0?"+":"−")+ar(Math.abs(delta));
+ f.style.color=delta>0?"var(--good)":"var(--bad)";$("team"+i).appendChild(f);
+ f.animate([{transform:"translateY(0)",opacity:1},{transform:"translateY(-40px)",opacity:0}],{duration:1100,easing:"ease-out"}).onfinish=()=>f.remove();
+}
+
+/* ---------- question flow ---------- */
+let tm={raf:0};const C=2*Math.PI*34;$("ringfg").style.strokeDasharray=C;
+function startTimer(ms,onEnd){stopTimer();const t0=performance.now();let last=-1;
+ (function frame(now){const left=Math.max(0,ms-(now-t0)),secs=Math.ceil(left/1000);
+  $("ringfg").style.strokeDashoffset=C*(1-left/ms);$("ringtxt").textContent=ar(secs);
+  $("ring").classList.toggle("warn",secs<=5);
+  if(secs<=5&&secs>0&&secs!==last){sfx.tick();last=secs}
+  if(left<=0){tm.raf=0;onEnd();return}tm.raf=requestAnimationFrame(frame)})(t0)}
+function stopTimer(){if(tm.raf)cancelAnimationFrame(tm.raf);tm.raf=0}
+
+function openQ(id,el){
+ if(S.used[id]!==undefined||S.cur)return;actx();sfx.open();
+ const [c,r]=id.split("-").map(Number),[q,a]=CATS[c].qs[r],n=names();
+ S.cur={id,c,r,v:VALUES[r],q,a,el,special:id===S.treasure?"treasure":id===S.bomb?"bomb":null};
+ $("qcat").textContent=CATS[c].name;$("qval").textContent=ar(VALUES[r]);
+ $("qtext").textContent=q;$("qanstxt").textContent=a;$("qans").hidden=true;$("qsteal").innerHTML="";
+ setWho(S.turn);
+ let ban="";
+ if(S.cur.special==="treasure")ban=`<div class="banner treasure"><span class="big">كنز!</span>النقط هنا ×٢</div>`;
+ if(S.cur.special==="bomb")ban=`<div class="banner bomb"><span class="big">قنبلة!</span>لو ${n[S.turn]} مجاوبش صح، هيتخصم ${ar(S.cur.v)}</div>`;
+ if(S.dblOn)ban+=`<div class="banner dblb"><span class="big">×٢</span>${n[S.turn]} مدبّلين السؤال ده</div>`;
+ $("qban").innerHTML=ban;
+ qov.hidden=false;
+ if(!reduce){const a1=el.getBoundingClientRect(),b1=card.getBoundingClientRect();
+  const dx=(a1.left+a1.width/2)-(b1.left+b1.width/2),dy=(a1.top+a1.height/2)-(b1.top+b1.height/2);
+  card.animate([{transform:`translate(${dx}px,${dy}px) scale(${a1.width/b1.width},${a1.height/b1.height})`,opacity:.4,borderRadius:"10px"},{transform:"none",opacity:1}],{duration:460,easing:"cubic-bezier(.2,.85,.25,1)"});
+  qov.animate([{opacity:0},{opacity:1}],{duration:300})}
+ if(S.cur.special)setTimeout(()=>sfx[S.cur?.special]?.(),280);
+ phase("ask");
+}
+function setWho(i){const w=$("qwho");w.textContent="بيجاوب: "+names()[i];w.style.background=tcol(i);$("ring").style.setProperty("--tc",tcol(i))}
+function btn(label,cls,fn){const b=document.createElement("button");b.className="btn "+cls;b.textContent=label;b.onclick=()=>{sfx.click();fn()};acts.appendChild(b);return b}
+function phase(p){
+ S.cur.phase=p;acts.innerHTML="";const t=S.turn,o=1-t,n=names();
+ if(p==="ask"){
+  startTimer(30000,()=>{sfx.bad();shake();phase("steal")});
+  btn("اكشف الإجابة","primary",reveal);
+  btn(`غلط؟ الفرصة لـ${n[o]}`,"ghost",()=>{sfx.bad();shake();phase("steal")});
+ }else if(p==="steal"){
+  sfx.steal();setWho(o);
+  $("qsteal").innerHTML=`<div class="steal" style="--tc:${tcol(o)}">${n[o]}، معاكم ١٥ ثانية تسرقوا السؤال</div>`;
+  startTimer(15000,()=>{sfx.bad();reveal()});
+  btn("اكشف الإجابة","primary",reveal);
+ }else if(p==="judge"){
+  $("qsteal").innerHTML="";$("qwho").textContent="مين جاوب صح؟";$("qwho").style.background="var(--brass)";
+  btn(n[0],"ta",()=>resolve(0));btn(n[1],"tb",()=>resolve(1));btn("محدش","ghost",()=>resolve(null));
+ }
+}
+function reveal(){stopTimer();const a=$("qans");a.hidden=false;
+ if(!reduce)a.animate([{transform:"perspective(600px) rotateX(-80deg)",opacity:0},{transform:"none",opacity:1}],{duration:420,easing:"cubic-bezier(.2,.9,.3,1.2)"});
+ phase("judge")}
+function shake(){if(!reduce)card.animate([0,-10,10,-7,7,-3,0].map(x=>({transform:`translateX(${x}px)`})),{duration:420})}
+function resolve(w){
+ const c=S.cur,t=S.turn,tre=c.special==="treasure"?2:1;
+ if(w===t){addScore(t,c.v*tre*(S.dblOn?2:1));sfx.good();const r=$("team"+t).getBoundingClientRect();confetti(70,r.left+r.width/2,r.top+r.height/2)}
+ else if(w!==null){addScore(w,c.v*tre);sfx.good();const r=$("team"+w).getBoundingClientRect();confetti(70,r.left+r.width/2,r.top+r.height/2)}
+ else sfx.bad();
+ if(c.special==="bomb"&&w!==t)setTimeout(()=>addScore(t,-c.v),350);
+ if(S.dblOn){S.dbl[t]=false;S.dblOn=false}
+ S.used[c.id]=w;closeQ();
+}
+function closeQ(){
+ stopTimer();const c=S.cur,el=c.el;
+ const finish=()=>{qov.hidden=true;S.cur=null;
+  el.classList.add("used");el.dataset.w=c.id in S.used&&S.used[c.id]!==null?S.used[c.id]:"x";
+  el.textContent=S.used[c.id]===null?"—":ar(c.v);el.disabled=true;
+  S.turn=1-S.turn;renderTop();
+  if(Object.keys(S.used).length===36)setTimeout(endGame,500)};
+ if(reduce)return finish();
+ const a1=el.getBoundingClientRect(),b1=card.getBoundingClientRect();
+ const dx=(a1.left+a1.width/2)-(b1.left+b1.width/2),dy=(a1.top+a1.height/2)-(b1.top+b1.height/2);
+ qov.animate([{opacity:1},{opacity:0}],{duration:360,delay:60});
+ card.animate([{transform:"none",opacity:1},{transform:`translate(${dx}px,${dy}px) scale(${a1.width/b1.width},${a1.height/b1.height})`,opacity:.2}],{duration:380,easing:"cubic-bezier(.5,0,.75,0)"}).onfinish=finish;
+}
+function endGame(){
+ const n=names(),[a,b]=S.scores,h=$("endtitle");
+ if(a===b){h.textContent="تعادل!";h.style.color="var(--brass-deep)"}
+ else{const w=a>b?0:1;h.textContent="مبروك "+n[w];h.style.color=w?"#2f8fd1":"#e05a2c"}
+ $("endscore").textContent=`${n[0]} ${ar(a)}  ·  ${n[1]} ${ar(b)}`;
+ $("endov").hidden=false;sfx.win();confetti(220,innerWidth/2,innerHeight/3);setTimeout(()=>confetti(160,innerWidth/4,innerHeight/2),500);setTimeout(()=>confetti(160,innerWidth*.75,innerHeight/2),900);
+}
+$("again").onclick=()=>{$("endov").hidden=true;newGame()};
+$("reset").onclick=()=>{sfx.click();if(S.cur)return;newGame()};
+$("mute").onclick=e=>{muted=!muted;e.target.textContent="الصوت: "+(muted?"مقفول":"شغال");e.target.setAttribute("aria-pressed",muted)};
+[0,1].forEach(i=>$("name"+i).addEventListener("input",renderTop));
+addEventListener("keydown",e=>{if(e.key==="Escape"&&S.cur&&S.cur.phase==="judge")resolve(null)});
+newGame();
+</script>

@@ -1,0 +1,14 @@
+{
+  "name": "allamma",
+  "version": "0.1.0",
+  "private": true,
+  "description": "اللمّة — free online party games club (first game: مين الجاسوس؟)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "build": "npm --prefix server install --include=dev && npm --prefix client install --include=dev && npm --prefix client run build && npm --prefix server run build",
+    "start": "node server/dist/main.js",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev"
+  }
+}
