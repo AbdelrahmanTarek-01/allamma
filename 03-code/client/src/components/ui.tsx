@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AR, serverNow } from '../net';
 import { setAudio, sfx, timerTick, useAudioSettings } from '../sound';
 
@@ -62,7 +63,7 @@ function AudioRow({ id, label, icon, on, value, onToggle, onChange }: {
   id: string; label: string; icon: ReactNode; on: boolean; value: number;
   onToggle: () => void; onChange: (v: number) => void;
 }) {
-  const pct = Math.round(value * 100);
+  const pct = Math.max(5, Math.round(value * 100)); // the saved value (never 0): the thumb and the label always agree, muted or not
   return (
     <div className="card flat col" style={{ gap: 10, padding: 14 }}>
       <div className="row between">
@@ -75,7 +76,7 @@ function AudioRow({ id, label, icon, on, value, onToggle, onChange }: {
         <input
           id={id}
           type="range"
-          min={0}
+          min={5}
           max={100}
           step={5}
           value={pct}
@@ -85,7 +86,7 @@ function AudioRow({ id, label, icon, on, value, onToggle, onChange }: {
           onChange={(e) => onChange(Number(e.target.value) / 100)}
           aria-valuetext={`${pct}٪`}
         />
-        <span className="num" style={{ width: 44, fontWeight: 900, textAlign: 'center' }}>{AR(pct)}٪</span>
+        <span className="num" style={{ width: 44, fontWeight: 900, textAlign: 'center', opacity: on ? 1 : 0.45 }}>{AR(pct)}٪</span>
       </div>
     </div>
   );
@@ -97,13 +98,13 @@ export function SoundSheet({ onClose }: { onClose: () => void }) {
     <Sheet title="الصوت" onClose={onClose}>
       <AudioRow
         id="vol-music" label="الموسيقى" icon={<NoteIcon off={!a.musicOn} />} on={a.musicOn} value={a.music}
-        onToggle={() => { setAudio({ musicOn: !a.musicOn }); (a.musicOn ? sfx.toggleOff : sfx.toggleOn)(); }}
-        onChange={(v) => setAudio({ music: v, musicOn: v > 0 })}
+        onToggle={() => { setAudio(a.musicOn ? { musicOn: false } : { musicOn: true, music: Math.max(a.music, 0.05) }); (a.musicOn ? sfx.toggleOff : sfx.toggleOn)(); }}
+        onChange={(v) => setAudio({ music: v, musicOn: true })}
       />
       <AudioRow
         id="vol-sfx" label="المؤثرات" icon={<SpeakerIcon off={!a.sfxOn} />} on={a.sfxOn} value={a.sfx}
-        onToggle={() => { if (a.sfxOn) sfx.toggleOff(); setAudio({ sfxOn: !a.sfxOn }); if (!a.sfxOn) sfx.toggleOn(); }}
-        onChange={(v) => { setAudio({ sfx: v, sfxOn: v > 0 }); sfx.soft(); }}
+        onToggle={() => { if (a.sfxOn) sfx.toggleOff(); setAudio(a.sfxOn ? { sfxOn: false } : { sfxOn: true, sfx: Math.max(a.sfx, 0.05) }); if (!a.sfxOn) sfx.toggleOn(); }}
+        onChange={(v) => { setAudio({ sfx: v, sfxOn: true }); sfx.soft(); }}
       />
       <span className="muted">الإعدادات بتتحفظ على جهازك.</span>
     </Sheet>
@@ -130,7 +131,21 @@ export function MuteButton({ bare = false, card = false }: { bare?: boolean; car
   );
 }
 
+/** Background scroll lock shared by every open sheet (counted, so nested sheets never unlock too early). */
+let sheetsOpen = 0;
+function useScrollLock() {
+  useEffect(() => {
+    if (sheetsOpen++ === 0) document.body.style.overflow = 'hidden';
+    return () => { if (--sheetsOpen === 0) document.body.style.overflow = ''; };
+  }, []);
+}
+
+/**
+ * Every sheet renders through ONE portal on document.body (z-index scale in styles.css: dock < sheet < toast),
+ * so no screen layout, sticky header, rail or dock can ever cover it. While it is open the page behind can't scroll or be tapped.
+ */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  useScrollLock();
   useEffect(() => {
     sfx.whoosh();
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -138,7 +153,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     return () => window.removeEventListener('keydown', esc);
   }, []);
   const close = () => { sfx.close(); onClose(); };
-  return (
+  return createPortal(
     <div className="sheet-bg" onClick={close}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="row between">
@@ -147,8 +162,14 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
+}
+
+/** The toast, through the same body portal (above the sheets). */
+export function ToastPortal({ text }: { text: string }) {
+  return createPortal(<div key={text} className="toast" role="status">{text}</div>, document.body);
 }
 
 /** Counts a number up from its previous value — used for scores. */

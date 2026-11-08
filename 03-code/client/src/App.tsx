@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { GameChat } from './components/GameChat';
 import { HelpSheet } from './components/HelpSheet';
 import { takeFirstTimeHelp } from './games';
-import { SkeletonHome } from './components/ui';
+import { SkeletonHome, ToastPortal } from './components/ui';
 import { start, useStore } from './net';
 import { music, type MusicName } from './sound';
 import { Home } from './screens/Home';
@@ -122,7 +122,7 @@ export function App() {
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
       {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && !isQuiz && !isWords && !isAuction && !isDraw && phase === 'discuss'} visible={!board && (!room.game || (isWave || isQuiz || isWords || isAuction || isDraw ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
-      {toast && <div key={toast} className="toast" role="status">{toast}</div>}
+      {toast && <ToastPortal text={toast} />}
     </>
   );
 }

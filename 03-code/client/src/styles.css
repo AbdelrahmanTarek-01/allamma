@@ -1,5 +1,7 @@
 /* Allamma design tokens — bold yellow, white cards, black ink, game colors as small accents */
 :root {
+  /* z-index scale: page content < sticky headers / rails < dock < sheets < toasts */
+  --z-sticky: 15; --z-dock: 20; --z-sheet: 100; --z-toast: 110;
   --yellow: #FFD23F;
   --yellow-soft: #FFF3C4;
   --ink: #111;
@@ -187,7 +189,8 @@ button:disabled { cursor: not-allowed; }
 .stamp.green { border-color: var(--ok); color: var(--ok); }
 
 /* sheets & toasts */
-.sheet-bg { position: fixed; inset: 0; background: rgba(17,17,17,.55); display: flex; align-items: flex-end; justify-content: center; z-index: 30; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(17,17,17,.55); display: flex; align-items: flex-end; justify-content: center; z-index: var(--z-sheet); touch-action: none; overscroll-behavior: contain; }
+.sheet { touch-action: pan-y; overscroll-behavior: contain; }
 .sheet {
   width: 100%; max-width: 480px; max-height: 80dvh; overflow: auto;
   background: var(--yellow); border: 3px solid var(--ink); border-bottom: 0; border-radius: 24px 24px 0 0;
@@ -199,7 +202,7 @@ button:disabled { cursor: not-allowed; }
 .toast {
   position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--ink); color: var(--yellow); padding: 10px 18px; border-radius: 14px;
-  font-weight: 800; z-index: 40; max-width: calc(100vw - 32px); text-align: center;
+  font-weight: 800; z-index: var(--z-toast); max-width: calc(100vw - 32px); text-align: center;
   animation: pop .25s cubic-bezier(.2, .9, .3, 1.3);
 }
 @keyframes pop { from { transform: translate(-50%, 20px) scale(.9); opacity: 0; } }
