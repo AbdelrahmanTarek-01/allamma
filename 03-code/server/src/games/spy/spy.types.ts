@@ -1,16 +1,13 @@
-import type { Difficulty, Place } from './places';
+import type { Level } from '../difficulty';
+import type { Place } from './places';
 
 export type SpyPhase = 'discuss' | 'vote' | 'reveal' | 'guess' | 'result' | 'final';
 export type SpyOutcome = 'detectives' | 'spy-escaped' | 'spy-guessed';
 
-export type DifficultySetting = Difficulty | 'mix';
-
 export interface SpySettings {
-  discussSeconds: number;
   rounds: number;
   /** Wanted number of spies. The engine clamps it per round to what the connected players allow. */
   spies: number;
-  difficulty: DifficultySetting;
 }
 
 export interface SpyGame {
@@ -19,8 +16,8 @@ export interface SpyGame {
   phase: SpyPhase;
   endsAt: number | null;
   place: Place;
-  /** This round's difficulty (a mix picks one per round) and its points multiplier. */
-  difficulty: Difficulty;
+  /** The lounge's difficulty level and its points multiplier. */
+  difficulty: Level;
   multiplier: number;
   board: string[];
   guessOptions: string[];

@@ -1,3 +1,4 @@
+import type { Level } from '../games/difficulty';
 import type { GameEngine } from '../games/game-engine';
 
 export const AVATARS = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'] as const;
@@ -51,6 +52,8 @@ export interface Room {
   players: Map<string, Player>;
   chat: ChatMsg[];
   selectedGame: string;
+  /** Shared difficulty of the lounge (host-only). Games that have a level table read it when a game starts. */
+  difficulty: Level;
   /** Settings per game id, so switching games keeps each game's choices. */
   settings: Record<string, any>;
   engine: GameEngine | null;

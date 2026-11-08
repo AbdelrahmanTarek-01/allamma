@@ -10,7 +10,7 @@ type P = { room: RoomView; g: GameView };
 
 const spyLabel = (n: number) => (n === 1 ? 'جاسوس واحد' : n === 2 ? 'جاسوسين' : `${AR(n)} جواسيس`);
 /** "صعب ×٢": this round's difficulty and its points multiplier. */
-const DIFF_NAME = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' } as const;
+const DIFF_NAME = { easy: 'سهل', medium: 'متوسط', hard: 'صعب', max: 'ماكس' } as const;
 const diffLabel = (g: GameView) => `${DIFF_NAME[g.difficulty]} ×${AR(String(g.multiplier).replace('.', '٫'))}`;
 
 const usePlayers = (room: RoomView) => {

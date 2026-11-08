@@ -18,6 +18,7 @@ Every client→server event takes a payload and an ack callback. The ack is `{ o
 | `lobby:quick` | – | anyone | Joins the fullest public waiting room with a free seat (never one that banned you), otherwise creates a new public room. Ack `{ code, created }`. |
 | `room:ready` | `{ ready }` | member | |
 | `room:chat` | `{ text }` | member | Up to 200 chars. The last 50 messages per room are kept in memory only. Max 1 message per second per player ("استنى ثانية"). Bad words are masked with `***` while the room is public. Delivered to everyone as `chat:new`. |
+| `room:difficulty` | `{ level }` | host, lounge only | Shared lounge difficulty: `easy` / `medium` (default) / `hard` / `max`. Only games with a level table (`GameDef.levels`, today Spy) use it; the room view carries `difficulty` and `hasLevels`. |
 | `room:rename` | `{ name }` | host | Lounge name, trimmed, max 24 chars, not empty. |
 | `room:selectGame` | `{ game }` | host | Only in the lounge (no game running). Only `spy` is playable, anything else is rejected with "اللعبة دي جاية قريب". |
 | `room:settings` | a patch of the selected game's settings, e.g. `{ spies: 2 }` | host | Validated against the game's schema (`settingsSchema` in `room:state`): unknown values are ignored, an option that needs more connected players than there are is rejected ("محتاج ٦ لاعيبة"). Only while no game is running. Kept per game. Spy: `discussSeconds` 300/480/600, `rounds` 1/3/5, `spies` 1/2/3 (need 3/6/9 players), `difficulty` easy/medium/hard/mix. |

@@ -1,4 +1,5 @@
 import type { Room } from '../rooms/rooms.types';
+import type { Level } from './difficulty';
 
 /** What the room gives an engine: access to the room plus the single per-room timer. */
 export interface EngineCtx {
@@ -77,5 +78,7 @@ export interface GameDef<S = any> {
   /** The settings schema: key, label and the allowed options (validation comes from here). */
   settings: SettingField[];
   defaultSettings(): S;
-  create(settings: S): GameEngine;
+  /** The game's difficulty table, one row per level. A game without one ignores the room's difficulty (no control is shown). */
+  levels?: Record<Level, object>;
+  create(settings: S, level: Level): GameEngine;
 }

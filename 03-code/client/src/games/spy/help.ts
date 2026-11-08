@@ -20,7 +20,8 @@ export const spyHelp: GameHelp = {
   multipliers: [
     { label: 'سهل', value: '×١' },
     { label: 'متوسط', value: '×١٫٥' },
-    { label: 'صعب', value: '×٢' }
+    { label: 'صعب', value: '×٢' },
+    { label: 'ماكس', value: '×٢٫٥' }
   ],
   tip: 'أول مرة؟ لو جاسوس جاوب إجابات عامة زي الباقي ومتسألش أسئلة غريبة. لو محقق اسأل سؤال يفرّق بين الأماكن المتشابهة.'
 };

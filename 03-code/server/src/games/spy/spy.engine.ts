@@ -1,15 +1,34 @@
 import { arabicNum } from '../../common/ar';
 import { GameError, type Room } from '../../rooms/rooms.types';
 import type { EngineCtx, GameDef, GameEngine, SettingField } from '../game-engine';
-import { PLACE_FAMILIES, type Difficulty } from './places';
+import type { Level } from '../difficulty';
+import { PLACE_FAMILIES } from './places';
 import type { SpyGame, SpyOutcome, SpySettings } from './spy.types';
 
 export const VOTE_SECONDS = 45;
 export const REVEAL_SECONDS = 6;
 export const GUESS_SECONDS = 20;
 
-/** Points multiplier per round difficulty. Every award is multiplied, then rounded up to the nearest 10. */
-export const MULTIPLIER: Record<Difficulty, number> = { easy: 1, medium: 1.5, hard: 2 };
+/** One row per level (01-brainstorm/difficulty.md). A new knob is one more field here. */
+export interface SpyLevel {
+  discussSeconds: number;
+  /** How many places the caught spy guesses from (the real one included). */
+  guessOptions: number;
+  /** Place tiers (1-4) that can come up at this level, inclusive. */
+  tiers: [number, number];
+  /** The guess options come from the real place's family first (hard to tell apart). */
+  sameFamily: boolean;
+  /** Points multiplier. Every award is multiplied, then rounded up to the nearest 10. */
+  multiplier: number;
+  /** With at least this many players there are two spies even if the host asked for one (0 = never). */
+  twoSpiesFrom: number;
+}
+export const SPY_LEVELS: Record<Level, SpyLevel> = {
+  easy: { discussSeconds: 480, guessOptions: 6, tiers: [1, 1], sameFamily: false, multiplier: 1, twoSpiesFrom: 0 },
+  medium: { discussSeconds: 360, guessOptions: 9, tiers: [1, 2], sameFamily: false, multiplier: 1.5, twoSpiesFrom: 0 },
+  hard: { discussSeconds: 300, guessOptions: 12, tiers: [2, 3], sameFamily: true, multiplier: 2, twoSpiesFrom: 0 },
+  max: { discussSeconds: 240, guessOptions: 12, tiers: [3, 4], sameFamily: true, multiplier: 2.5, twoSpiesFrom: 6 }
+};
 const up10 = (n: number) => Math.ceil(n / 10) * 10;
 
 /** Spies allowed by connected players: 3-5 => 1, 6-8 => up to 2, 9-10 => up to 3. */
@@ -34,10 +53,6 @@ const shuffle = <T>(arr: T[]): T[] => {
  */
 const SETTINGS: SettingField[] = [
   {
-    key: 'discussSeconds', label: 'وقت الجولة', hint: 'وقت النقاش في كل جولة بالدقايق',
-    options: [{ value: 300, label: '٥', full: '٥ دقايق' }, { value: 480, label: '٨', full: '٨ دقايق' }, { value: 600, label: '١٠', full: '١٠ دقايق' }]
-  },
-  {
     key: 'rounds', label: 'عدد الجولات', hint: 'كام جولة هتلعبوا قبل الترتيب النهائي',
     options: [{ value: 1, label: '١', full: 'جولة' }, { value: 3, label: '٣', full: '٣ جولات' }, { value: 5, label: '٥', full: '٥ جولات' }]
   },
@@ -49,10 +64,6 @@ const SETTINGS: SettingField[] = [
       { value: 2, label: '٢', full: spyWord(2), hintName: 'جاسوسين', minPlayers: MIN_PLAYERS_FOR_SPIES[2] },
       { value: 3, label: '٣', full: spyWord(3), hintName: '٣', minPlayers: MIN_PLAYERS_FOR_SPIES[3] }
     ]
-  },
-  {
-    key: 'difficulty', label: 'الصعوبة', hint: 'مضاعف النقط: سهل ×١ · متوسط ×١٫٥ · صعب ×٢',
-    options: [{ value: 'easy', label: 'سهل' }, { value: 'medium', label: 'متوسط' }, { value: 'hard', label: 'صعب' }, { value: 'mix', label: 'مكس' }]
   }
 ];
 
@@ -61,8 +72,9 @@ export const spyDef: GameDef<SpySettings> = {
   name: 'مين الجاسوس؟',
   minPlayers: 3,
   settings: SETTINGS,
-  defaultSettings: () => ({ discussSeconds: 480, rounds: 3, spies: 1, difficulty: 'mix' }),
-  create: (settings) => new SpyEngine(settings)
+  levels: SPY_LEVELS,
+  defaultSettings: () => ({ rounds: 3, spies: 1 }),
+  create: (settings, level) => new SpyEngine(settings, level)
 };
 
 export class SpyEngine implements GameEngine {
@@ -74,8 +86,10 @@ export class SpyEngine implements GameEngine {
   private room?: Room; // to know who is connected when counting "ready"
   private scores: Record<string, number> = {};
   private readonly settings: SpySettings;
+  private readonly level: Level;
 
-  constructor(settings: SpySettings) {
+  constructor(settings: SpySettings, level: Level) {
+    this.level = level;
     this.settings = { ...settings }; // the room's saved choice stays untouched when a round clamps the spy count
   }
 
@@ -185,19 +199,24 @@ export class SpyEngine implements GameEngine {
     if (round > 1) ctx.system(`بدأت الجولة ${arabicNum(round)}`);
 
     // not enough players for the wanted number of spies (people left): clamp for this round and say so
-    const spies = Math.min(s.spies, maxSpiesFor(participants.length));
-    if (spies < s.spies) ctx.system(`اللاعيبة قلّوا، فعدد الجواسيس بقى ${spyWord(spies)}`);
+    // the lounge's level decides the time, the place pool, the guess options and (on max) the second spy
+    const lvl = SPY_LEVELS[this.level];
+    const wanted = lvl.twoSpiesFrom && participants.length >= lvl.twoSpiesFrom ? Math.max(s.spies, 2) : s.spies;
+    const spies = Math.min(wanted, maxSpiesFor(participants.length));
+    if (spies < wanted) ctx.system(`اللاعيبة قلّوا، فعدد الجواسيس بقى ${spyWord(spies)}`);
 
-    // difficulty: fixed, or a random one per round for "mix"; the place comes from that difficulty
-    const difficulty: Difficulty = s.difficulty === 'mix' ? pick<Difficulty>(['easy', 'medium', 'hard']) : s.difficulty;
     const all = PLACE_FAMILIES.flatMap((f) => f.places.map((place) => ({ family: f, place })));
-    const pool = all.filter((x) => x.place.difficulty === difficulty);
+    const pool = all.filter((x) => x.place.difficulty >= lvl.tiers[0] && x.place.difficulty <= lvl.tiers[1]);
     const { family, place } = pick(pool.length ? pool : all);
 
     const familyNames = family.places.map((p) => p.name);
     const others = shuffle(PLACE_FAMILIES.filter((f) => f !== family).flatMap((f) => f.places.map((p) => p.name)));
     const board = shuffle([...familyNames, ...others.slice(0, Math.max(0, 12 - familyNames.length))]);
-    const guessOptions = shuffle([place.name, ...shuffle(familyNames.filter((n) => n !== place.name)).slice(0, 5)]);
+    // guess options: the real place + (n-1) others. Hard/max take the real place's family first (near-identical siblings), then top up.
+    const siblings = shuffle(familyNames.filter((n) => n !== place.name));
+    const elsewhere = shuffle(PLACE_FAMILIES.flatMap((f) => f.places.map((x) => x.name)).filter((n) => n !== place.name && !siblings.includes(n)));
+    const wrong = lvl.sameFamily ? [...siblings, ...elsewhere] : shuffle([...siblings, ...elsewhere]);
+    const guessOptions = shuffle([place.name, ...wrong.slice(0, lvl.guessOptions - 1)]);
 
     const spyIds = shuffle(participants).slice(0, spies);
     const roles: Record<string, string> = {}; // only detectives get a role; spies just get the spy card
@@ -213,8 +232,8 @@ export class SpyEngine implements GameEngine {
       round,
       totalRounds: s.rounds,
       phase: 'discuss',
-      endsAt: Date.now() + s.discussSeconds * 1000,
-      place, difficulty, multiplier: MULTIPLIER[difficulty],
+      endsAt: Date.now() + lvl.discussSeconds * 1000,
+      place, difficulty: this.level, multiplier: lvl.multiplier,
       board, guessOptions, spyIds, roles, participants,
       askerId,
       targetId: pick(participants.filter((id) => id !== askerId)),
@@ -226,7 +245,7 @@ export class SpyEngine implements GameEngine {
       outcome: null,
       roundPoints: {}
     };
-    ctx.schedule(s.discussSeconds, () => this.startVote(ctx));
+    ctx.schedule(lvl.discussSeconds, () => this.startVote(ctx));
     ctx.emit();
   }
 

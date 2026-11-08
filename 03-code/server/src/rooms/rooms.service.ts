@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { EngineCtx } from '../games/game-engine';
+import { DEFAULT_LEVEL, isLevel } from '../games/difficulty';
 import { DEFAULT_GAME, GAME_DEFS } from '../games/registry';
 import { applySettings } from '../games/settings';
 import { maskBad } from '../common/profanity';
@@ -115,6 +116,7 @@ export class RoomsService implements OnModuleDestroy {
       players: new Map(),
       chat: [],
       selectedGame: def.id,
+      difficulty: DEFAULT_LEVEL,
       settings: { [def.id]: def.defaultSettings() },
       engine: null,
       settled: false,
@@ -291,6 +293,15 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
+  /** Shared difficulty: same guard as the other host settings (host only, not while a game runs). */
+  setDifficulty(playerId: string, level: unknown) {
+    const room = this.mustHost(playerId);
+    if (room.engine) throw new GameError('مينفعش تغيّر الصعوبة واللعبة شغالة');
+    if (!isLevel(level)) throw new GameError('اختيار مش صح');
+    room.difficulty = level;
+    this.emit(room);
+  }
+
   /** Settings of the selected game. */
   updateSettings(playerId: string, patch: unknown) {
     const room = this.mustHost(playerId);
@@ -341,7 +352,7 @@ export class RoomsService implements OnModuleDestroy {
     const online = [...room.players.values()].filter((p) => p.connected);
     if (online.length < def.minPlayers) throw new GameError(`محتاجين ${def.minPlayers} لاعيبة على الأقل`);
     this.clearTimer(room);
-    room.engine = def.create(room.settings[def.id]);
+    room.engine = def.create(room.settings[def.id], room.difficulty);
     room.settled = false;
     this.systemMessage(room, `بدأت لعبة ${def.name}`);
     room.engine.start(this.ctx(room), online.map((p) => p.id));
@@ -376,6 +387,8 @@ export class RoomsService implements OnModuleDestroy {
       players,
       selectedGame: room.selectedGame,
       minPlayers: GAME_DEFS[room.selectedGame].minPlayers, // the lounge's start button follows the selected game
+      difficulty: room.difficulty,
+      hasLevels: !!GAME_DEFS[room.selectedGame].levels, // only games with a level table show the difficulty control
       settings: room.settings[room.selectedGame],
       // the selected game's settings schema: the lounge renders its settings sheet from this (not needed during a game)
       settingsSchema: e ? null : GAME_DEFS[room.selectedGame].settings,

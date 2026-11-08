@@ -6,6 +6,7 @@ import { MuteButton, Sheet } from '../components/ui';
 import { AR, leaveRoom, send, toast, type RoomView } from '../net';
 import { sfx } from '../sound';
 import { loadMapDef } from '../games/map/maps';
+import { LEVELS, levelOf } from '../games/difficulty';
 
 const LockMini = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#111" /><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="#111" strokeWidth={3} /></svg>
@@ -146,7 +147,11 @@ export function Room({ room }: { room: RoomView }) {
       <section className="card row" style={{ gap: 12, padding: '12px 14px' }}>
         <span className="icontile" style={{ background: game.color, width: 46, height: 46, flex: 'none' }}>{game.icon}</span>
         <div className="col grow" style={{ gap: 0, minWidth: 0 }}>
-          <span className="display" style={{ fontSize: 19 }}>{game.name}</span>
+          <span className="row" style={{ gap: 8 }}>
+            <span className="display" style={{ fontSize: 19 }}>{game.name}</span>
+            {/* everyone but the host sees the level as a read-only coloured chip (the host changes it in the gear) */}
+            {!isHost && room.hasLevels && <span className="chip" style={{ background: levelOf(room.difficulty).color, fontSize: 12 }}>{levelOf(room.difficulty).label}</span>}
+          </span>
           {summary && <span style={{ fontSize: 13, fontWeight: 800 }}>{summary}</span>}
         </div>
         <HelpButton gameId={game.id} />
@@ -221,6 +226,26 @@ export function Room({ room }: { room: RoomView }) {
           {/* a) the selected game's settings, rendered generically from its schema */}
           <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
             <span className="display" style={{ fontSize: 18 }}>إعدادات اللعبة</span>
+            {/* shared difficulty: one control for every game that has a level table, in the level colours */}
+            {room.hasLevels && (
+              <div className="col" style={{ gap: 4 }}>
+                <span className="label" style={{ fontSize: 12.5 }}>الصعوبة</span>
+                <div className="seg" role="group" aria-label="الصعوبة">
+                  {LEVELS.map((l) => {
+                    const on = room.difficulty === l.id;
+                    return (
+                      <button
+                        key={l.id}
+                        aria-pressed={on}
+                        style={on ? { background: l.color, color: '#111' } : { boxShadow: `inset 0 -6px 0 ${l.color}` }}
+                        onClick={() => send('room:difficulty', { level: l.id })}
+                      >{l.label}</button>
+                    );
+                  })}
+                </div>
+                <span className="muted setting-hint">بتغيّر الوقت وعدد الاختيارات والأماكن</span>
+              </div>
+            )}
             {/* every group: title, buttons with ONE word or number each, one small helper line */}
             {schema.map((f) => (
               <div key={f.key} className="col" style={{ gap: 4 }}>

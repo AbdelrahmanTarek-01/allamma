@@ -157,6 +157,11 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.updateSettings(id, b ?? {}));
   }
 
+  @SubscribeMessage('room:difficulty')
+  difficulty(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    return this.run(c, (id) => this.rooms.setDifficulty(id, b?.level));
+  }
+
   @SubscribeMessage('room:rename')
   rename(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     return this.run(c, (id) => this.rooms.renameRoom(id, b?.name));

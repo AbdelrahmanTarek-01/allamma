@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { io } from 'socket.io-client';
+import type { Level } from './games/difficulty';
 import { sfx } from './sound';
 
 /** `score` is this game's points; `lounge` is the lounge total across games. */
@@ -29,7 +30,7 @@ export interface GameView {
   readyTotal: number;
   /** How many spies there are (public). Who they are is only revealed at the end of the round. */
   spyCount: number;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: Level;
   multiplier: number;
   /** The one spy the votes caught, from the reveal on. */
   caughtSpyId: string | null;
@@ -86,6 +87,9 @@ export interface RoomView {
   selectedGame: string;
   /** Players the selected game needs to start. */
   minPlayers: number;
+  /** Shared lounge difficulty (host-only). Only games with a level table show it (`hasLevels`). */
+  difficulty: Level;
+  hasLevels: boolean;
   hostId: string;
   youId: string;
   players: PlayerView[];
