@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { GameChat } from './components/GameChat';
 import { SkeletonHome } from './components/ui';
 import { start, useStore } from './net';
 import { music, type MusicName } from './sound';
@@ -33,6 +34,7 @@ export function App() {
   return (
     <>
       <div key={key} className="enter">{screen}</div>
+      {room?.game && <GameChat room={room} visible={phase === 'discuss' || phase === 'vote' || phase === 'result'} />}
       {hasConnected && status === 'offline' && room && (
         <div className="toast" role="status">النت فصل، بنرجّعك لنفس مكانك…</div>
       )}

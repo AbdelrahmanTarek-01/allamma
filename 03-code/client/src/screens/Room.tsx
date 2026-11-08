@@ -46,6 +46,13 @@ export function Room({ room }: { room: RoomView }) {
     catch { toast(`الكود: ${room.code}`); }
   };
 
+  // WhatsApp can't start a call from a link, so this opens a message to a group/contact: they start the voice call there.
+  const whatsapp = () => {
+    const link = `${location.origin}/?room=${room.code}`;
+    const text = `تعالوا نلعب مين الجاسوس في اللمّة ونفتح مكالمة صوت! الكود ${room.code}\n${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  };
+
   const sendChat = async () => {
     const t = msg.trim();
     if (!t) return;
@@ -69,6 +76,11 @@ export function Room({ room }: { room: RoomView }) {
           ادعي
         </button>
       </header>
+
+      <button className="btn full" style={{ background: 'var(--green)' }} onClick={whatsapp}>
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5l2.2 4.4-1.7 1.7a12 12 0 006.3 6.3l1.7-1.7 4.4 2.2c.4.2.6.6.5 1l-.5 2.1c-.1.5-.6.9-1.1.9C10.4 20.4 3.6 13.6 3.1 5.1c0-.5.4-1 .9-1.1l2.1-.5c.5-.1.9.1 1 .5z" fill="#fff" stroke="#111" strokeWidth={1.8} strokeLinejoin="round" /></svg>
+        افتحوا مكالمة واتساب
+      </button>
 
       <section className="card col" style={{ gap: 10, padding: '14px 16px' }}>
         <div className="row">

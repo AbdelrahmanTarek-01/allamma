@@ -184,6 +184,39 @@ button:disabled { cursor: not-allowed; }
 }
 @keyframes pop { from { transform: translate(-50%, 20px) scale(.9); opacity: 0; } }
 
+/* in-game chat */
+.chat-fab {
+  position: fixed; z-index: 20;
+  inset-inline-end: max(16px, calc(50vw - 240px + 16px));
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + 100px);
+  width: 56px; height: 56px; border-radius: 18px; padding: 0;
+  background: var(--white); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .1s, box-shadow .1s;
+}
+.chat-fab:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+.chat-badge {
+  position: absolute; top: -9px; inset-inline-start: -9px; min-width: 24px; height: 24px; padding: 0 5px;
+  background: var(--red); color: var(--white); border: 2.5px solid var(--ink); border-radius: 99px;
+  font-family: var(--font-display); font-weight: 800; font-size: 14px; line-height: 19px; text-align: center;
+}
+.chat-bubble {
+  position: fixed; z-index: 35; left: 50%; top: calc(max(12px, env(safe-area-inset-top)) + 4px);
+  width: min(calc(100vw - 32px), 420px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; text-align: right;
+  background: var(--white); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink);
+  padding: 8px 12px; animation: drop .25s cubic-bezier(.2, .9, .3, 1.3);
+}
+@keyframes drop { from { transform: translate(-50%, -24px) scale(.92); opacity: 0; } }
+.chat-list { display: flex; flex-direction: column; gap: 8px; max-height: 38dvh; min-height: 90px; overflow-y: auto; padding: 2px; }
+.chat-msg { display: flex; align-items: flex-end; gap: 6px; max-width: 88%; align-self: flex-start; }
+.chat-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.chat-card {
+  display: flex; flex-direction: column; gap: 0; min-width: 0;
+  background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; padding: 4px 10px;
+}
+.chat-msg.mine .chat-card { background: var(--yellow-soft); }
+
 /* skeletons */
 /* yellow-on-yellow only, slow and soft like breathing */
 .sk {
