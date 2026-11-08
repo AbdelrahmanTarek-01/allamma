@@ -253,7 +253,7 @@ export function MapView({ scope, onTap, focus, layer, overlay, controls = true, 
             {def.labels.map((l, i) => {
               const x = l.x * view.s + view.tx, y = l.y * view.s + view.ty;
               if (x < -60 || x > size.w + 60 || y < -20 || y > size.h + 20) return null;
-              return <text key={i} className="map-label" x={x} y={y} textAnchor="middle" transform={l.r ? `rotate(${l.r} ${x} ${y})` : undefined}>{l.t}</text>;
+              return <text key={i} className="map-label" style={l.s ? { fontSize: l.s } : undefined} x={x} y={y} textAnchor="middle" transform={l.r ? `rotate(${l.r} ${x} ${y})` : undefined}>{l.t}</text>;
             })}
             <g>{overlay?.(ctx)}</g>
           </svg>

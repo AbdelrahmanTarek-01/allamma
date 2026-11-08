@@ -63,12 +63,12 @@ export const MAP_LEVELS: Record<Level, { prefer: Difficulty; multiplier: number 
 /** points = round(1000 * exp(-km / scale)), per map scope. */
 export const SCALE_KM: Record<MapScope, number> = { egypt: 150, arab: 400, world: 1500 };
 /** The map's short side in km, used for the circle hint radius. */
-const SHORT_KM: Record<MapScope, number> = { egypt: 1100, arab: 4500, world: 20000 };
+const SHORT_KM: Record<MapScope, number> = { egypt: 1100, arab: 4500, world: 15000 };
 /** Visible area in degrees, used to place the half-map cut inside the map. */
 const BOUNDS: Record<MapScope, { lat: [number, number]; lon: [number, number] }> = {
   egypt: { lat: [21.5, 32], lon: [24, 37.5] },
   arab: { lat: [-3, 38], lon: [-18, 60] },
-  world: { lat: [-55, 70], lon: [-170, 180] }
+  world: { lat: [-58, 78], lon: [-170, 180] }
 };
 
 // ---------- geometry ----------

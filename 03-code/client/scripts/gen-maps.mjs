@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { geoMercator, geoNaturalEarth1, geoPath, geoGraticule10 } from 'd3-geo';
+import { geoMercator, geoNaturalEarth1, geoPath, geoGraticule, geoGraticule10 } from 'd3-geo';
 import { feature } from 'topojson-client';
 
 const require = createRequire(import.meta.url);
@@ -25,6 +25,11 @@ const NILE = [[32.90, 24.09], [32.88, 24.45], [32.78, 24.98], [32.64, 25.70], [3
 const ROSETTA = [[31.23, 30.03], [30.95, 30.45], [30.42, 31.40]];
 const DAMIETTA = [[31.23, 30.03], [31.45, 30.75], [31.81, 31.42]];
 const CANAL = [[32.31, 31.26], [32.30, 30.60], [32.55, 29.97]];
+
+// World: the natural-earth sphere fitted to the width, then cropped to lat -58..78 (no Antarctica, no empty far north), so land fills the frame.
+const WORLD_BASE = geoNaturalEarth1().fitExtent([[8, 8], [792, 412]], { type: 'Sphere' });
+const WORLD_N = WORLD_BASE([0, 78])[1], WORLD_S = WORLD_BASE([0, -58])[1];
+const WORLD_H = Math.ceil(WORLD_S - WORLD_N + 16);
 
 const SPECS = {
   egypt: {
@@ -49,11 +54,14 @@ const SPECS = {
     ]
   },
   world: {
-    w: 800, h: 420, set: countries110, shortKm: 20000, scaleKm: 1500,
-    make: () => geoNaturalEarth1().fitExtent([[8, 8], [792, 412]], { type: 'Sphere' }),
+    w: 800, h: WORLD_H, set: countries110, shortKm: 15000, scaleKm: 1500,
+    make: () => { const p = geoNaturalEarth1().fitExtent([[8, 8], [792, 412]], { type: 'Sphere' }); const [tx, ty] = p.translate(); return p.translate([tx, ty + 8 - WORLD_N]); },
     kind: 'naturalEarth1',
+    bounds: 'canvas', // the "fit" view is the whole (cropped) canvas, i.e. the land width
+    gridStep: 30, gridClass: 'mp-grid light', // fewer, lighter graticule lines
     hl: (n) => n === 'Egypt',
-    labels: [['المحيط الأطلسي', -37, 22], ['المحيط الهادي', -150, 8], ['المحيط الهادي', 168, -12], ['المحيط الهندي', 80, -25]]
+    // seas only, small (font px, constant on screen), placed in open water away from land
+    labels: [['المحيط الأطلسي', -46, 31, 0, 9], ['المحيط الهادي', -140, 8, 0, 9], ['المحيط الهادي', 160, 22, 0, 9], ['المحيط الهندي', 85, -12, 0, 9]]
   }
 };
 
@@ -72,10 +80,12 @@ for (const [id, s] of Object.entries(SPECS)) {
   if (id === 'egypt') {
     deco = `<path class="mp-river" d="${line(NILE)}"/><path class="mp-river thin" d="${line(ROSETTA)}"/><path class="mp-river thin" d="${line(DAMIETTA)}"/><path class="mp-river thin" d="${line(CANAL)}"/>`;
   }
-  const grid = path(geoGraticule10());
+  const grid = path(s.gridStep ? geoGraticule().step([s.gridStep, s.gridStep])() : geoGraticule10());
   // focus: the box the "fit" button frames (the area the game is about). Everything around it is bleed so the screen never shows empty edges.
   let focus = [0, 0, s.w, s.h];
-  if (s.bounds) {
+  if (s.bounds === 'canvas') {
+    focus = [8, 8, s.w - 8, s.h - 8];
+  } else if (s.bounds) {
     const [x0, y1] = proj([s.bounds.lon[0], s.bounds.lat[0]]), [x1, y0] = proj([s.bounds.lon[1], s.bounds.lat[1]]);
     focus = [x0, y0, x1, y1].map((v) => r(v, 1));
   } else if (id !== 'world') {
@@ -83,11 +93,11 @@ for (const [id, s] of Object.entries(SPECS)) {
     const padX = (fb[1][0] - fb[0][0]) * 0.05, padY = (fb[1][1] - fb[0][1]) * 0.05;
     focus = [Math.max(0, fb[0][0] - padX), Math.max(0, fb[0][1] - padY), Math.min(s.w, fb[1][0] + padX), Math.min(s.h, fb[1][1] + padY)].map((v) => r(v, 1));
   }
-  const svg = `<rect class="mp-sea" width="${s.w}" height="${s.h}"/><path class="mp-grid" d="${grid}"/><path class="${s.nbrClass ?? 'mp-nbr'}" d="${base}"/><path class="mp-hl" d="${hl}"/>${deco}`;
+  const svg = `<rect class="mp-sea" width="${s.w}" height="${s.h}"/><path class="${s.gridClass ?? 'mp-grid'}" d="${grid}"/><path class="${s.nbrClass ?? 'mp-nbr'}" d="${base}"/><path class="mp-hl" d="${hl}"/>${deco}`;
 
-  const labels = s.labels.map(([t, lon, lat, rot]) => {
+  const labels = s.labels.map(([t, lon, lat, rot, sz]) => {
     const p = proj([lon, lat]);
-    return { t, x: r(p[0], 1), y: r(p[1], 1), r: rot ?? 0 };
+    return { t, x: r(p[0], 1), y: r(p[1], 1), r: rot ?? 0, ...(sz ? { s: sz } : {}) };
   });
 
   // projection parameters: the client rebuilds the same d3 projection from these, so tap -> lat/lon is exact

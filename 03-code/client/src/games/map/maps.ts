@@ -1,7 +1,8 @@
 // Types and the lazy loader for the generated maps (games/map/maps/*.ts, made by client/scripts/gen-maps.mjs).
 export type MapScope = 'egypt' | 'arab' | 'world';
 export interface MapProj { kind: 'mercator' | 'naturalEarth1'; scale: number; translate: [number, number]; center: [number, number] }
-export interface MapLabel { t: string; x: number; y: number; r: number }
+/** `s`: font size in px (screen size, default from CSS). */
+export interface MapLabel { t: string; x: number; y: number; r: number; s?: number }
 export interface MapDef {
   w: number;
   h: number;
