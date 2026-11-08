@@ -541,7 +541,6 @@ button:disabled { cursor: not-allowed; }
 .rank-row { position: absolute; inset-inline: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: 4px 10px; background: var(--white); border: 3px solid var(--ink); border-radius: 16px; transition: transform .75s cubic-bezier(.34, 1.56, .64, 1), background .3s, box-shadow .3s; }
 .rank-row.leader { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); z-index: 2; }
 .rank-n { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; }
-.replay { gap: 6px; }
 
 /* ---------- الموجة (wave) ---------- */
 .wave-screen { gap: 10px; }

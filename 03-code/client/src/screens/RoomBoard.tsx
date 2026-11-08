@@ -13,7 +13,6 @@ const STEP = [{ h: 92, bg: '#FFD23F' }, { h: 70, bg: '#fff' }, { h: 54, bg: '#F3
  * "ترتيب القعدة" (canvas artboard RoomBoard): placement points across every game played in this lounge.
  * Opened from the trophy in the lounge header, and shown automatically after each game ends (`auto`): the totals count up,
  * the rows slide from the old order to the new one, the arrows fade in, and the host gets "اختار اللعبة الجاية".
- * The replay button in the header plays that animation again.
  */
 export function RoomBoard({ room, auto, onClose }: { room: RoomView; auto: boolean; onClose: () => void }) {
   const b = room.board;

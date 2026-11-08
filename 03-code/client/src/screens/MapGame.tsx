@@ -434,7 +434,6 @@ function RankRow({ p, total, prev, pts, from, to, step, isYou }: { p: PlayerView
 
 /** Rows start in the previous order, +points chips appear, totals count up, then rows slide to the new order with ▲/▼. */
 function Ranking({ room, g }: P) {
-  const [run, setRun] = useState(0);
   const [step, setStep] = useState(0);
   const rows = room.players.map((p, i) => ({ p, i, total: p.score, pts: g.roundPoints[p.id] ?? 0, prev: p.score - (g.roundPoints[p.id] ?? 0) }));
   const prevOrder = [...rows].sort((a, b) => b.prev - a.prev || a.i - b.i).map((r) => r.p.id);
@@ -445,19 +444,15 @@ function Ranking({ room, g }: P) {
     setStep(0);
     const ts = [setTimeout(() => setStep(1), 450), setTimeout(() => { setStep(2); sfx.pop(); }, 1000), setTimeout(() => { setStep(3); sfx.whoosh(); }, 2300), setTimeout(() => setStep(4), 3100)];
     return () => ts.forEach(clearTimeout);
-  }, [run]);
+  }, []);
 
   return (
     <div className="col" style={{ gap: 6 }}>
       <div className="rank-board" style={{ height: rows.length * ROW_H }}>
         {rows.map((r) => (
-          <RankRow key={`${run}-${r.p.id}`} p={r.p} total={r.total} prev={r.prev} pts={r.pts} from={prevOrder.indexOf(r.p.id)} to={newOrder.indexOf(r.p.id)} step={step} isYou={r.p.id === room.youId} />
+          <RankRow key={r.p.id} p={r.p} total={r.total} prev={r.prev} pts={r.pts} from={prevOrder.indexOf(r.p.id)} to={newOrder.indexOf(r.p.id)} step={step} isYou={r.p.id === room.youId} />
         ))}
       </div>
-      <button className="chip soft replay" style={{ alignSelf: 'center' }} onClick={() => { sfx.soft(); setRun((r) => r + 1); }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 108-8H7M7 4L4 7l3 3" /></svg>
-        إعادة العرض
-      </button>
     </div>
   );
 }
