@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // All audio is synthesized with WebAudio: no files to download, works offline.
 // Two channels with their own volume + mute: music and effects (sfx).
 import { useSyncExternalStore } from 'react';
@@ -24,6 +25,7 @@ let ctx: AudioContext | null = null;
 let sfxBus: GainNode | null = null;
 let musicBus: GainNode | null = null;
 let duck: GainNode | null = null;
+let master: DynamicsCompressorNode | null = null;
 let lastSfxAt = 0;
 
 function ac() {
@@ -31,11 +33,18 @@ function ac() {
     const C = window.AudioContext || (window as any).webkitAudioContext;
     if (!C) return null;
     ctx = new C();
+    master = ctx.createDynamicsCompressor();
+    master.threshold.value = -14;
+    master.knee.value = 10;
+    master.ratio.value = 4;
+    master.attack.value = 0.003;
+    master.release.value = 0.2;
+    master.connect(ctx.destination);
     sfxBus = ctx.createGain();
     musicBus = ctx.createGain();
     duck = ctx.createGain();
-    sfxBus.connect(ctx.destination);
-    musicBus.connect(duck).connect(ctx.destination);
+    sfxBus.connect(master);
+    musicBus.connect(duck).connect(master);
     applyVolumes();
   }
   if (ctx.state === 'suspended') ctx.resume();
@@ -45,9 +54,9 @@ function ac() {
 function applyVolumes() {
   if (!ctx || !sfxBus || !musicBus) return;
   const t = ctx.currentTime;
-  sfxBus.gain.setTargetAtTime(settings.sfxOn ? settings.sfx : 0, t, 0.05);
-  // music is mixed well under the effects so it never fights the game sounds
-  musicBus.gain.setTargetAtTime(settings.musicOn ? settings.music * 0.55 : 0, t, 0.15);
+  // boosted: the raw voices are quiet on purpose, the compressor keeps the peaks safe
+  sfxBus.gain.setTargetAtTime(settings.sfxOn ? settings.sfx * 2.2 : 0, t, 0.05);
+  musicBus.gain.setTargetAtTime(settings.musicOn ? settings.music * 2.4 : 0, t, 0.15);
 }
 
 export function setAudio(patch: Partial<AudioSettings>) {
@@ -58,16 +67,16 @@ export function setAudio(patch: Partial<AudioSettings>) {
   music.refresh();
 }
 
-// Browsers only allow audio after a user gesture: unlock on the first tap.
-if (typeof window !== 'undefined') {
-  const unlock = () => {
-    ac()?.resume().then(() => music.refresh());
-    window.removeEventListener('pointerdown', unlock);
-    window.removeEventListener('keydown', unlock);
-  };
-  window.addEventListener('pointerdown', unlock);
-  window.addEventListener('keydown', unlock);
+// Browsers only allow audio after a user gesture. Try on every gesture until the context runs,
+// so audio recovers if the browser suspends it again (tab switch, phone lock, Bluetooth change).
+function wake() {
+  const c = ac();
+  if (!c) return;
+  if (c.state !== 'running') c.resume().then(() => music.refresh()).catch(() => {});
+  else music.refresh();
 }
+const WAKE_EVENTS = ['pointerdown', 'touchend', 'keydown'] as const;
+if (typeof window !== 'undefined') WAKE_EVENTS.forEach((e) => window.addEventListener(e, wake, { passive: true }));
 
 /* ---------- low-level voices ---------- */
 
@@ -161,17 +170,16 @@ export const sfx = {
 };
 
 /* Every button gets a sound by its kind, unless its own handler already played one. */
-if (typeof document !== 'undefined') {
-  document.addEventListener('click', (e) => {
-    const el = (e.target as HTMLElement | null)?.closest('button');
-    if (!el || el.disabled || el.dataset.sfx === 'none') return;
-    if (performance.now() - lastSfxAt < 80) return;
-    if (el.classList.contains('big')) sfx.confirm();
-    else if (el.classList.contains('tile')) sfx.card();
-    else if (el.classList.contains('chip')) sfx.soft();
-    else sfx.tap();
-  });
+function buttonSound(e: Event) {
+  const el = (e.target as HTMLElement | null)?.closest('button');
+  if (!el || el.disabled || el.dataset.sfx === 'none') return;
+  if (performance.now() - lastSfxAt < 80) return;
+  if (el.classList.contains('big')) sfx.confirm();
+  else if (el.classList.contains('tile')) sfx.card();
+  else if (el.classList.contains('chip')) sfx.soft();
+  else sfx.tap();
 }
+if (typeof document !== 'undefined') document.addEventListener('click', buttonSound);
 
 /* ---------- background music: Egyptian maqsoum rhythm, hijaz on D ---------- */
 
@@ -204,7 +212,7 @@ const TRACKS: Record<'lobby' | 'tension', Track> = {
       'A4', null, 'Bb4', 'A4', 'G4', 'Fs4', null, 'Eb4',
       'Fs4', null, 'Eb4', null, 'D4', null, null, null
     ],
-    melodyVol: 0.035
+    melodyVol: 0.11
   },
   tension: {
     bpm: 84,
@@ -218,7 +226,7 @@ const TRACKS: Record<'lobby' | 'tension', Track> = {
       null, null, 'Eb4', null, 'D4', null, null, null
     ],
     drone: 'D3',
-    melodyVol: 0.03
+    melodyVol: 0.08
   }
 };
 
@@ -241,16 +249,20 @@ export const music = (() => {
       const bar = Math.floor(s / 8);
       const t = nextAt;
       if (tr.doum.includes(inBar)) {
-        tone(110, 0.22, 'sine', 0.22, 0, 45, musicBus, t);
+        tone(150, 0.2, 'sine', 0.35, 0, 70, musicBus, t);            // body of the doum
+        tone(300, 0.08, 'triangle', 0.12, 0, 140, musicBus, t);      // upper knock so small speakers hear it
         const b = tr.bass[bar];
-        if (b) tone(N[b], stepDur * 3, 'triangle', 0.09, 0, undefined, musicBus, t);
+        if (b) tone(N[b] * 2, stepDur * 3, 'triangle', 0.14, 0, undefined, musicBus, t);
       }
-      if (tr.tak.includes(inBar)) noise(0.05, 0.05, 0, 2600, 'bandpass', musicBus, t);
-      if (inBar === 0 && tr.drone) tone(N[tr.drone], stepDur * 8, 'sine', 0.05, 0, undefined, musicBus, t);
+      if (tr.tak.includes(inBar)) {
+        noise(0.06, 0.16, 0, 3200, 'bandpass', musicBus, t);
+        tone(1800, 0.03, 'sine', 0.04, 0, undefined, musicBus, t);
+      }
+      if (inBar === 0 && tr.drone) tone(N[tr.drone] * 2, stepDur * 8, 'sine', 0.06, 0, undefined, musicBus, t);
       const m = tr.melody[s];
       if (m) {
         tone(N[m], stepDur * 1.6, 'triangle', tr.melodyVol, 0, undefined, musicBus, t);
-        tone(N[m] * 2, stepDur * 0.8, 'sine', tr.melodyVol * 0.25, 0, undefined, musicBus, t);
+        tone(N[m] * 2, stepDur * 0.9, 'sine', tr.melodyVol * 0.35, 0, undefined, musicBus, t);
       }
       nextAt += stepDur;
       step++;
@@ -292,3 +304,12 @@ export const music = (() => {
     }
   };
 })();
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    music.play(null);
+    WAKE_EVENTS.forEach((e) => window.removeEventListener(e, wake));
+    document.removeEventListener('click', buttonSound);
+    ctx?.close().catch(() => {});
+  });
+}

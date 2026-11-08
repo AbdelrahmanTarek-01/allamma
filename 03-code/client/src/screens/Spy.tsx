@@ -65,7 +65,7 @@ function Discuss({ room, g }: P) {
     const next = !open;
     setOpen(next);
     sfx.flip();
-    if (next && g.you?.isSpy) setTimeout(() => sfx.stamp(), 550);
+    if (next) setTimeout(() => sfx.stamp(), 550); // every role stamps, so the sound and buzz never give the role away
   };
 
   return (
@@ -91,25 +91,18 @@ function Discuss({ room, g }: P) {
               <span style={{ fontSize: 14, fontWeight: 700, color: '#4a4038', lineHeight: 1.6 }}>خبّي الموبايل الأول<br />محدش يبص على دورك</span>
             </div>
             <div className="face back">
-              {g.you.isSpy ? (
-                <>
-                  <span className={`stamp${open ? ' slam' : ''}`} style={{ marginTop: 10 }}>إنت الجاسوس</span>
-                  <span className="hand" style={{ fontSize: 24, textAlign: 'center', marginTop: 16 }}>محدش يعرف غيرك</span>
-                  <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.7, textAlign: 'center', color: '#4a4038' }}>اسمع أسئلتهم كويس واعرف المكان. لو مسكوك هيبقى عندك فرصة تخمّن.</span>
-                  <span className="push" style={{ background: 'var(--red)', color: '#fbf6ec', borderRadius: 12, padding: '10px 12px', fontSize: 13.5, fontWeight: 800, textAlign: 'center' }}>اتصرف طبيعي</span>
-                </>
-              ) : (
-                <>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#4a4038' }}>المكان</span>
-                  <span className="hand" style={{ fontSize: 36, lineHeight: 1.25 }}>{g.you.place}</span>
-                  <span style={{ borderTop: '2px dashed rgba(31,42,68,.35)' }} />
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#4a4038' }}>دورك</span>
-                  <span className="display" style={{ fontSize: 28, color: '#b8381f' }}>{g.you.role}</span>
-                  <span className="push" style={{ background: '#1f2a44', color: '#fbf6ec', borderRadius: 12, padding: '10px 12px', fontSize: 13.5, fontWeight: 700, lineHeight: 1.6 }}>
-                    اسأل وجاوب، بس ما تقولش المكان صريح. الجاسوس سامعك.
-                  </span>
-                </>
-              )}
+              {/* One layout for every role: only the words differ, so a glance from the next seat tells nothing. */}
+              <span className={`stamp${open ? ' slam' : ''}`} style={{ marginTop: 10, width: 230, boxSizing: 'border-box', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {g.you.isSpy ? 'إنت الجاسوس' : 'محقق'}
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#4a4038' }}>المكان</span>
+              <span className="hand" style={{ fontSize: 36, lineHeight: 1.25 }}>{g.you.isSpy ? '؟؟؟' : g.you.place}</span>
+              <span style={{ borderTop: '2px dashed rgba(31,42,68,.35)' }} />
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#4a4038' }}>دورك</span>
+              <span className="display" style={{ fontSize: 28, color: '#b8381f' }}>{g.you.isSpy ? 'جاسوس' : g.you.role}</span>
+              <span className="push" style={{ background: '#1f2a44', color: '#fbf6ec', borderRadius: 12, padding: '10px 12px', fontSize: 13.5, fontWeight: 800, lineHeight: 1.6, textAlign: 'center', minHeight: 64, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {g.you.isSpy ? 'اتصرف طبيعي، اسمع وخمّن المكان' : 'اسأل وجاوب، بس ما تقولش المكان صريح'}
+              </span>
             </div>
           </button>
         </div>
