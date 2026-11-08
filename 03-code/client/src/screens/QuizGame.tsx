@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Character } from '../components/art';
 import { HelpButton } from '../components/HelpSheet';
 import { TeamChatButton } from '../components/TeamChatSheet';
-import { Confetti, MuteButton, Timer, useSecondsLeft, useTimerSounds } from '../components/ui';
+import { Ring } from '../components/Ring';
+import { Confetti, MuteButton, Timer } from '../components/ui';
 import { TEAM } from '../games/teams';
 import { AR, send, type QuizGameView, type RoomView } from '../net';
 import { buzz, gameOver, music, sfx } from '../sound';
@@ -222,23 +223,6 @@ function Board({ room, g }: P) {
 }
 
 /* ---------- question, steal, reveal ---------- */
-
-function Ring({ endsAt, color }: { endsAt: number | null; color: string }) {
-  const left = useSecondsLeft(endsAt);
-  const total = useRef(0);
-  if (left > total.current) total.current = left;
-  const f = total.current ? left / total.current : 0;
-  useTimerSounds(left, !!endsAt);
-  return (
-    <span className="qz-ring" role="timer" aria-label={`فاضل ${left} ثانية`}>
-      <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="26" cy="26" r="22" fill="#fff" stroke="#111" strokeWidth="3" />
-        <circle cx="26" cy="26" r="17" fill="none" stroke={left <= 5 ? '#E2433B' : color} strokeWidth="6" strokeDasharray="106.8" strokeDashoffset={106.8 * (1 - f)} strokeLinecap="round" style={{ transition: 'stroke-dashoffset .3s linear' }} />
-      </svg>
-      <span className="display" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{AR(left)}</span>
-    </span>
-  );
-}
 
 function Question({ room, g }: P) {
   const { name, avatar } = useWho(room);

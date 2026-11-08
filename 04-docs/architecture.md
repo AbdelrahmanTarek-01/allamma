@@ -100,3 +100,7 @@ result ──host──▶ back to the lounge
 ## Sound pass (01-brainstorm/sounds.md)
 - New sfx in `client/src/sound.ts`: near, poof, swipe, boom, blip, coin(step), gavel. `timerTick(left)` (soft tick each second in the last 5 s, rising in the last 3, tiny buzz, "close" at zero) runs on every countdown through `useTimerSounds` (ui.tsx: Timer and the quiz ring). `gameOver(outcome)` = drumroll, fanfare, crown, pop sprinkle, then win/lose for team games.
 - Secrecy rule: sounds fire on public events only (same sound for every role and every card until it is flipped). Auction and draw have no screens yet, so coin and gavel are ready but unused.
+
+## مزاد المعلومات (auction)
+- Engine `server/src/games/auction/auction.engine.ts`; lots reuse the حزّورة question pack (topic = category, tier from the level). Phases per lot: bid (countdown resets on every bid) → sold (gavel + stamp) → answer (buyer, 15 s; others predict, +50) → reveal → next lot or final. Setting `lots` 5/8/12.
+- Difficulty table `AUCTION_LEVELS`: bid time 15/10/8/5 s, start money 1500/1000/800/500, wrong answer refund / half / bid / 2x bid (floored at 0), question tier. Richest wins; money is the lounge score.

@@ -101,7 +101,7 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
     icon: (<svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="17" height="17" rx="4" fill="#fff" {...S} /><rect x="26" y="5" width="17" height="17" rx="4" fill="#FF4F9A" {...S} /><rect x="5" y="26" width="17" height="17" rx="4" fill="#4D9DFF" {...S} /><rect x="26" y="26" width="17" height="17" rx="4" fill="#fff" {...S} /><path d="M10 12h7M10 16h5M31 33h7M31 37h5" {...S} /></svg>)
   },
   {
-    id: 'auction', name: 'مزاد المعلومات', tagline: 'زايدوا على قد ثقتكم', color: '#FF8A3D', ready: false,
+    id: 'auction', name: 'مزاد المعلومات', tagline: 'زايدوا على قد ثقتكم', color: '#FF8A3D', ready: true,
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-40 22 18)"><rect x="19.5" y="23" width="5" height="20" rx="2.5" fill="#fff" {...S} /><rect x="9" y="11" width="26" height="12" rx="4" fill="#FFD23F" {...S} /><path d="M15 11v12M29 11v12" {...S} /></g><circle cx="10" cy="39" r="6" fill="#FFD23F" {...S} /><circle cx="10" cy="39" r="2.5" fill="none" stroke="#111" strokeWidth={2} /></svg>)
   },
   {

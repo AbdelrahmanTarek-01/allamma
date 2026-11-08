@@ -169,6 +169,36 @@ export interface WordsGameView {
   final: { winner: 0 | 1 | null; awards: { k: string; id: string | null; why: string }[] } | null;
 }
 
+/** مزاد المعلومات (auction). The question only exists here once the lot is sold; the right answer only at the reveal. */
+export interface AuctionGameView {
+  type: 'auction';
+  phase: 'bid' | 'sold' | 'answer' | 'reveal' | 'final';
+  endsAt: number | null;
+  level: string;
+  participants: string[];
+  money: Record<string, number>;
+  lotNo: number;
+  lots: number;
+  bidSecs: number;
+  penalty: number;
+  topic: string | null;
+  tier: number | null;
+  price: number;
+  buyer: string | null;
+  log: { by: string; amount: number }[];
+  steps: number[];
+  question: { text: string; options: string[] } | null;
+  pick: number | null;
+  locked: boolean;
+  predicted: boolean | null;
+  predictors: string[];
+  result: { kind: 'right' | 'wrong' | 'none'; buyer: string | null; price: number; delta: number; chosen: number | null; correct: number; predictions: { id: string; yes: boolean; ok: boolean }[] } | null;
+  fact: string | null;
+  final: { awards: { k: string; id: string | null; why: string }[] } | null;
+  you: { money: number; role: 'buyer' | 'watcher' | 'bidder' } | null;
+  revealCorrect: number | null;
+}
+
 export interface BoardRow {
   id: string; name: string; avatar: string;
   /** Still in the lounge (rows of players who left stay, greyed). */
@@ -219,7 +249,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | MapGameView | WaveGameView | QuizGameView | WordsGameView | null;
+  game: GameView | MapGameView | WaveGameView | QuizGameView | WordsGameView | AuctionGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }

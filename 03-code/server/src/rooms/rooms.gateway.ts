@@ -198,7 +198,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('game:act')
   act(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
     const game = String(b?.game ?? '');
-    if (game !== 'quiz' && game !== 'words') return this.run(c, () => { throw new GameError('مش وقته دلوقتي'); });
+    if (!['quiz', 'words', 'auction', 'draw'].includes(game)) return this.run(c, () => { throw new GameError('مش وقته دلوقتي'); });
     return this.run(c, (id) => this.rooms.gameAction(id, game, String(b?.action ?? ''), b?.payload));
   }
 

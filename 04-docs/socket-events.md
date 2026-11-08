@@ -94,11 +94,12 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
 ```
 
 ## Team games (حزّورة and شبكة الكلمات)
-One generic event: `game:act` with `{ game: 'quiz' | 'words', action, payload }`, ack `{ ok, error? }`. The engine validates the actor, the phase and the payload.
+One generic event: `game:act` with `{ game: 'quiz' | 'words' | 'auction' | 'draw', action, payload }`, ack `{ ok, error? }`. The engine validates the actor, the phase and the payload.
 - quiz actions: `pickCategory {cat}`, `pickCell {r,c}`, `card {card: 'double'|'fifty'|'steal'}`, `vote {option}`, `lock`, `teamChat {text}`, `next` (host).
 - words actions: `clue {word,num}`, `mark {i}`, `flip`, `endTurn`, `teamChat {text}`, `next` (host).
+- auction actions: `bid {step: 50|100|200}`, `pick {option}` (buyer), `lock` (buyer), `predict {yes}` (everyone else), `next` (host).
 - Teams are edited with `room:teams` (shuffle / move), the same editor as الموجة teams mode.
-- Secrets: words' colour key only to the two guides (everyone sees a card's colour when it is flipped); marks only to the marking team (on ماكس not even there). quiz: the right answer only at the reveal; teammates' votes only to the answering team; a team's chat only to that team.
+- Secrets: words' colour key only to the two guides (everyone sees a card's colour when it is flipped); marks only to the marking team (on ماكس not even there). auction: the question only exists in snapshots once the lot is sold, the buyer's pick is private until locked. quiz: the right answer only at the reveal; teammates' votes only to the answering team; a team's chat only to that team.
 
 ## HTTP
 - `GET /api/health` → `{ ok, rooms, players }`. Also used to wake the free server, and by the keep-alive ping.

@@ -759,3 +759,35 @@ button:disabled { cursor: not-allowed; }
 .home-head { position: sticky; top: 0; z-index: 15; background: var(--yellow); margin: calc(-1 * max(20px, env(safe-area-inset-top))) calc(-1 * var(--gutter)) 0; padding: max(20px, env(safe-area-inset-top)) var(--gutter) 8px; }
 .home-dock { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; z-index: 20; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 34px max(18px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(to top, var(--yellow) 64%, rgba(255, 210, 63, 0)); pointer-events: none; }
 .home-dock > * { pointer-events: auto; }
+
+/* مزاد المعلومات (auction): canvas artboards AuctionLot / AuctionAnswer / AuctionFinal */
+.au-screen { gap: 12px; }
+.au-lot { position: relative; background: var(--white); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.au-lotno { position: absolute; top: -13px; right: 14px; font-size: 12px; font-weight: 900; background: var(--purple); border: 2px solid var(--ink); border-radius: 99px; padding: 0 10px; }
+.au-hidden { display: flex; align-items: center; gap: 8px; margin-top: 6px; background: #F6F1E3; border: 2px dashed var(--ink); border-radius: 14px; padding: 7px 10px; }
+.au-hidden i { display: block; border-radius: 99px; background: var(--ink); opacity: .25; }
+.au-level { border: 2px solid var(--ink); border-radius: 99px; padding: 0 8px; font-weight: 900; }
+.au-stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.au-ring { position: relative; width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; }
+.au-by { display: flex; align-items: center; gap: 6px; border: 2px solid var(--ink); border-radius: 99px; padding: 1px 10px 1px 4px; }
+.au-log { display: flex; align-items: center; gap: 4px; background: var(--white); border: 2px solid var(--ink); border-radius: 99px; padding: 0 8px 0 3px; font-size: 12px; font-weight: 900; animation: slideIn .3s ease-out; }
+.au-stamp { position: absolute; z-index: 4; top: 56%; left: 50%; white-space: nowrap; background: #E2433B; color: #fff; border: 4px solid var(--ink); border-radius: 14px; padding: 4px 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 28px; box-shadow: 4px 4px 0 var(--ink); animation: stampOn .45s cubic-bezier(.2, 1.4, .4, 1) .3s both; }
+.au-bids { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.au-bid { height: 58px; border: 3px solid var(--ink); border-radius: 16px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 24px; color: var(--ink); transition: transform .1s; }
+.au-bid:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none !important; }
+.au-buyer { display: flex; align-items: center; gap: 10px; background: var(--white); border: 3px solid var(--ink); border-radius: 18px; padding: 8px 12px; box-shadow: 4px 4px 0 var(--ink); }
+.au-qcard { background: var(--white); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 6px 6px 0 var(--ink); padding: 18px 16px; animation: cardIn .45s cubic-bezier(.2, 1.4, .4, 1); }
+.au-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.au-opt { min-height: 66px; border: 3px solid var(--ink); border-radius: 18px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; color: var(--ink); padding: 4px 8px; line-height: 1.2; transition: transform .12s, background .2s; }
+.au-box { border: 2.5px solid var(--ink); border-radius: 16px; padding: 6px 10px; display: flex; flex-direction: column; }
+.au-predict { background: var(--white); border: 2.5px solid var(--ink); border-radius: 18px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.au-pbtn { height: 46px; border: 2.5px solid var(--ink); border-radius: 14px; font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; font-weight: 800; font-size: 20px; color: var(--ink); }
+.au-coins { position: absolute; left: 0; right: 0; top: 44%; display: flex; justify-content: center; pointer-events: none; }
+.au-coins > span { position: absolute; animation: coinUp 1.2s ease-out both; }
+.au-final-rows { background: var(--white); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; }
+@keyframes slideIn { 0% { transform: translateX(-20px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes auSlam { 0% { transform: rotate(-38deg); } 55% { transform: rotate(14deg); } 70% { transform: rotate(6deg); } 100% { transform: rotate(9deg); } }
+@keyframes thud { 0%, 100% { transform: none; } 30% { transform: scale(.94, .9) translateY(4px); } 60% { transform: scale(1.03); } }
+@keyframes burst { 0% { transform: scale(.3); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+@keyframes stampOn { 0% { transform: translate(-50%, -50%) scale(2.6) rotate(-16deg); opacity: 0; } 60% { transform: translate(-50%, -50%) scale(.92) rotate(-9deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(-9deg); opacity: 1; } }
+@keyframes coinUp { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-140px) scale(1); opacity: 0; } }
