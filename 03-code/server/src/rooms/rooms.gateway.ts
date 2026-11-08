@@ -194,6 +194,14 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.run(c, (id) => this.rooms.again(id));
   }
 
+  // حزّورة and شبكة الكلمات: one generic action event ({ game, action, payload }); the engine validates everything.
+  @SubscribeMessage('game:act')
+  act(@ConnectedSocket() c: Socket, @MessageBody() b: any): Ack {
+    const game = String(b?.game ?? '');
+    if (game !== 'quiz' && game !== 'words') return this.run(c, () => { throw new GameError('مش وقته دلوقتي'); });
+    return this.run(c, (id) => this.rooms.gameAction(id, game, String(b?.action ?? ''), b?.payload));
+  }
+
   // Spy actions: the service delegates them to the room's active engine.
   @SubscribeMessage('spy:nextTurn')
   nextTurn(@ConnectedSocket() c: Socket): Ack {

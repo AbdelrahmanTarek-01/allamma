@@ -310,12 +310,18 @@ export class RoomsService implements OnModuleDestroy {
     this.emit(room);
   }
 
-  /** الموجة, teams mode: the host shuffles the teams or moves one player to the other team (stored with the game's settings). */
+  /** Games played in two teams: حزّورة and شبكة الكلمات always, الموجة in its teams mode. */
+  private usesTeams(room: Room) {
+    const g = room.selectedGame;
+    return g === 'quiz' || g === 'words' || (g === 'wave' && room.settings.wave?.mode === 'teams');
+  }
+
+  /** Team games: the host shuffles the teams or moves one player to the other team (stored with the game's settings). */
   teamsAction(playerId: string, op: unknown, targetId: unknown) {
     const room = this.mustHost(playerId);
     if (room.engine) throw new GameError('مينفعش تغيّر الفرق واللعبة شغالة');
-    if (room.selectedGame !== 'wave') throw new GameError('مش وقته دلوقتي');
-    const s = (room.settings.wave ??= GAME_DEFS.wave.defaultSettings());
+    if (!this.usesTeams(room)) throw new GameError('مش وقته دلوقتي');
+    const s = (room.settings[room.selectedGame] ??= GAME_DEFS[room.selectedGame].defaultSettings());
     const members = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id);
     const cur = normalizeTeams(members, s.teams ?? {});
     if (op === 'shuffle') {
@@ -487,8 +493,8 @@ export class RoomsService implements OnModuleDestroy {
       difficulty: room.difficulty,
       board: this.boardView(room),
       // الموجة: the team of every player (saved choices + automatic balance), for the host's teams editor
-      teams: room.selectedGame === 'wave'
-        ? normalizeTeams([...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id), room.settings.wave?.teams ?? {})
+      teams: this.usesTeams(room)
+        ? normalizeTeams([...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id), room.settings[room.selectedGame]?.teams ?? {})
         : null,
       hasLevels: !!GAME_DEFS[room.selectedGame].levels, // only games with a level table show the difficulty control
       settings: room.settings[room.selectedGame],

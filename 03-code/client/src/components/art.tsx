@@ -105,7 +105,7 @@ export const GAMES: { id: string; name: string; tagline: string; color: string; 
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-40 22 18)"><rect x="19.5" y="23" width="5" height="20" rx="2.5" fill="#fff" {...S} /><rect x="9" y="11" width="26" height="12" rx="4" fill="#FFD23F" {...S} /><path d="M15 11v12M29 11v12" {...S} /></g><circle cx="10" cy="39" r="6" fill="#FFD23F" {...S} /><circle cx="10" cy="39" r="2.5" fill="none" stroke="#111" strokeWidth={2} /></svg>)
   },
   {
-    id: 'quiz', name: 'حزّورة', tagline: 'لوحة أسئلة بين فريقين', color: '#B48CFF', ready: false,
+    id: 'quiz', name: 'حزّورة', tagline: 'لوحة أسئلة بين فريقين', color: '#B48CFF', ready: true,
     icon: (<svg width="42" height="42" viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6h30a5 5 0 015 5v17a5 5 0 01-5 5H24l-9 8v-8H9a5 5 0 01-5-5V11a5 5 0 015-5z" fill="#fff" {...S} /><path d="M28.5 15.5c0-2.8-2.2-4.5-4.6-4.5s-4.4 1.8-4.4 4.2c0 3.3 4.5 3.6 4.5 7.3" fill="none" stroke="#111" strokeWidth={3.2} strokeLinecap="round" /><circle cx="24" cy="27.5" r="2" fill="#111" /></svg>)
   },
   {

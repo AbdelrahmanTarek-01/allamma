@@ -268,7 +268,7 @@ export function Room({ room, onBoard }: { room: RoomView; onBoard: () => void })
               </div>
             )}
             {/* الموجة in teams mode: shuffle the teams or tap a player to move them to the other team */}
-            {room.selectedGame === 'wave' && room.settings.mode === 'teams' && room.teams && (
+            {room.teams && (
               <div className="col" style={{ gap: 6 }}>
                 <div className="row between">
                   <span className="label" style={{ fontSize: 12.5 }}>الفريقين</span>

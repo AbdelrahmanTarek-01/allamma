@@ -14,6 +14,7 @@ import { hasInviteLink, hasSeenWelcome, markWelcomed, Welcome } from './screens/
 
 // the map game brings the generated maps (a few hundred KB): only players who open it download it
 const WaveGame = lazy(() => import('./screens/WaveGame').then((m) => ({ default: m.WaveGame })));
+const QuizGame = lazy(() => import('./screens/QuizGame').then((m) => ({ default: m.QuizGame })));
 const MapGame = lazy(() => import('./screens/MapGame').then((m) => ({ default: m.MapGame })));
 
 export function App() {
@@ -48,6 +49,10 @@ export function App() {
     key = `wave-${room.game.turn}-${room.game.phase}`;
     screen = <Suspense fallback={<SkeletonHome note="بنجهّز اللعبة…" />}><WaveGame room={room} g={room.game} /></Suspense>;
   }
+  else if (room.game.type === 'quiz') {
+    key = `quiz-${room.game.phase}-${room.game.question ? room.game.question.text : room.game.left}`;
+    screen = <Suspense fallback={<SkeletonHome note="بنجهّز اللعبة…" />}><QuizGame room={room} g={room.game} /></Suspense>;
+  }
   else { key = `spy-${room.game.round}-${room.game.phase}`; screen = <SpyGame room={room} g={room.game} />; }
 
   // the first time a game starts for this player, open its how-to-play once (remembered per game on this device)
@@ -58,8 +63,11 @@ export function App() {
   const phase = room?.game?.phase;
   const isMap = room?.game?.type === 'map';
   const isWave = room?.game?.type === 'wave';
+  const isQuiz = room?.game?.type === 'quiz';
   // spy: tense while talking, silent on the dark reveal/guess. map: tense while the clock runs, lively for the yellow reveal
-  const track: MusicName = isWave
+  const track: MusicName = isQuiz
+    ? (phase === 'question' || phase === 'steal' ? 'tension' : 'lobby')
+    : isWave
     ? (phase === 'reveal' ? null : phase === 'guess' || phase === 'call' ? 'tension' : 'lobby') // dark reveal: silent, like the spy reveal
     : isMap
     ? (phase === 'guess' ? 'tension' : 'lobby')
@@ -87,7 +95,7 @@ export function App() {
       <div key={key} className="enter">{screen}</div>
       {autoHelp && <HelpSheet gameId={autoHelp} onClose={() => setAutoHelp(null)} />}
       {/* floating chat: in the lounge and in the bright game phases (not the dark reveal/guess screens) */}
-      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && phase === 'discuss'} visible={!board && (!room.game || (isWave ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
+      {room && <GameChat room={room} lounge={!room.game} discuss={!isMap && !isWave && !isQuiz && phase === 'discuss'} visible={!board && (!room.game || (isWave || isQuiz ? phase === 'final' : isMap ? phase === 'result' || phase === 'final' : phase === 'discuss' || phase === 'vote' || phase === 'result'))} />}
       {toast && <div key={toast} className="toast" role="status">{toast}</div>}
     </>
   );

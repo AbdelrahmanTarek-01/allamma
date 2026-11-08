@@ -85,3 +85,9 @@ result ──host──▶ back to the lounge
 - **View:** `room.board` = `{ rows (sorted, with total, gain of the last game, prevRank, per-game points, inRoom), played (game, winner, newest last), games }`.
 - **Client:** `screens/RoomBoard.tsx`: podium, list with rank-change arrows, filter tabs per game, games-played strip. Opened from the trophy in the lounge header, and by itself ~4s after a game ends, with "اختار اللعبة الجاية" for the host (it sends `game:backToRoom`).
 - The older per-player `lounge` sum (raw game points) is still sent and shown as a small chip in the lounge; the board is the placement-based ranking.
+
+## حزّورة (quiz)
+- Engine `server/src/games/quiz/quiz.engine.ts`, pack `questions.ts` (61 questions, 6 categories, tiers 1-4). Phases: draft (15 s per pick, 3 categories each) → board (30 s to pick a cell; the picker rotates inside the team) → question (team on turn) → steal (10 s, the wrong option struck) → reveal (7 s, host can skip) → final.
+- Difficulty table `QUIZ_LEVELS`: answer time 30/20/15/10 s, 50:50 cards 2/1/1/0, wrong-answer penalty 0/0/50%/100%, and the question tier of the 200/400/600 cells.
+- Cards (setting `cards`): ×٢ before picking a cell, ٥٠:٥٠ on the answering team's question, سرقة on the other team's question (they answer first). One treasure (×٢) and one bomb (wrong answer loses the value) hide on the board.
+- Teams use `room.settings.quiz.teams` + `normalizeTeams`; `TeamChat` (games/team-chat.ts) keeps one chat per team. Lounge leaderboard: winning team 8, losers 2.

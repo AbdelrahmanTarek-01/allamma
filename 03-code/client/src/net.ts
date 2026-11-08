@@ -99,6 +99,45 @@ export interface WaveGameView {
 }
 
 /** One row of the room leaderboard (placement points across the games played in this lounge). */
+export interface TeamMsg { id: string; from: string; text: string; at: number }
+
+/** حزّورة (quiz). The right answer and the other team's votes only arrive at the reveal / for the answering team. */
+export interface QuizQuestionView {
+  cat: string; value: number; worth: number; special: 'treasure' | 'bomb' | null; doubled: boolean; early: boolean; text: string;
+  answering: 0 | 1 | null;
+  options: { text: string; gone: boolean; struck: boolean }[];
+  votes: { id: string; option: number }[];
+  correct: number | null;
+  first: { team: 0 | 1; option: number | null } | null;
+  second: { team: 0 | 1; option: number | null; secondsLeft: number } | null;
+  outcome: { kind: 'right' | 'steal' | 'wrong' | 'none'; team: 0 | 1 | null; delta: [number, number]; note: string } | null;
+  fact: string | null;
+}
+export interface QuizGameView {
+  type: 'quiz';
+  phase: 'draft' | 'board' | 'question' | 'steal' | 'reveal' | 'final';
+  endsAt: number | null;
+  participants: string[];
+  teams: Record<string, 0 | 1>;
+  teamScores: [number, number];
+  turnTeam: 0 | 1;
+  level: string;
+  cardsOn: boolean;
+  cards: { double: number; fifty: number; steal: number }[];
+  team: 0 | 1 | null;
+  chat: TeamMsg[];
+  pickerId: string | null;
+  doubleArmed: boolean;
+  left: number;
+  cats: { id: string; name: string; sub: string; owner: 0 | 1 | null }[];
+  draftTurn: 0 | 1 | null;
+  rows: { id: string; name: string; owner: 0 | 1; cells: { value: number; used: boolean; winner: 0 | 1 | 'x' | null }[] }[];
+  total: number;
+  question: QuizQuestionView | null;
+  you: { role: string; vote: number | null } | null;
+  final: { star: { id: string; right: number; total: number } | null; moment: { text: string; sub: string } | null } | null;
+}
+
 export interface BoardRow {
   id: string; name: string; avatar: string;
   /** Still in the lounge (rows of players who left stay, greyed). */
@@ -149,7 +188,7 @@ export interface RoomView {
   settings: Record<string, any>;
   /** The selected game's schema while in the lounge, null during a game. */
   settingsSchema: SettingField[] | null;
-  game: GameView | MapGameView | WaveGameView | null;
+  game: GameView | MapGameView | WaveGameView | QuizGameView | null;
   serverNow: number;
 }
 export interface Profile { id: string; name: string; avatar: string }
