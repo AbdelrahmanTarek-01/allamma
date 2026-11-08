@@ -6,7 +6,7 @@ import { useSyncExternalStore } from 'react';
 export interface AudioSettings { music: number; sfx: number; musicOn: boolean; sfxOn: boolean }
 
 const KEY = 'allamma.audio';
-const DEFAULTS: AudioSettings = { music: 0.5, sfx: 0.8, musicOn: true, sfxOn: true };
+const DEFAULTS: AudioSettings = { music: 0.3, sfx: 0.8, musicOn: true, sfxOn: true };
 
 function load(): AudioSettings {
   try {
