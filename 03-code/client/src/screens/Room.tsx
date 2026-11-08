@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Character, GAMES } from '../components/art';
+import { Character, GAMES, SpyIcon } from '../components/art';
 import { GameTile } from '../components/GameTile';
 import { HelpButton } from '../components/HelpSheet';
 import { MuteButton, Sheet } from '../components/ui';
@@ -23,7 +23,22 @@ export function Room({ room }: { room: RoomView }) {
   const game = GAMES.find((g) => g.id === room.selectedGame) ?? GAMES[0];
   const schema = room.settingsSchema ?? [];
   // one compact line for everyone, built from the schema: "٨ دقايق · ٣ جولات · جاسوس واحد · مكس"
-  const summary = schema.map((f) => f.options.find((o) => o.value === room.settings[f.key])?.label).filter(Boolean).join(' · ');
+  // (buttons hold one word or number; the summary uses each option's long form when it has one)
+  const summary = schema.map((f) => { const o = f.options.find((x) => x.value === room.settings[f.key]); return o ? (o.full ?? o.label) : null; }).filter(Boolean).join(' · ');
+  const [shaking, setShaking] = useState<string | null>(null);
+  /** Tapping a locked option: shake, error sound, and say how many players it needs. */
+  const tapLocked = (key: string, min: number) => {
+    sfx.error();
+    toast(`محتاج ${AR(min)} لاعيبة على الأقل`);
+    setShaking(key);
+    setTimeout(() => setShaking((s) => (s === key ? null : s)), 500);
+  };
+  /** The one helper line under a group. Groups with player-count requirements get a live one: "معاكم ٤ لاعيبة · جاسوسين من ٦ و٣ من ٩". */
+  const hintFor = (f: NonNullable<RoomView['settingsSchema']>[number]) => {
+    if (!f.options.some((o) => o.minPlayers)) return f.hint ?? '';
+    const locked = f.options.filter((o) => o.minPlayers && online < o.minPlayers && room.settings[f.key] !== o.value);
+    return `معاكم ${AR(online)} لاعيبة · ${locked.length ? locked.map((o) => `${o.hintName ?? o.label} من ${AR(o.minPlayers!)}`).join(' و') : 'كل الاختيارات متاحة'}`;
+  };
   const saveName = async () => {
     const n = draft.trim();
     if (!n) return toast('اكتب اسم للقعدة');
@@ -195,20 +210,37 @@ export function Room({ room }: { room: RoomView }) {
           {/* a) the selected game's settings, rendered generically from its schema */}
           <section className="card flat col" style={{ gap: 12, padding: '12px 14px' }}>
             <span className="display" style={{ fontSize: 18 }}>إعدادات اللعبة</span>
+            {/* every group: title, buttons with ONE word or number each, one small helper line */}
             {schema.map((f) => (
               <div key={f.key} className="col" style={{ gap: 4 }}>
                 <span className="label" style={{ fontSize: 12.5 }}>{f.label}</span>
-                <div className="seg" role="group" aria-label={f.label}>
+                <div className={`seg${f.icon ? ' tall' : ''}`} role="group" aria-label={f.label}>
                   {f.options.map((o) => {
-                    const locked = !!o.minPlayers && online < o.minPlayers;
+                    const selected = room.settings[f.key] === o.value;
+                    // not enough players yet: faded with a lock. The selected option never shows a requirement.
+                    const locked = !!o.minPlayers && online < o.minPlayers && !selected;
+                    const key = `${f.key}:${o.value}`;
                     return (
-                      <button key={String(o.value)} className={locked ? 'locked' : ''} disabled={locked} aria-pressed={room.settings[f.key] === o.value} onClick={() => send('room:settings', { [f.key]: o.value })}>
-                        <span>{o.label}</span>
-                        {locked && <small><LockMini /> محتاج {AR(o.minPlayers!)} لاعيبة</small>}
+                      <button
+                        key={String(o.value)}
+                        className={`${locked ? 'locked' : ''}${shaking === key ? ' shake' : ''}`}
+                        aria-pressed={selected}
+                        aria-disabled={locked}
+                        aria-label={locked ? `${o.full ?? o.label}، محتاج ${AR(o.minPlayers!)} لاعيبة على الأقل` : (o.full ?? o.label)}
+                        onClick={() => locked ? tapLocked(key, o.minPlayers!) : send('room:settings', { [f.key]: o.value })}
+                      >
+                        {f.icon === 'spy' ? (
+                          <>
+                            <span className="num-big">{AR(o.value)}</span>
+                            <span className="hats" aria-hidden="true">{Array.from({ length: Number(o.value) }, (_, i) => <span key={i} className="hat"><SpyIcon size={14} /></span>)}</span>
+                          </>
+                        ) : <span>{o.label}</span>}
+                        {locked && <span className="lock-corner" aria-hidden="true"><LockMini /></span>}
                       </button>
                     );
                   })}
                 </div>
+                <span className="muted setting-hint">{hintFor(f)}</span>
               </div>
             ))}
           </section>
@@ -224,16 +256,21 @@ export function Room({ room }: { room: RoomView }) {
               </div>
             </form>
             <div className="col" style={{ gap: 4 }}>
-              <span className="label" style={{ fontSize: 12.5 }}>مين يقدر يدخل؟</span>
+              <span className="label" style={{ fontSize: 12.5 }}>الخصوصية</span>
               <div className="seg" role="group" aria-label="خصوصية القعدة">
                 <button aria-pressed={room.privacy === 'private'} onClick={() => send('room:privacy', { privacy: 'private' })}>خاصة</button>
                 <button aria-pressed={room.privacy === 'public'} onClick={() => send('room:privacy', { privacy: 'public' })}>عامة</button>
               </div>
-              <span className="muted" style={{ fontSize: 12 }}>{room.privacy === 'public' ? 'القعدة ظاهرة لأي حد في "قعدات مفتوحة"' : 'بالكود أو اللينك بس'}</span>
+              <span className="muted setting-hint">{room.privacy === 'public' ? 'القعدة ظاهرة لأي حد في "قعدات مفتوحة"' : 'بالكود أو اللينك بس'}</span>
             </div>
-            <button className={`btn sm ${room.locked ? 'black' : ''}`} aria-pressed={room.locked} onClick={() => send('room:lock', { locked: !room.locked })}>
-              {room.locked ? 'الدخول مقفول، دوس تفتحه' : 'اقفل الدخول'}
-            </button>
+            <div className="col" style={{ gap: 4 }}>
+              <span className="label" style={{ fontSize: 12.5 }}>الدخول</span>
+              <div className="seg" role="group" aria-label="الدخول للقعدة">
+                <button aria-pressed={!room.locked} onClick={() => send('room:lock', { locked: false })}>مفتوح</button>
+                <button aria-pressed={room.locked} onClick={() => send('room:lock', { locked: true })}>مقفول</button>
+              </div>
+              <span className="muted setting-hint">{room.locked ? 'محدش جديد يقدر يدخل' : 'أي حد معاه الكود يقدر يدخل'}</span>
+            </div>
           </section>
         </Sheet>
       )}

@@ -27,19 +27,33 @@ const shuffle = <T>(arr: T[]): T[] => {
   return a;
 };
 
-/** The settings schema: the client renders the settings sheet from this, the server validates against it. */
+/**
+ * The settings schema: the client renders the settings sheet from this, the server validates against it.
+ * Rule: one word or number per option button (`label`), explanations in the one helper line (`hint`).
+ * `full` is only for the read-only summary line.
+ */
 const SETTINGS: SettingField[] = [
-  { key: 'discussSeconds', label: 'وقت الجولة', options: [{ value: 300, label: '٥ دقايق' }, { value: 480, label: '٨ دقايق' }, { value: 600, label: '١٠ دقايق' }] },
-  { key: 'rounds', label: 'عدد الجولات', options: [{ value: 1, label: 'جولة' }, { value: 3, label: '٣ جولات' }, { value: 5, label: '٥ جولات' }] },
   {
-    key: 'spies', label: 'عدد الجواسيس',
+    key: 'discussSeconds', label: 'وقت الجولة', hint: 'وقت النقاش في كل جولة بالدقايق',
+    options: [{ value: 300, label: '٥', full: '٥ دقايق' }, { value: 480, label: '٨', full: '٨ دقايق' }, { value: 600, label: '١٠', full: '١٠ دقايق' }]
+  },
+  {
+    key: 'rounds', label: 'عدد الجولات', hint: 'كام جولة هتلعبوا قبل الترتيب النهائي',
+    options: [{ value: 1, label: '١', full: 'جولة' }, { value: 3, label: '٣', full: '٣ جولات' }, { value: 5, label: '٥', full: '٥ جولات' }]
+  },
+  {
+    // the button is a big number plus that many spy-hat icons; the helper line is dynamic (built from minPlayers)
+    key: 'spies', label: 'عدد الجواسيس', icon: 'spy',
     options: [
-      { value: 1, label: spyWord(1), minPlayers: MIN_PLAYERS_FOR_SPIES[1] },
-      { value: 2, label: spyWord(2), minPlayers: MIN_PLAYERS_FOR_SPIES[2] },
-      { value: 3, label: spyWord(3), minPlayers: MIN_PLAYERS_FOR_SPIES[3] }
+      { value: 1, label: '١', full: spyWord(1), minPlayers: MIN_PLAYERS_FOR_SPIES[1] },
+      { value: 2, label: '٢', full: spyWord(2), hintName: 'جاسوسين', minPlayers: MIN_PLAYERS_FOR_SPIES[2] },
+      { value: 3, label: '٣', full: spyWord(3), hintName: '٣', minPlayers: MIN_PLAYERS_FOR_SPIES[3] }
     ]
   },
-  { key: 'difficulty', label: 'الصعوبة', options: [{ value: 'easy', label: 'سهل' }, { value: 'medium', label: 'متوسط' }, { value: 'hard', label: 'صعب' }, { value: 'mix', label: 'مكس' }] }
+  {
+    key: 'difficulty', label: 'الصعوبة', hint: 'مضاعف النقط: سهل ×١ · متوسط ×١٫٥ · صعب ×٢',
+    options: [{ value: 'easy', label: 'سهل' }, { value: 'medium', label: 'متوسط' }, { value: 'hard', label: 'صعب' }, { value: 'mix', label: 'مكس' }]
+  }
 ];
 
 export const spyDef: GameDef<SpySettings> = {

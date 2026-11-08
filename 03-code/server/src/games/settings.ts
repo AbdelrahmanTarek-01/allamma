@@ -14,7 +14,7 @@ export function applySettings<S extends Record<string, any>>(fields: SettingFiel
     if (!(f.key in p)) continue;
     const opt = f.options.find((o) => String(o.value) === String(p[f.key]));
     if (!opt) continue;
-    if (opt.minPlayers && connected < opt.minPlayers) throw new GameError(`محتاج ${arabicNum(opt.minPlayers)} لاعيبة`);
+    if (opt.minPlayers && connected < opt.minPlayers) throw new GameError(`محتاج ${arabicNum(opt.minPlayers)} لاعيبة على الأقل`);
     next[f.key] = opt.value;
   }
   return next as S;

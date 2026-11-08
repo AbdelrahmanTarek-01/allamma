@@ -59,7 +59,7 @@ LobbyRoom = { code, name, host: { name, avatar }, game, players, max, status: 'w
               lounge /* lounge total across games */ }],
   selectedGame,                       // 'spy'
   settings: { discussSeconds, rounds, spies, difficulty }, // settings of the selected game
-  settingsSchema,                    // [{ key, label, options: [{ value, label, minPlayers? }] }], null during a game
+  settingsSchema,                    // [{ key, label, hint?, icon?, options: [{ value, label, full?, hintName?, minPlayers? }] }], null during a game
   serverNow,
   game: null | {
     type: 'spy', round, totalRounds,

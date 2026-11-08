@@ -387,7 +387,15 @@ button:disabled { cursor: not-allowed; }
   display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.25;
   transition: transform .1s, background .15s;
 }
-.seg button small { font-size: 10px; font-weight: 800; white-space: normal; display: inline-flex; align-items: center; gap: 3px; margin-top: 1px; }
+.seg.tall button { min-height: 62px; position: relative; }
+.seg .num-big { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1; }
+.seg .hats { display: flex; gap: 3px; margin-top: 3px; }
+.seg .hat { display: flex; border-radius: 6px; padding: 1px; }
+.seg button[aria-pressed="true"] .hat { background: var(--yellow-soft); } /* the black selected button needs a light backing or the hats vanish */
+/* locked option: faded with a small lock in the corner, no text inside; still tappable (it shakes and says what it needs) */
+.seg button.locked { opacity: .45; position: relative; }
+.seg button .lock-corner { position: absolute; top: 4px; inset-inline-end: 5px; display: flex; }
+.setting-hint { font-size: 12px; line-height: 1.5; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--yellow); }
 .seg button:active:not(:disabled) { transform: scale(.96); }
 .seg button:disabled { cursor: default; opacity: 1; }

@@ -36,20 +36,35 @@ export interface GameEngine {
   isOver(): boolean;
 }
 
-/** One choice of a setting. `minPlayers`: needs at least this many connected players (shown locked until then). */
+/**
+ * One choice of a setting. RULE for all settings: the option button holds ONE word or number (`label`);
+ * any explanation goes in the field's single helper line (`hint`).
+ */
 export interface SettingOption {
   value: number | string;
+  /** What the button shows: one word or one number. */
   label: string;
+  /** Long form for the read-only summary line ("٨ دقايق"), when the button's one-word label isn't enough there. */
+  full?: string;
+  /** Short name used in the dynamic helper line of locked options ("جاسوسين من ٦"). Defaults to `label`. */
+  hintName?: string;
+  /** Needs at least this many connected players (shown locked until then). */
   minPlayers?: number;
 }
 
 /**
  * A setting a game exposes. The schema is sent to the client, which renders the settings sheet generically
- * (one segmented control per field), and the server validates every change against it. A new game only adds a schema.
+ * (one segmented control per field, one small helper line under it), and the server validates every change
+ * against it. A new game only adds a schema.
  */
 export interface SettingField {
   key: string;
+  /** Group title above the buttons. */
   label: string;
+  /** The one small helper line under the group. Fields with `minPlayers` options get a dynamic one built by the client. */
+  hint?: string;
+  /** Draw `value` small filled icons of this kind under the number on each button (e.g. 'spy' hats). */
+  icon?: 'spy';
   options: SettingOption[];
 }
 
