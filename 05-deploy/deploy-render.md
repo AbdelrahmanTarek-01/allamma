@@ -3,47 +3,29 @@
 اللعبة كلها خدمة واحدة: السيرفر بيقدّم الواجهة والـ WebSocket مع بعض. ومش محتاج كارت.
 
 ## ١. ارفع الكود على GitHub
-من جوه فولدر `Allamma`:
+على حسابك الشخصي `AbdelrahmanTarek-01` بس (مش حساب الشركة). من جوه فولدر `Allamma`:
 ```bash
-git init
-git add .
-git commit -m "Allamma v0.1"
+gh auth status          # لازم الحساب النشط يبقى AbdelrahmanTarek-01
+gh repo create AbdelrahmanTarek-01/allamma --private --source . --remote origin --push
 ```
-اعمل ريبو جديد على حسابك الشخصي `AbdelrahmanTarek-01`، سمّيه `allamma`، وبعدين:
-```bash
-git remote add origin https://github.com/AbdelrahmanTarek-01/allamma.git
-git branch -M main
-git push -u origin main
-```
+لو الحساب التاني نشط: `gh auth switch --user AbdelrahmanTarek-01`، ولو مش مسجّل: `gh auth login` واختار الحساب الشخصي.
 
-## ٢. اعمل الخدمة على Render
-1. ادخل render.com، واعمل حساب بـ GitHub.
-2. **New → Web Service**، واختار ريبو `allamma`.
-3. املا كده:
-
-| الخانة | القيمة |
-|---|---|
-| Name | `allamma` (ده هيبقى اللينك: allamma.onrender.com) |
-| Root Directory | `03-code` |
-| Runtime | Node |
-| Build Command | `npm run build` |
-| Start Command | `npm start` |
-| Instance Type | **Free** |
-| Health Check Path | `/api/health` |
-| Environment Variable | `NODE_VERSION` = `22` |
-
-4. دوس **Create Web Service**، واستنى البناء (حوالي ٣ دقايق).
-5. افتح `https://allamma.onrender.com`، وابعت اللينك لصحابك.
+## ٢. اعمل الخدمة على Render (Blueprint)
+الملف `render.yaml` على جذر الريبو فيه كل الإعدادات (خدمة واحدة مجانية، Node 20، `rootDir: 03-code`، `/health`، نشر تلقائي مع كل push على main).
+1. ادخل render.com واعمل حساب بـ GitHub، وادّي Render صلاحية على ريبو `allamma` الخاص.
+2. **New → Blueprint**، واختار ريبو `allamma` (هيقرا `render.yaml` لوحده).
+3. دوس **Apply**، واستنى البناء (حوالي ٣ دقايق).
+4. افتح `https://allamma.onrender.com` (أو الاسم اللي Render ادّاهولك فوق في صفحة الخدمة)، وابعت اللينك لصحابك.
 
 بعد كده أي `git push` على main بيعمل نشر جديد لوحده.
 
-> لو اسم `allamma` مش متاح، Render هيدّيك اسم قريب. اللينك هيبان فوق في صفحة الخدمة.
+> بديل من غير Blueprint: **New → Web Service** وانسخ نفس القيم: Root Directory `03-code`، Build `npm run build`، Start `npm start`، Health Check Path `/health`، `NODE_VERSION` = `20`، Instance Type **Free**.
 
 ## ٣. خلّي السيرفر صاحي على طول (اختياري، ببلاش)
 الخطة المجانية بتنيّم السيرفر بعد ١٥ دقيقة من غير استخدام، وأول فتحة بعدها بتاخد حوالي دقيقة. عشان تلغي الانتظار ده:
 1. ادخل **cron-job.org** واعمل حساب مجاني.
 2. **Create cronjob**:
-   - URL: `https://allamma.onrender.com/api/health`
+   - URL: `https://<service>.onrender.com/health` (بيرجّع `ok`، وده اسم الخدمة اللي على Render، مثلاً allamma)
    - Schedule: كل **10 دقايق**
 3. احفظ.
 
@@ -57,5 +39,5 @@ git push -u origin main
 - لو اللعبة كبرت وبقت محتاجة سيرفر صاحي على طول وأقوى، الخطوة الجاية Oracle Cloud Always Free بالـ `Dockerfile` و`docker-compose.yml` اللي في الفولدر ده.
 
 ## التأكد إن كله تمام
-- `https://allamma.onrender.com/api/health` لازم يرجّع `{"ok":true,...}`.
+- `https://<service>.onrender.com/health` لازم يرجّع `ok` (والتفاصيل على `/api/health`).
 - افتح اللعبة من ٣ موبايلات (أو من شبابيك متصفح خفية)، واعمل أوضة، وادخل بالكود، والعب جولة.

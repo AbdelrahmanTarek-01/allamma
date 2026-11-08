@@ -18,7 +18,16 @@ class HealthController {
   }
 }
 
-@Module({ controllers: [HealthController], providers: [RoomsService, IdeasService, RoomsGateway] })
+/** Plain-text liveness for Render's health check and keep-alive pings (no logging, no state). */
+@Controller()
+class LivenessController {
+  @Get('health')
+  alive() {
+    return 'ok';
+  }
+}
+
+@Module({ controllers: [HealthController, LivenessController], providers: [RoomsService, IdeasService, RoomsGateway] })
 class AppModule {}
 
 async function bootstrap() {
@@ -29,7 +38,7 @@ async function bootstrap() {
   if (existsSync(clientDir)) {
     app.useStaticAssets(clientDir, { maxAge: '1h', index: false });
     const indexFile = join(clientDir, 'index.html');
-    app.getHttpAdapter().getInstance().get(/^\/(?!api|socket\.io).*/, (_req: any, res: any) => res.sendFile(indexFile));
+    app.getHttpAdapter().getInstance().get(/^\/(?!api|health|socket\.io).*/, (_req: any, res: any) => res.sendFile(indexFile));
   }
 
   const port = Number(process.env.PORT) || 3000;

@@ -1,0 +1,15 @@
+# Render Blueprint (this file must sit at the repo root). One free web service: the Node server serves the built client and the WebSocket.
+services:
+  - type: web
+    name: allamma
+    runtime: node
+    plan: free
+    branch: main
+    autoDeploy: true # every push to main deploys
+    rootDir: 03-code
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
